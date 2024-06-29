@@ -1,7 +1,7 @@
 # deepwork
 
 ###
-[DeepWork](resources/gaudmire-ig.png)
+![DeepWork](resources/gaudmire-ig.png)
 
 // TODO: VS Code extension to preview Markdown
 
