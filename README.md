@@ -1,32 +1,42 @@
 # deepwork
 
 ###
+
 ![DeepWork](resources/gaudmire-ig.png)
 
 // TODO: VS Code extension to preview Markdown
 
-Mission: 
-Building the oura for productivity. Get insights on how productive you are. 
-
+Mission:
+Building the oura for productivity. Get insights on how productive you are.
 
 ### Goals
 
-Goal for the next 2 hours: build minimum viable prototype: 
+Goal for the next 2 hours: build minimum viable prototype:
 ~~1. Allow all users to download on any machine through an Electron JS app ~~
-~~2. Using JS for now, eventually will move to TS. Considering using SolidJS instead of React as well. Also, set up a CI/CD pipeline and allow users to download automatic releases. Also add a changelog using conventional commits~~
-3. Allow users to enter a goal in their session. 
-3. Application will get FULL System Access and collect logs every min to observe what the active window is. We'll ask in onboarding whether certain sites should be labeled as productive or not productive. 
+~~2. Using JS for now, eventually will move to TS. Considering using SolidJS instead of React as well. Also, set up a CI/CD pipeline and allow users to download automatic releases. Also add a changelog using conventional commits~~ 3. Allow users to enter a goal in their session. 3. Application will get FULL System Access and collect logs every min to observe what the active window is. We'll ask in onboarding whether certain sites should be labeled as productive or not productive.
 
+### Philosophy
 
-Note: 
+For example,
+WhatsApp,
+Reddit
+Instagram
+Facebook
+Gmail
 
+^ Probably shouldn't be labeled as Deep work for most Knowledge workers and it takes away your foxus.
 
+This product was built primarily for Software Engineers/Product/Designers in mind.
+
+Note:
 
 ## Recommended IDE Setup
 
 - [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ## Project Setup
+
+Note: I recommend using node LTS >=v20.12.2 & npm v10.5.0
 
 ### Install
 
