@@ -2,14 +2,13 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
-import { Result, activeWindow, openWindowsSync } from 'get-windows'
-import { parse } from 'url'
-
+import { MacOSResult, Result, activeWindow, openWindowsSync } from 'get-windows'
+import { calculateProductivityScore, getUrlFromResult } from '../utils/productivityUtils'
 interface StoreSchema {
   unproductiveSites: string[]
 }
 
-let timer = 0
+export type ExtendedResult = Result & { url?: string }
 
 interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -17,72 +16,38 @@ interface TypedStore extends Store<StoreSchema> {
   set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void
 }
 const store = new Store<StoreSchema>() as TypedStore
-// console.log('store is ', store);
 
-// In your main process
 function startActivityMonitoring(): void {
   setInterval(async () => {
     try {
       const windowInfo = await activeWindow()
-      const currOpenWindows = await openWindowsSync()
+      const currOpenWindows = (await openWindowsSync()) as MacOSResult[]
 
-      if (windowInfo) {
-        // Process the information
-        processActivityData(windowInfo, currOpenWindows)
+      if (windowInfo && windowInfo!.platform === 'macos') {
+        const extendedResult: ExtendedResult = {
+          ...windowInfo,
+          url: getUrlFromResult(windowInfo)
+        }
+        const result = processActivityData(extendedResult, currOpenWindows)
+        console.log('result is ', result)
       }
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 10000) // Check every second
+  }, 60000) // run every min
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
-function processActivityData(_windowInfoData: Result | undefined, _currOpenWindowsData: Result[]) {
-  // Implement your logic here
-  // e.g., check if the URL or title contains unproductive sites
-  // Update productivity score, etc.
-
-  function getDomainFromUrl(url: string): string {
-    const parsedUrl = parse(url)
-    return parsedUrl.hostname || ''
-  }
-
-  function isProductiveUrl(url: string, unproductiveSites: string[]): boolean {
-    const domain = getDomainFromUrl(url)
-    return !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
-  }
-
-  function calculateProductivityScore(windows: WindowInfo[], unproductiveSites: string[]): number {
-    const browserWindows = windows.filter((win) => win.url)
-    if (browserWindows.length === 0) return 1 // No browser windows open, assume productive
-
-    const productiveWindows = browserWindows.filter((win) =>
-      isProductiveUrl(win.url!, unproductiveSites)
-    )
-    return productiveWindows.length / browserWindows.length
-  }
-
-  if (_windowInfoData!.platform === 'macos') {
-    // Among other fields, `result.owner.bundleId` is available on macOS.
-    console.log(
-      `Process title is ${_windowInfoData?.title} with bundle id ${_windowInfoData?.owner.bundleId}.`
-    )
-
-    // Usage
-    const unproductiveSites = ['gmail.com', 'instagram.com', 'facebook.com']
-    const openWindows: Result[] = _currOpenWindowsData // Your data from earlier
-    const productivityScore = calculateProductivityScore(openWindows, unproductiveSites)
-
-    console.log(`Current productivity score: ${productivityScore}`)
-    timer += 1
-    console.log(timer)
-  } else {
-    console.log(`Currently running on a Non-MacOS system > Data can't be collected`)
-  }
-
+function processActivityData(
+  _windowInfoData: ExtendedResult | undefined,
+  _currOpenWindowsData: MacOSResult[]
+) {
+  calculateProductivityScore(_currOpenWindowsData)
   return { _windowInfoData, _currOpenWindowsData }
 }
-
+console.log('dirname is ', __dirname) // /Users/timeo/Desktop/Engineering/buildspace/quick-start/deepWork/out/main
+console.log(__dirname + '/renderer/src/assets/deepWork.ico')
+console.log('test3', join(__dirname, '../renderer/index.html'))
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -94,7 +59,8 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
-    }
+    },
+    icon: __dirname + '../renderer/src/assets/deepWork.ico'
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -137,7 +103,12 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('add-unproductive-site', (_, site: string) => {
-    const sites = store.get('unproductiveSites', ['Gmail', 'Instagram', 'Facebook']) as string[]
+    const sites = store.get('unproductiveSites', [
+      'Gmail',
+      'Instagram',
+      'Facebook',
+      'LinkedIn'
+    ]) as string[]
     if (!sites.includes(site)) {
       sites.push(site)
       store.set('unproductiveSites', sites)

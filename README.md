@@ -28,6 +28,11 @@ Gmail
 
 This product was built primarily for Software Engineers/Product/Designers in mind.
 
+Also, there's 10,000 hours to become an expert.
+
+Coding is the same thing. We want to face imposter syndrome & create systems > not focusing as much on TC & the end goal, but also reflecting on the journey and remind yourself that you ARE putting the work in. And if you're not,
+hopefully deepWork helps get you to do it.
+
 Note:
 
 ## Recommended IDE Setup
