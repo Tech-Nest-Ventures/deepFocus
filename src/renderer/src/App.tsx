@@ -3,10 +3,10 @@ import Versions from './components/Versions'
 import logo from './assets/deepWork.svg'
 
 const App: Component = () => {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
 
   // Call this function when you want to test the email send
-  const testEmailSend = (): void => window.electron.ipcRenderer.send('test-email-send')
+  const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
 
   return (
     <>
