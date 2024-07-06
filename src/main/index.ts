@@ -11,23 +11,18 @@ import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productiv
 const store = new Store<StoreSchema>() as TypedStore
 
 console.log('resend API key', process.env.RESEND_API_KEY)
-const emailService = new EmailService(
-  process.env.RESEND_API_KEY || '',
-  process.env.EMAIL || '',
-  store
-)
-
+const emailService = new EmailService(process.env.EMAIL || '', store)
 
 export let currentSiteTimeTrackers: SiteTimeTracker[] = []
 function saveSiteTimeTrackers(): void {
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
-  console.log('Saved site time trackers:', currentSiteTimeTrackers)
+  // console.log('Saved site time trackers:', currentSiteTimeTrackers)
 }
 
 async function loadSiteTimeTrackers(): Promise<void> {
   const savedTrackers = store.get('siteTimeTrackers', [])
   currentSiteTimeTrackers = savedTrackers
-  console.log('Loaded site time trackers:', currentSiteTimeTrackers)
+  // console.log('Loaded site time trackers:', currentSiteTimeTrackers)
 }
 
 // Call this function periodically, e.g., every 5 minutes

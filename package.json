@@ -29,6 +29,7 @@
     "electron-updater": "^6.1.7",
     "get-windows": "^9.1.1",
     "node-schedule": "^2.1.1",
+    "resend": "^3.4.0",
     "url": "^0.11.3"
   },
   "devDependencies": {

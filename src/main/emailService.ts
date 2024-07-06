@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { Resend } from 'resend'
 import * as schedule from 'node-schedule'
 import { TypedStore } from './types'
 
@@ -8,14 +8,14 @@ interface TopSite {
 }
 
 export class EmailService {
-  private resendApiKey: string
   private userEmail: string
   private store: TypedStore
+  private resend: Resend
 
-  constructor(resendApiKey: string, userEmail: string, store: TypedStore) {
-    this.resendApiKey = resendApiKey || ''
+  constructor(userEmail: string, store: TypedStore) {
     this.userEmail = userEmail || ''
     this.store = store
+    this.resend = new Resend(process.env.RESEND_API_KEY)
   }
 
   public scheduleEmailSend(): void {
@@ -51,28 +51,19 @@ export class EmailService {
       return
     }
 
-    const emailBody = this.composeEmailBody(deepWorkHours, topSites)
+    //TODO: const emailBody = this.composeEmailBody(deepWorkHours, topSites)
 
     try {
-      const response = await axios.post(
-        'https://api.resend.com/emails',
-        {
-          from: 'support@deepwork.io',
-          to: this.userEmail,
-          subject: 'Your Daily Productivity Summary',
-          html: emailBody
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.resendApiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
+      const data = await this.resend.emails.send({
+        from: 'deepFocus <info@deepfocus.cc>',
+        to: [this.userEmail, 'timeo.j.williams@gmail.com'],
+        subject: 'Hello World',
+        html: '<strong>It works!</strong>'
+      })
 
-      console.log('Email sent successfully:', response.data)
+      console.log(data)
     } catch (error) {
-      console.error('Failed to send email:', error)
+      console.error(error)
     }
   }
 
@@ -131,28 +122,16 @@ export class EmailService {
     const emailBody = this.composeEmailBody(testDeepWorkHours, testTopSites)
 
     try {
-      const response = await axios.post(
-        'https://api.resend.com/emails',
-        {
-          from: 'support@deepwork.io',
-          to: this.userEmail,
-          subject: 'Test: Your Daily Productivity Summary',
-          html: emailBody
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.resendApiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
+      const data = await this.resend.emails.send({
+        from: 'deepFocus <info@deepfocus.cc>',
+        to: [this.userEmail, 'timeo.j.williams@gmail.com'],
+        subject: 'Hello World',
+        html: emailBody
+      })
 
-      console.log('Test email sent successfully:', response.data)
+      console.log('Response from testEmail is ', data)
     } catch (error) {
-      console.error('Failed to send test email:', error)
-      if (axios.isAxiosError(error) && error.response) {
-        console.error('Error response:', error.response.data)
-      }
+      console.error(error)
     }
   }
 }
