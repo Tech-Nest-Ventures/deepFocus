@@ -14,10 +14,10 @@ export function getUrlFromResult(result: Result): string | undefined {
 
 function getDomainFromUrl(url: string): string {
   const parsedUrl = parse(url)
+  isProductiveUrl(parsedUrl.hostname || '')
   return parsedUrl.hostname || ''
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isProductiveUrl(url: string): boolean {
   const domain = getDomainFromUrl(url)
   console.log(
