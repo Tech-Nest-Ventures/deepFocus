@@ -1,19 +1,22 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import icon from '../../resources/icon.png?asset'
+// import icon from '../../resources/icon.png?asset'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { MacOSResult, activeWindow, openWindowsSync } from 'get-windows'
+const { activeWindow } = await import('get-windows')
 import { EmailService } from './emailService'
 import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, TypedStore, ExtendedResult } from './types'
-import {
-  calculateProductivityScore,
-  getUrlFromResult,
-  formatTime,
-  updateSiteTimeTracker
-} from './productivityUtils'
+import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productivityUtils'
 
 const store = new Store<StoreSchema>() as TypedStore
+
+console.log('resend API key', process.env.RESEND_API_KEY)
+const emailService = new EmailService(
+  process.env.RESEND_API_KEY || '',
+  process.env.EMAIL || '',
+  store
+)
+
 
 export let currentSiteTimeTrackers: SiteTimeTracker[] = []
 function saveSiteTimeTrackers(): void {
@@ -35,7 +38,6 @@ function startActivityMonitoring(): void {
   setInterval(async () => {
     try {
       const windowInfo = await activeWindow()
-      const currOpenWindows = openWindowsSync() as MacOSResult[]
 
       if (windowInfo && windowInfo!.platform === 'macos') {
         const extendedResult: ExtendedResult = {
@@ -43,7 +45,7 @@ function startActivityMonitoring(): void {
           url: getUrlFromResult(windowInfo),
           siteTimeTracker: updateSiteTimeTracker(windowInfo)
         }
-        const result = processActivityData(extendedResult, currOpenWindows)
+        const result = processActivityData(extendedResult)
         if (result?._windowInfoData?.url) {
           console.log('result is ', result)
         }
@@ -51,18 +53,14 @@ function startActivityMonitoring(): void {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 60000) //TODO: change to 60000 for prod. Using 10000 for dev purposes only
+  }, 60000)
 }
 
-function processActivityData(
-  _windowInfoData: ExtendedResult | undefined,
-  _currOpenWindowsData: MacOSResult[]
-): {
+function processActivityData(_windowInfoData: ExtendedResult | undefined): {
   _windowInfoData: ExtendedResult | undefined
-  productivityScore: number
 } {
   console.log('processActivityScore')
-  const productivityScore = calculateProductivityScore(_currOpenWindowsData)
+  // const productivityScore = calculateProductivityScore(_currOpenWindowsData)
 
   if (_windowInfoData?.siteTimeTracker) {
     console.log(
@@ -74,27 +72,30 @@ function processActivityData(
     console.log(`Current time: ${new Date().toISOString()}`)
   }
 
-  return { _windowInfoData, productivityScore }
+  return { _windowInfoData }
 }
 
-async function createWindow(): Promise<void> {
+async function createWindow(): Promise<BrowserWindow> {
   console.log('createWindow()')
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
-    show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    show: true,
+    autoHideMenuBar: false,
+    ...(process.platform === 'linux' ? {} : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
     console.log('ready-to-show')
     mainWindow.show()
+    startActivityMonitoring()
+    await loadSiteTimeTrackers()
+    emailService.scheduleEmailSend()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -110,19 +111,22 @@ async function createWindow(): Promise<void> {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(async() => {
+app.whenReady().then(async () => {
   console.log('app.whenReady()')
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-  //  // Add this IPC handler
-  //  ipcMain.handle('test-email-send', async () => {
-  //   await emailService.testEmailSend()
-  // })
+
+  ipcMain.on('test-email-send', async () => {
+    console.info('sending email')
+    await emailService.testEmailSend()
+  })
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -136,50 +140,11 @@ app.whenReady().then(async() => {
 
   await createWindow()
 
-  await loadSiteTimeTrackers()
-
-  // Initialize EmailService
-  const emailService = new EmailService(
-    process.env.RESEND_API_KEY || '',
-    process.env.EMAIL || '',
-    store
-  )
-  emailService.scheduleEmailSend()
-
-  /* //TODO: Remove/adjust logic once connected to frontend
-  ipcMain.handle('get-unproductive-sites', () => {
-    return store.get('unproductiveSites', ['Gmail', 'Instagram', 'Facebook'])
-  })
-
-  ipcMain.handle('add-unproductive-site', (_, site: string) => {
-    const sites = store.get('unproductiveSites', [
-      'Gmail',
-      'Instagram',
-      'Facebook',
-      'LinkedIn'
-    ]) as string[]
-    if (!sites.includes(site)) {
-      sites.push(site)
-      store.set('unproductiveSites', sites)
-    }
-    return sites
-  })
-
-  ipcMain.handle('remove-unproductive-site', (_, site: string) => {
-    const sites = store.get('unproductiveSites', ['Gmail', 'Instagram', 'Facebook']) as string[]
-    const updatedSites = sites.filter((s) => s !== site)
-    store.set('unproductiveSites', updatedSites)
-    return updatedSites
-  })
-    */
-
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-
-  startActivityMonitoring()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

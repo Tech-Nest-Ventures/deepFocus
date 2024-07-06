@@ -7,7 +7,6 @@ body {
   overflow: hidden;
   background-image: url('./wavy-lines.svg');
   background-size: cover;
-  /* background-color: #000000; */
   user-select: none;
 }
 
@@ -150,10 +149,6 @@ code {
   &:last-child {
     border: none;
   }
-}
-
-.visibility {
-  background-color: white;
 }
 
 @media (max-width: 720px) {

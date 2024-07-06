@@ -1,7 +1,6 @@
 import { parse } from 'url'
-import { MacOSResult, Result } from 'get-windows'
-import { SiteTimeTracker } from './types'
 import { currentSiteTimeTrackers } from '.'
+import { MacOSResult, Result, SiteTimeTracker } from './types'
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['gmail.com', 'instagram.com', 'facebook.com']
@@ -18,6 +17,7 @@ function getDomainFromUrl(url: string): string {
   return parsedUrl.hostname || ''
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isProductiveUrl(url: string): boolean {
   const domain = getDomainFromUrl(url)
   console.log(
@@ -27,15 +27,6 @@ function isProductiveUrl(url: string): boolean {
     !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
   )
   return !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
-}
-
-//TODO: This logic doesn't really make sense haha.
-export function calculateProductivityScore(windows: MacOSResult[]): number {
-  const browserWindows = windows.filter((win) => win.url)
-  if (browserWindows.length === 0) return 1 // No browser windows open, assume productive
-
-  const productiveWindows = browserWindows.filter((win) => isProductiveUrl(win.url!))
-  return productiveWindows.length / browserWindows.length
 }
 
 export function formatTime(milliseconds: number): string {
