@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as schedule from 'node-schedule'
-import { TypedStore } from '../types'
+import { TypedStore } from './types'
 
 interface TopSite {
   url: string

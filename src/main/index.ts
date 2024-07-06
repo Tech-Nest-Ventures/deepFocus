@@ -1,16 +1,17 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
+import icon from '../../resources/icon.png?asset'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { MacOSResult, activeWindow, openWindowsSync } from 'get-windows'
 import { EmailService } from './emailService'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, TypedStore, ExtendedResult } from '../types'
+import { StoreSchema, SiteTimeTracker, TypedStore, ExtendedResult } from './types'
 import {
   calculateProductivityScore,
   getUrlFromResult,
   formatTime,
   updateSiteTimeTracker
-} from '../utils/productivityUtils'
+} from './productivityUtils'
 
 const store = new Store<StoreSchema>() as TypedStore
 
@@ -20,7 +21,7 @@ function saveSiteTimeTrackers(): void {
   console.log('Saved site time trackers:', currentSiteTimeTrackers)
 }
 
-function loadSiteTimeTrackers(): void {
+async function loadSiteTimeTrackers(): Promise<void> {
   const savedTrackers = store.get('siteTimeTrackers', [])
   currentSiteTimeTrackers = savedTrackers
   console.log('Loaded site time trackers:', currentSiteTimeTrackers)
@@ -50,7 +51,7 @@ function startActivityMonitoring(): void {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 10000) //TODO: change to 60000 for prod. Using 10000 for dev purposes only
+  }, 60000) //TODO: change to 60000 for prod. Using 10000 for dev purposes only
 }
 
 function processActivityData(
@@ -76,7 +77,7 @@ function processActivityData(
   return { _windowInfoData, productivityScore }
 }
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
   console.log('createWindow()')
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -84,12 +85,11 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? {} : {}),
+    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
-    },
-    icon: __dirname + '../renderer/src/assets/deepWork.ico'
+    }
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -115,24 +115,14 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async() => {
   console.log('app.whenReady()')
-  loadSiteTimeTrackers()
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-
-  // Initialize EmailService
-  const emailService = new EmailService(
-    process.env.RESEND_API_KEY || '',
-    process.env.EMAIL || '',
-    store
-  )
-  emailService.scheduleEmailSend()
-
-  // Add this IPC handler
-  ipcMain.handle('test-email-send', async () => {
-    await emailService.testEmailSend()
-  })
+  //  // Add this IPC handler
+  //  ipcMain.handle('test-email-send', async () => {
+  //   await emailService.testEmailSend()
+  // })
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -143,6 +133,18 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  await createWindow()
+
+  await loadSiteTimeTrackers()
+
+  // Initialize EmailService
+  const emailService = new EmailService(
+    process.env.RESEND_API_KEY || '',
+    process.env.EMAIL || '',
+    store
+  )
+  emailService.scheduleEmailSend()
 
   /* //TODO: Remove/adjust logic once connected to frontend
   ipcMain.handle('get-unproductive-sites', () => {
@@ -170,8 +172,6 @@ app.whenReady().then(() => {
     return updatedSites
   })
     */
-
-  createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

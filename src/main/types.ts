@@ -22,3 +22,5 @@ export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
   set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void
 }
+
+export { Store, type Result }

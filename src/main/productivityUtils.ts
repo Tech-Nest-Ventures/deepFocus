@@ -1,7 +1,7 @@
 import { parse } from 'url'
 import { MacOSResult, Result } from 'get-windows'
-import { SiteTimeTracker } from '../types'
-import { currentSiteTimeTrackers } from '../main'
+import { SiteTimeTracker } from './types'
+import { currentSiteTimeTrackers } from '.'
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['gmail.com', 'instagram.com', 'facebook.com']
