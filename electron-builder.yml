@@ -4,14 +4,14 @@ directories:
   output: dist
   buildResources: build
 files:
-  - "out/**/*"
-  - "package.json"
+  - 'out/**/*'
+  - 'package.json'
 extraResources:
-  - from: ".env"
-    to: ".env"
+  - from: '.env'
+    to: '.env'
 asar: true
 asarUnpack:
-  - "resources/**"
+  - 'resources/**'
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

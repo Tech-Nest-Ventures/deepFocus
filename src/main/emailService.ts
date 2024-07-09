@@ -1,9 +1,7 @@
 import { Resend } from 'resend'
 import * as schedule from 'node-schedule'
 import { TypedStore } from './types'
-// import html from '../renderer/src/components/Waitlist'
 
-const logoUrl = 'https://www.deepfocus.cc/assets/deepWork-Bb_70LlS.ico'
 interface TopSite {
   url: string
   timeSpent: number
@@ -21,10 +19,17 @@ export class EmailService {
   }
 
   public scheduleEmailSend(): void {
-    // Schedule the email to be sent at the end of each day (e.g., 11:59 PM)
+    // Schedule the email to be sent every 1 minutes for testing
+    schedule.scheduleJob('*/5 * * * *', () => {
+      this.sendDailySummary()
+    })
+
+    /*
+     // Schedule the email to be sent at the end of each day (e.g., 11:59 PM)
     schedule.scheduleJob('59 23 * * *', () => {
       this.sendDailySummary()
     })
+    */
   }
   // Avoid sending emails to customers on the weekends
   private async shouldSendEmail(): Promise<boolean> {
@@ -40,6 +45,7 @@ export class EmailService {
   }
 
   private async sendDailySummary(): Promise<void> {
+    console.log('sending daily summary')
     if (!(await this.shouldSendEmail())) {
       console.log('Skipping email send')
       return
@@ -47,20 +53,21 @@ export class EmailService {
 
     const deepWorkHours = await this.getDeepWorkHours()
     const topSites = await this.getTopSites()
+    console.log('deepWorkHours ', deepWorkHours, 'topSites ', topSites)
 
-    if (!deepWorkHours || topSites.length === 0) {
+    if (topSites.length === 0) {
       console.log('Not enough data to send email')
       return
     }
 
-    //TODO: const emailBody = this.composeEmailBody(deepWorkHours, topSites)
+    const emailBody = this.composeEmailBody(deepWorkHours, topSites)
 
     try {
       const data = await this.resend.emails.send({
         from: 'deepFocus <info@deepfocus.cc>',
         to: [this.userEmail, 'timeo.j.williams@gmail.com'],
         subject: 'Hello World',
-        html: '<strong>It works!</strong>'
+        html: emailBody
       })
 
       console.log(data)
@@ -73,7 +80,6 @@ export class EmailService {
     return `
       <div style="font-family: Arial, sans-serif; color: #fff; background-color: #000; padding: 20px; border-radius: 8px; max-width: 80%; margin: auto;">
         <div style="display: flex; align-items: center; margin-bottom: 20px;">
-         <img src="${logoUrl}" alt="Logo" style="height: 40px; margin-right: 10px;">
           <h1 style="color: #ecf0f1; margin: 0;">deepFocus</h1>
         </div>
         <h2 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Daily Summary</h2>
@@ -110,11 +116,12 @@ export class EmailService {
 
   private async getTopSites(): Promise<TopSite[]> {
     const siteTimeTrackers = this.store.get('siteTimeTrackers', [])
+    console.log('siteTimeTrackers are', siteTimeTrackers)
 
-    // Sort trackers by time spent (descending) and take top 5
+    // Sort trackers by time spent (descending) and take top 3
     const topSites = siteTimeTrackers
       .sort((a, b) => b.timeSpent - a.timeSpent)
-      .slice(0, 5)
+      .slice(0, 3)
       .map((tracker) => ({
         url: tracker.url,
         timeSpent: Math.round(tracker.timeSpent / (1000 * 60)) // Convert ms to minutes
