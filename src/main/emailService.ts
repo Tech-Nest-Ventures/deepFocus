@@ -1,7 +1,9 @@
 import { Resend } from 'resend'
 import * as schedule from 'node-schedule'
 import { TypedStore } from './types'
+// import html from '../renderer/src/components/Waitlist'
 
+const logoUrl = 'https://www.deepfocus.cc/assets/deepWork-Bb_70LlS.ico'
 interface TopSite {
   url: string
   timeSpent: number
@@ -69,12 +71,27 @@ export class EmailService {
 
   public composeEmailBody(deepWorkHours: number, topSites: TopSite[]): string {
     return `
-      <h2>Daily Summary:</h2>
-      <p>Total Deep Work Hours: ${deepWorkHours}</p>
-      <h3>Top 5 Sites Visited:</h3>
-      <ul>
-        ${topSites.map((site) => `<li>${site.url}: ${site.timeSpent} minutes</li>`).join('')}
-      </ul>
+      <div style="font-family: Arial, sans-serif; color: #fff; background-color: #000; padding: 20px; border-radius: 8px; max-width: 80%; margin: auto;">
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+         <img src="${logoUrl}" alt="Logo" style="height: 40px; margin-right: 10px;">
+          <h1 style="color: #ecf0f1; margin: 0;">deepFocus</h1>
+        </div>
+        <h2 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Daily Summary</h2>
+        <p style="font-size: 16px; margin-bottom: 20px;">Total Deep Work Hours: <strong>${deepWorkHours}</strong></p>
+        
+        <h3 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 30px;">Top 5 Sites Visited</h3>
+        <ul style="list-style-type: none; padding-left: 0;">
+          ${topSites
+            .map(
+              (site) => `
+            <li style="background-color: #333; margin-bottom: 10px; padding: 10px; border-radius: 4px; border: 1px solid #555; color: #fff;">
+              <strong>${site.url}</strong>: ${site.timeSpent} minutes
+            </li>
+          `
+            )
+            .join('')}
+        </ul>
+      </div>
     `
   }
 
