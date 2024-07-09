@@ -29,7 +29,7 @@ const App: Component = () => {
         </div>
         <div class="action">
           <a
-            href="https://github.com/timeowilliams/deepWork/releases/download/v1.1.0/deepwork-1.1.0.dmg"
+            href="https://github.com/timeowilliams/deepFocus/releases/download/v1.1.0/deepfocus-1.0.0.dmg"
             download="deepwork-1.1.0.dmg"
           >
             Download deepFocus (MacOS only)
