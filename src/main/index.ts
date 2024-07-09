@@ -1,5 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import path, { join } from 'path'
+import fs from 'fs'
+import dotenv from 'dotenv'
 // import icon from '../../resources/icon.png?asset'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { activeWindow } = await import('get-windows')
@@ -10,7 +12,30 @@ import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productiv
 
 const store = new Store<StoreSchema>() as TypedStore
 
-console.log('resend API key', process.env.RESEND_API_KEY)
+console.log('Current NODE_ENV:', process.env.NODE_ENV)
+console.log('Is Production?', process.env.NODE_ENV === 'production')
+console.log('Is Development?', process.env.NODE_ENV === 'development')
+
+console.log('Is app packaged?', app.isPackaged)
+
+if (app.isPackaged) {
+  // Production logic here
+  const envPath = path.join(process.resourcesPath, '.env')
+  console.log('Env file path:', envPath)
+  console.log('Env file exists:', fs.existsSync(envPath))
+  if (fs.existsSync(envPath)) {
+    console.log('Env file contents:', fs.readFileSync(envPath, 'utf8'))
+    dotenv.config({ path: envPath })
+  } else {
+    console.error('Env file not found in production build')
+  }
+} else {
+  // Development logic here
+  dotenv.config()
+}
+
+console.log('RESEND_API_KEY after loading:', process.env.RESEND_API_KEY)
+
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
 export let currentSiteTimeTrackers: SiteTimeTracker[] = []

@@ -1,8 +1,6 @@
-# deepwork
-
 ###
 
-![DeepWork](resources/gaudmire-ig.png)
+![DeepFocus](resources/gaudmire-ig.png)
 
 // TODO: VS Code extension to preview Markdown
 
@@ -35,7 +33,7 @@ This product was built primarily for Software Engineers/Product/Designers in min
 Also, there's 10,000 hours to become an expert.
 
 Coding is the same thing. We want to face imposter syndrome & create systems > not focusing as much on TC & the end goal, but also reflecting on the journey and remind yourself that you ARE putting the work in. And if you're not,
-hopefully deepWork helps get you to do it.
+hopefully deepFocus helps get you to do it.
 
 Some ideas:
 https://www.electronjs.org/docs/latest/tutorial/progress-bar (Progress Bar showing how much deep work done)
