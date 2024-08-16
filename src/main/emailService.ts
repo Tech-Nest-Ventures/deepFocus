@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import * as schedule from 'node-schedule'
 import { TypedStore } from './types'
+import { capitalizeFirstLetter } from './productivityUtils'
 
 interface TopSite {
   url: string
@@ -24,12 +25,10 @@ export class EmailService {
       this.sendDailySummary()
     })
 
-    /*
-     // Schedule the email to be sent at the end of each day (e.g., 11:59 PM)
+    // Schedule the email to be sent at the end of each day (e.g., 11:59 PM)
     schedule.scheduleJob('59 23 * * *', () => {
       this.sendDailySummary()
     })
-    */
   }
   // Avoid sending emails to customers on the weekends
   private async shouldSendEmail(): Promise<boolean> {
@@ -64,7 +63,7 @@ export class EmailService {
 
     try {
       const data = await this.resend.emails.send({
-        from: 'deepFocus <info@deepfocus.cc>',
+        from: 'info@deepfocus.cc',
         to: [this.userEmail, 'timeo.j.williams@gmail.com'],
         subject: 'Hello World',
         html: emailBody
@@ -79,10 +78,10 @@ export class EmailService {
   public composeEmailBody(deepWorkHours: number, topSites: TopSite[]): string {
     return `
       <div style="font-family: Arial, sans-serif; color: #fff; background-color: #000; padding: 20px; border-radius: 8px; max-width: 80%; margin: auto;">
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-          <h1 style="color: #ecf0f1; margin: 0;">deepFocus</h1>
-        </div>
-        <h2 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Daily Summary</h2>
+<div style="display: flex; align-items: center; margin-bottom: 20px;">
+  <h1 style="color: #ecf0f1; margin: 0; font-style: italic; font-family: 'Montserrat', sans-serif;">deepFocus</h1>
+</div>
+
         <p style="font-size: 16px; margin-bottom: 20px;">Total Deep Work Hours: <strong>${deepWorkHours}</strong></p>
         
         <h3 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 30px;">Top 5 Sites Visited</h3>
@@ -95,7 +94,7 @@ export class EmailService {
             </li>
           `
             )
-            .join('')}
+            .join('')}  
         </ul>
       </div>
     `
@@ -111,7 +110,7 @@ export class EmailService {
       .reduce((total, tracker) => total + tracker.timeSpent, 0)
 
     // Convert milliseconds to hours
-    return productiveTime / (1000 * 60 * 60)
+    return parseFloat((productiveTime / (1000 * 60 * 60)).toFixed(1))
   }
 
   private async getTopSites(): Promise<TopSite[]> {
@@ -123,11 +122,29 @@ export class EmailService {
       .sort((a, b) => b.timeSpent - a.timeSpent)
       .slice(0, 3)
       .map((tracker) => ({
-        url: tracker.url,
+        url: this.formatUrl(tracker.url),
         timeSpent: Math.round(tracker.timeSpent / (1000 * 60)) // Convert ms to minutes
       }))
 
     return topSites
+  }
+
+  private formatUrl(url: string): string {
+    try {
+      const { hostname } = new URL(url)
+      const parts = hostname.split('.').filter((part) => part !== 'www')
+
+      if (parts.length >= 2) {
+        const subdomain = parts.slice(0, -2).join('.') // Get everything before the domain and TLD
+        const domain = parts.slice(-2).join('.') // Get the domain and TLD
+        return `${capitalizeFirstLetter(subdomain)}.${capitalizeFirstLetter(domain)}`
+      } else {
+        return capitalizeFirstLetter(parts[0])
+      }
+    } catch (error) {
+      console.error('Error formatting URL:', error)
+      return url // Return the original URL if there's an error
+    }
   }
 
   public async testEmailSend(): Promise<void> {

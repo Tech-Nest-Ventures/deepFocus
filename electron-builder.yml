@@ -12,6 +12,7 @@ extraResources:
 asar: true
 asarUnpack:
   - 'resources/**'
+  - 'node_modules/get-windows/main'
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

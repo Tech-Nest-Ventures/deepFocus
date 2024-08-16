@@ -12,6 +12,10 @@ export function getUrlFromResult(result: Result): string | undefined {
   return undefined
 }
 
+export function capitalizeFirstLetter(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 function getDomainFromUrl(url: string): string {
   const parsedUrl = parse(url)
   isProductiveUrl(parsedUrl.hostname || '')
