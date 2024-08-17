@@ -1,27 +1,29 @@
-name: Create Release
-
 on:
   push:
     tags:
       - 'create-*'
 
+name: Create Release
+
 jobs:
   build:
     name: Create Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # Ensures the GITHUB_TOKEN has write permissions for the repository contents
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@master
+      - name: Get package name for tag
+        id: tag
+        run: |
+          pkgName=${GITHUB_REF_NAME%@*}
+          echo "::set-output name=pkgName::$pkgName"
       - name: Create Release for Tag
         id: release_tag
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
           body: |
-            Refer to https://github.com/timeowilliams/deepFocus
+            Please refer to [CHANGELOG.md](https://github.com/timeowilliams/deepWork/blob/${{ github.ref_name }}/packages/${{ steps.tag.outputs.pkgName }}/CHANGELOG.md) for details.
