@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Component } from 'solid-js'
 import Versions from './components/Versions'
 import logo from './assets/deepWork.svg'
@@ -17,16 +18,16 @@ const App: Component = () => {
       </div>
       <p class="tip">Coming soon! Stay up to date with weekly features</p>
       <div class="actions">
-        <div class="action">
+        {/* <div class="action">
           <a target="_blank" rel="noreferrer" onClick={testEmailSend}>
             Send Test Email
           </a>
-        </div>
-        <div class="action">
+        </div> */}
+        {/* <div class="action">
           <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
             Send IPC
           </a>
-        </div>
+        </div> */}
         <div class="action">
           <a
             href="https://github.com/timeowilliams/deepFocus/releases/download/v1.1.0/deepfocus-1.0.0.dmg"
