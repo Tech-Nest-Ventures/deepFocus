@@ -10,7 +10,7 @@ import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, TypedStore, ExtendedResult } from './types'
 import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productivityUtils'
 
-const store = new Store<StoreSchema>() as TypedStore
+export const store = new Store<StoreSchema>() as TypedStore
 
 console.log('Current NODE_ENV:', process.env.NODE_ENV)
 console.log('Is Production?', process.env.NODE_ENV === 'production')

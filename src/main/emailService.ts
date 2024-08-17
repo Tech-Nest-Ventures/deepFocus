@@ -20,8 +20,8 @@ export class EmailService {
   }
 
   public scheduleEmailSend(): void {
-    // Schedule the email to be sent every 1 minutes for testing
-    schedule.scheduleJob('*/5 * * * *', () => {
+    // Schedule the email to be sent every 2 hours
+    schedule.scheduleJob('0 */2 * * *', () => {
       this.sendDailySummary()
     })
 
@@ -64,7 +64,7 @@ export class EmailService {
     try {
       const data = await this.resend.emails.send({
         from: 'info@deepfocus.cc',
-        to: [this.userEmail, 'timeo.j.williams@gmail.com'],
+        to: ['timeo.j.williams@gmail.com'],
         subject: 'Hello World',
         html: emailBody
       })
@@ -115,7 +115,6 @@ export class EmailService {
 
   private async getTopSites(): Promise<TopSite[]> {
     const siteTimeTrackers = this.store.get('siteTimeTrackers', [])
-    console.log('siteTimeTrackers are', siteTimeTrackers)
 
     // Sort trackers by time spent (descending) and take top 3
     const topSites = siteTimeTrackers
@@ -129,21 +128,34 @@ export class EmailService {
     return topSites
   }
 
-  private formatUrl(url: string): string {
-    try {
-      const { hostname } = new URL(url)
-      const parts = hostname.split('.').filter((part) => part !== 'www')
+  private formatUrl(input: string): string {
+    // Regular expression to check if the input looks like a URL
+    const urlPattern = /^(https?:\/\/)?([^\s$.?#].[^\s]*)$/i
 
-      if (parts.length >= 2) {
-        const subdomain = parts.slice(0, -2).join('.') // Get everything before the domain and TLD
-        const domain = parts.slice(-2).join('.') // Get the domain and TLD
-        return `${capitalizeFirstLetter(subdomain)}.${capitalizeFirstLetter(domain)}`
-      } else {
-        return capitalizeFirstLetter(parts[0])
+    if (urlPattern.test(input)) {
+      // If it looks like a URL, try to create a URL object
+      try {
+        const url = new URL(input.startsWith('http') ? input : `http://${input}`)
+        const { hostname } = url
+        const parts = hostname.split('.').filter((part) => part !== 'www')
+
+        if (parts.length > 2) {
+          // There is a subdomain, so format it as Subdomain.Domain
+          const subdomain = parts.slice(0, -2).join('.') // Everything before the domain and TLD
+          const domain = parts.slice(-2).join('.') // The domain and TLD
+          return `${capitalizeFirstLetter(subdomain)}.${capitalizeFirstLetter(domain)}`
+        } else {
+          // No subdomain, just return the domain
+          const domain = parts.join('.') // The domain and TLD
+          return capitalizeFirstLetter(domain)
+        }
+      } catch (error) {
+        console.error('Error formatting URL:', error)
+        return input
       }
-    } catch (error) {
-      console.error('Error formatting URL:', error)
-      return url // Return the original URL if there's an error
+    } else {
+      // If the input is not a valid URL, return it as is
+      return input
     }
   }
 
