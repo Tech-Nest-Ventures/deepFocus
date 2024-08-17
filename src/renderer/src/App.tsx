@@ -4,10 +4,10 @@ import Versions from './components/Versions'
 import logo from './assets/deepWork.svg'
 
 const App: Component = () => {
-  const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
+  // const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
 
   // Call this function when you want to test the email send
-  const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
+  //const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
 
   return (
     <>
@@ -30,7 +30,7 @@ const App: Component = () => {
         </div> */}
         <div class="action">
           <a
-            href="https://github.com/timeowilliams/deepFocus/releases/download/v1.1.0/deepfocus-1.0.0.dmg"
+            href="https://github.com/timeowilliams/deepFocus/releases/download/v1.2.6/deepfocus-1.0.0.dmg"
             download="deepwork-1.1.0.dmg"
           >
             Download deepFocus (MacOS only)
