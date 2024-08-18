@@ -30,7 +30,7 @@ export class EmailService {
       this.sendDailySummary()
     })
   }
-  // Avoid sending emails to customers on the weekends
+  // Avoid sending emails to customers on the weekends. Setting Default to True until optionality is established
   private async shouldSendEmail(): Promise<boolean> {
     const now = new Date()
     const isWeekend = now.getDay() === 0 || now.getDay() === 6

@@ -34,7 +34,9 @@ if (app.isPackaged) {
   dotenv.config()
 }
 
-console.log('RESEND_API_KEY after loading:', process.env.RESEND_API_KEY)
+if (!process.env.RESEND_API_KEY) {
+  console.log('RESEND API MISSING')
+}
 
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
