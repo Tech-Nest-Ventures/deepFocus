@@ -30,8 +30,8 @@ const App: Component = () => {
         </div> */}
         <div class="action">
           <a
-            href="https://github.com/timeowilliams/deepFocus/releases/download/v1.2.6/deepfocus-1.0.0.dmg"
-            download="deepwork-1.1.0.dmg"
+            href="https://github.com/timeowilliams/deepFocus/releases/download/create-v1.2.6/deepfocus-1.2.6.dmg"
+            download="deepwork-1.2.6.dmg"
           >
             Download deepFocus (MacOS only)
           </a>
