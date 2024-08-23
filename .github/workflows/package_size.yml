@@ -1,0 +1,26 @@
+name: Package Size Report
+
+on: pull_request
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  pkg-size-report:
+    name: Package Size Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Package size report
+        uses: pkg-size/action@v1.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
