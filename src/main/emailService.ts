@@ -20,12 +20,12 @@ export class EmailService {
   }
 
   public scheduleEmailSend(): void {
-    // Schedule the email to be sent every 2 hours
-    schedule.scheduleJob('0 */2 * * *', () => {
+    // Schedule the email to be sent every 4 hours
+    schedule.scheduleJob('0 */4 * * *', () => {
       this.sendDailySummary()
     })
 
-    // Schedule the email to be sent at the end of each day (e.g., 11:59 PM)
+    // Schedule the email to be sent at the end of each day (11:59 PM)
     schedule.scheduleJob('59 23 * * *', () => {
       this.sendDailySummary()
     })

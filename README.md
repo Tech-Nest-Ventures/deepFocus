@@ -1,81 +1,88 @@
-###
+# DeepFocus
 
-![DeepFocus](resources/gaudmire-ig.png)
+![DeepFocus Logo](resources/gaudmire-ig.png)
 
-// TODO: VS Code extension to preview Markdown
+[![Build Status](https://img.shields.io/travis/username/repo.svg)](https://travis-ci.org/username/repo)
+[![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Mission:
-Building the oura for productivity. Get insights on how productive you are.
+> Building the Oura for productivity. Get insights on how productive you are.
 
-Currently, deepFocus doesn't run on weekends.
+## Table of Contents
 
-It'll send you an email at the end of everyday with the total number of deep work hours.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Goals](#goals)
+- [Philosophy](#philosophy)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-### Goals
+## Features
 
-~~1. Allow all users to download on any machine through an Electron JS app ~~
-~~~~~2. Using JS for now, eventually will move to TS. 
-Considering using SolidJS instead of React as well. Also, set up a CI/CD pipeline and allow users to download automatic releases. 
-Also add a changelog using conventional commits. Application will get FULL System Access and collect logs every min to observe what the active window is.~~ ~~~
+- Daily email summaries of deep work hours
+- Productivity tracking and insights
+- Customizable productivity site labeling
 
-3. Allow users to enter a goal in their session.We'll ask in onboarding whether certain sites should be labeled as productive or not productive.
+## Tech Stack
 
-For the future:
+![Electron](https://img.shields.io/badge/-Electron-47848F?style=flat-square&logo=electron&logoColor=white)
+![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![SolidJS](https://img.shields.io/badge/-SolidJS-2C4F7C?style=flat-square&logo=solid&logoColor=white)
 
-1. Migrate from using electron-storage to SQL-lite/more capable database to handle more data + complex queries.
+## Getting Started
 
-### Philosophy
+### Prerequisites
 
-For example,
-WhatsApp,
-Reddit
-Instagram
-Facebook
-Gmail
+- Node.js LTS >=v20.12.2
+- npm v10.5.0 or pnpm
 
-^ Probably shouldn't be labeled as Deep work for most Knowledge workers and it takes away your foxus.
-
-This product was built primarily for Software Engineers/Product/Designers in mind.
-
-Also, there's 10,000 hours to become an expert.
-
-Coding is the same thing. We want to face imposter syndrome & create systems > not focusing as much on TC & the end goal, but also reflecting on the journey and remind yourself that you ARE putting the work in. And if you're not,
-hopefully deepFocus helps get you to do it.
-
-Some ideas:
-https://www.electronjs.org/docs/latest/tutorial/progress-bar (Progress Bar showing how much deep work done)
-
-Note:
-
-## Recommended IDE Setup
-
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-
-## Project Setup
-
-Note: I recommend using node LTS >=v20.12.2 & npm v10.5.0
-
-### Install
+### Installation
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-### Development
+## Usage
 
-```bash
-$ pnpm dev
-```
+[Add screenshots or examples here]
 
-### Build
+## Goals
 
-```bash
-# For windows
-$ pnpm build:win
+- [x] Allow all users to download on any machine through an Electron JS app
+- [x] Migrate to TypeScript and implement SolidJS
+- [x] Set up CI/CD pipeline and automatic releases
+- [x] Implement changelog using conventional commits
+- [ ] Allow users to enter session goals and customize productive/unproductive sites
+- [ ] Migrate from electron-storage to SQLite for improved data handling
 
-# For macOS
-$ pnpm build:mac
+## Philosophy
 
-# For Linux
-$ pnpm build:linux
-```
+DeepFocus is built primarily for Software Engineers, Product Managers, and Designers. We believe in:
+
+- Creating systems to combat imposter syndrome
+- Focusing on the journey, not just the end goal
+- Encouraging consistent, focused work
+
+## Roadmap
+
+- Implement progress bar for deep work visualization
+- Enhance data analysis and insights
+- Improve user onboarding experience
+
+## Contributing
+
+[Add contributing guidelines here]
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+[Your Name] - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
+
+Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)

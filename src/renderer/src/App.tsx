@@ -5,6 +5,9 @@ import logo from './assets/deepWork.svg'
 
 const App: Component = () => {
   // const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
+  console.log(window?.electron)
+
+  const getLatestRelease = (): string => 'v1.2.6'
 
   // Call this function when you want to test the email send
   //const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
@@ -16,7 +19,7 @@ const App: Component = () => {
         the future of <span class="solid">deep</span>
         <span class="ts">Focus</span>
       </div>
-      <p class="tip">Coming soon! Stay up to date with weekly features</p>
+      <p class="tip">Latest Release: {getLatestRelease()}</p>
       <div class="actions">
         {/* <div class="action">
           <a target="_blank" rel="noreferrer" onClick={testEmailSend}>
