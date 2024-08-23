@@ -1,8 +1,10 @@
 # DeepFocus
 
-![DeepFocus Logo](resources/gaudmire-ig.png)
+<p align="center">
+  <img src="resources/icon.png" alt="DeepFocus Logo" width="200" height="200">
+</p>
 
-[![Build Status](https://img.shields.io/travis/username/repo.svg)](https://travis-ci.org/username/repo)
+[![Release](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -48,7 +50,7 @@ pnpm install
 
 ## Usage
 
-[Add screenshots or examples here]
+
 
 ## Goals
 
@@ -58,6 +60,8 @@ pnpm install
 - [x] Implement changelog using conventional commits
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
+- [ ] Add integration and automated tests
+- [ ] Implement user authentication and cloud-based data persistence
 
 ## Philosophy
 
@@ -72,6 +76,9 @@ DeepFocus is built primarily for Software Engineers, Product Managers, and Desig
 - Implement progress bar for deep work visualization
 - Enhance data analysis and insights
 - Improve user onboarding experience
+- Develop comprehensive test suite for main and renderer processes
+- Create cloud synchronization for user data and preferences
+- Implement secure user authentication system
 
 ## Contributing
 
@@ -83,6 +90,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-[Your Name] - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
+[Timeo Williams] - [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
 
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Project Link: [https://github.com/timeowilliams/deepFocus](https://github.com/timeowilliams/deepFocus)

@@ -33,3 +33,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+  update-badge:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get latest release version
+        id: get_version
+        run: |
+          VERSION=$(gh release list --limit 1 | cut -f1)
+          echo "::set-output name=version::$VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create badge
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: <your-gist-id>
+          filename: deepfocus-version.json
+          label: version
+          message: ${{ steps.get_version.outputs.version }}
+          color: blue
