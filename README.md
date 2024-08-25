@@ -4,7 +4,7 @@
   <img src="resources/icon.png" alt="DeepFocus Logo" width="200" height="200">
 </p>
 
-[![Release](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml)
+[![Release](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml)
 [![Integration Tests](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
