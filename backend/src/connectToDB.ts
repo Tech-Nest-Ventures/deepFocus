@@ -11,10 +11,7 @@ if (!uri) {
 async function connectToDB(): Promise<typeof mongoose> {
   try {
     // Connect to the MongoDB server using Mongoose
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
+    await mongoose.connect(uri)
     console.log('Connected successfully to MongoDB server')
     return mongoose
   } catch (error) {

@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import { connectToDB } from './connectToDB'
 import User from './models/User'
 
-const app = express()
+export const app = express()
 const port = process.env.PORT || 5000
 
 dotenv.config()
@@ -37,17 +37,57 @@ app.get('/api/v1/test-db', async (req, res) => {
 })
 
 // Authentication routes
+app.post('/api/v1/auth/signup', async (req, res) => {
+  try {
+    const { username, password, firstName, lastName, country, language } = req.body
+    console.log('Incoming signup request for username:', username)
+    await connectToDB()
+    const existingUser = await User.findOne({ username })
+
+    if (existingUser) {
+      return res.status(400).send('Username already exists')
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      country,
+      language
+    })
+    await newUser.save()
+
+    const token = jwt.sign({ username: newUser.username }, jwtSecret, {
+      expiresIn: '2h'
+    })
+    res.json({ token })
+  } catch (error) {
+    console.error('Signup error:', error)
+    res.status(500).send('Server error')
+  }
+})
+
 app.post('/api/v1/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body
     console.log('Incoming login request for username:', username)
     await connectToDB()
-    const user = await User.findOne({ username }) // Use the User model
+    const user = await User.findOne({ username })
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign({ username: user.username }, jwtSecret, {
-        expiresIn: '2h'
-      })
+      const token = jwt.sign(
+        {
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          country: user.country,
+          language: user.language
+        },
+        jwtSecret,
+        { expiresIn: '2h' }
+      )
       res.json({ token })
     } else {
       res.status(400).send('Invalid credentials')
@@ -58,6 +98,6 @@ app.post('/api/v1/auth/login', async (req, res) => {
   }
 })
 
-app.listen(port, '0.0.0.0', function () {
+app.listen(port, function () {
   console.log(`Server is running on port ${port}`)
 })
