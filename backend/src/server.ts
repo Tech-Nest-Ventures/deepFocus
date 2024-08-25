@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import cors from 'cors'
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
-import { connectToDB } from './connectToDB'
+import { connectToDB, closeDBConnection } from './connectToDB'
 import User from './models/User'
 
 export const app = express()
@@ -66,6 +66,8 @@ app.post('/api/v1/auth/signup', async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error)
     res.status(500).send('Server error')
+  } finally {
+    await closeDBConnection()
   }
 })
 
@@ -95,6 +97,8 @@ app.post('/api/v1/auth/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error)
     res.status(500).send('Server error')
+  } finally {
+    await closeDBConnection()
   }
 })
 
@@ -103,6 +107,7 @@ app.delete('/api/v1/auth/delete', async (req, res) => {
   const { username } = req.body
 
   try {
+    await connectToDB()
     const user = await User.findOneAndDelete({ username })
     if (!user) {
       return res.status(404).send('User not found')
@@ -110,6 +115,8 @@ app.delete('/api/v1/auth/delete', async (req, res) => {
     res.status(200).send('User deleted successfully')
   } catch (error) {
     res.status(500).send('Internal server error')
+  } finally {
+    await closeDBConnection()
   }
 })
 

@@ -19,5 +19,13 @@ async function connectToDB(): Promise<typeof mongoose> {
     throw error
   }
 }
+async function closeDBConnection(): Promise<void> {
+  try {
+    await mongoose.connection.close()
+    console.log('Disconnected successfully from MongoDB server')
+  } catch (error) {
+    console.error('Error closing the database connection:', error)
+  }
+}
 
-export { connectToDB }
+export { connectToDB, closeDBConnection }
