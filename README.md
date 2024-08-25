@@ -50,6 +50,8 @@ pnpm install
 
 ## Usage
 
+Note, for running this app locally, you may run into issues with active-window. Try running `npm install --ignore-scripts` to fix this. More info [here](https://github.com/sindresorhus/active-window/issues/10).
+
 ## Goals
 
 - [x] Allow all users to download on any machine through an Electron JS app
