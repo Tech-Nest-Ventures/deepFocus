@@ -33,6 +33,37 @@ function isProductiveUrl(url: string): boolean {
   return !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
 }
 
+export function formatUrl(input: string): string {
+  // Regular expression to check if the input looks like a URL
+  const urlPattern = /^(https?:\/\/)?([^\s$.?#].[^\s]*)$/i
+
+  if (urlPattern.test(input)) {
+    // If it looks like a URL, try to create a URL object
+    try {
+      const url = new URL(input.startsWith('http') ? input : `http://${input}`)
+      const { hostname } = url
+      const parts = hostname.split('.').filter((part) => part !== 'www')
+
+      if (parts.length > 2) {
+        // There is a subdomain, so format it as Subdomain.Domain
+        const subdomain = parts.slice(0, -2).join('.') // Everything before the domain and TLD
+        const domain = parts.slice(-2).join('.') // The domain and TLD
+        return `${capitalizeFirstLetter(subdomain)}.${capitalizeFirstLetter(domain)}`
+      } else {
+        // No subdomain, just return the domain
+        const domain = parts.join('.') // The domain and TLD
+        return capitalizeFirstLetter(domain)
+      }
+    } catch (error) {
+      console.error('Error formatting URL:', error)
+      return input
+    }
+  } else {
+    // If the input is not a valid URL, return it as is
+    return input
+  }
+}
+
 export function formatTime(milliseconds: number): string {
   const seconds = Math.floor(milliseconds / 1000)
   const minutes = Math.floor(seconds / 60)

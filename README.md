@@ -5,6 +5,7 @@
 </p>
 
 [![Release](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml)
+[![Integration Tests](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -50,7 +51,7 @@ pnpm install
 
 ## Usage
 
-
+Note, for running this app locally, you may run into issues with active-window. Try running `npm install --ignore-scripts` to fix this. More info [here](https://github.com/sindresorhus/active-window/issues/10).
 
 ## Goals
 

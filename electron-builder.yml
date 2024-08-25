@@ -9,6 +9,8 @@ files:
 extraResources:
   - from: '.env'
     to: '.env'
+  - from: 'src/main/emailTemplates'
+    to: 'emailTemplates'
 asar: true
 asarUnpack:
   - 'resources/**'
