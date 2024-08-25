@@ -11,7 +11,7 @@ describe('Authentication Endpoints', () => {
   })
 
   after((done) => {
-    server.close(done) // Close the server after tests
+    server.close(done)
   })
 
   describe('POST /api/v1/auth/signup', () => {

@@ -10,7 +10,7 @@
     "format": "prettier --write \"**/*.+(js|ts|jsx|tsx|json|css|md|yml|yaml|html)\"",
     "format:check": "prettier --check \"**/*.+(js|ts|jsx|tsx|json|css|md|yml|yaml|html)\"",
     "build": "copyfiles -u 1 src/**/* dist",
-    "test:integration": "tsx node_modules/mocha/bin/mocha src/tests/integration/**/*.test.ts"
+    "test:integration": "tsx node_modules/mocha/bin/mocha src/tests/integration/**/*.test.ts --exit"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
