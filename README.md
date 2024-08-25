@@ -50,8 +50,6 @@ pnpm install
 
 ## Usage
 
-
-
 ## Goals
 
 - [x] Allow all users to download on any machine through an Electron JS app

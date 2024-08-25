@@ -1,7 +1,10 @@
 import { Resend } from 'resend'
 import * as schedule from 'node-schedule'
 import { TypedStore } from './types'
-import { capitalizeFirstLetter } from './productivityUtils'
+import { formatUrl } from './productivityUtils'
+import fs from 'fs'
+import path from 'path'
+import { app } from 'electron'
 
 interface TopSite {
   url: string
@@ -121,58 +124,37 @@ export class EmailService {
       .sort((a, b) => b.timeSpent - a.timeSpent)
       .slice(0, 3)
       .map((tracker) => ({
-        url: this.formatUrl(tracker.url),
+        url: formatUrl(tracker.url),
         timeSpent: Math.round(tracker.timeSpent / (1000 * 60)) // Convert ms to minutes
       }))
 
     return topSites
   }
 
-  private formatUrl(input: string): string {
-    // Regular expression to check if the input looks like a URL
-    const urlPattern = /^(https?:\/\/)?([^\s$.?#].[^\s]*)$/i
-
-    if (urlPattern.test(input)) {
-      // If it looks like a URL, try to create a URL object
-      try {
-        const url = new URL(input.startsWith('http') ? input : `http://${input}`)
-        const { hostname } = url
-        const parts = hostname.split('.').filter((part) => part !== 'www')
-
-        if (parts.length > 2) {
-          // There is a subdomain, so format it as Subdomain.Domain
-          const subdomain = parts.slice(0, -2).join('.') // Everything before the domain and TLD
-          const domain = parts.slice(-2).join('.') // The domain and TLD
-          return `${capitalizeFirstLetter(subdomain)}.${capitalizeFirstLetter(domain)}`
-        } else {
-          // No subdomain, just return the domain
-          const domain = parts.join('.') // The domain and TLD
-          return capitalizeFirstLetter(domain)
-        }
-      } catch (error) {
-        console.error('Error formatting URL:', error)
-        return input
-      }
-    } else {
-      // If the input is not a valid URL, return it as is
-      return input
-    }
-  }
-
   public async testEmailSend(): Promise<void> {
     console.log('Testing email send...')
 
     // Use placeholder data for testing
-    const testDeepWorkHours = 5
-    const testTopSites: TopSite[] = [
-      { url: 'example.com', timeSpent: 120 },
-      { url: 'github.com', timeSpent: 90 },
-      { url: 'stackoverflow.com', timeSpent: 60 },
-      { url: 'docs.google.com', timeSpent: 45 },
-      { url: 'chat.openai.com', timeSpent: 30 }
-    ]
+    // const testDeepWorkHours = 5
+    // const testTopSites: TopSite[] = [
+    //   { url: 'example.com', timeSpent: 120 },
+    //   { url: 'github.com', timeSpent: 90 },
+    //   { url: 'stackoverflow.com', timeSpent: 60 },
+    //   { url: 'docs.google.com', timeSpent: 45 },
+    //   { url: 'chat.openai.com', timeSpent: 30 }
+    // ]
 
-    const emailBody = this.composeEmailBody(testDeepWorkHours, testTopSites)
+    // const emailBody = this.composeEmailBody(testDeepWorkHours, testTopSites)
+    // const emailBody = fs.readFileSync(path.join(__dirname, 'emailTemplates/welcome.html'), 'utf8')
+    console.log('app.getAppPath() ', app.getAppPath())
+    console.log(
+      'path.join(app.getAppPath(), "emailTemplates/welcome.html") ',
+      path.join(app.getAppPath(), '/src/main/emailTemplates/welcome.html')
+    )
+    const emailBody = fs.readFileSync(
+      path.join(app.getAppPath(), '/src/main/emailTemplates/welcome.html'),
+      'utf8'
+    )
 
     try {
       const data = await this.resend.emails.send({

@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
 import fs from 'fs'
 import dotenv from 'dotenv'
-// import icon from '../../resources/icon.png?asset'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { activeWindow } = await import('get-windows')
 import { EmailService } from './emailService'
@@ -24,7 +23,6 @@ if (app.isPackaged) {
   console.log('Env file path:', envPath)
   console.log('Env file exists:', fs.existsSync(envPath))
   if (fs.existsSync(envPath)) {
-    console.log('Env file contents:', fs.readFileSync(envPath, 'utf8'))
     dotenv.config({ path: envPath })
   } else {
     console.error('Env file not found in production build')
@@ -43,7 +41,6 @@ const emailService = new EmailService(process.env.EMAIL || '', store)
 export let currentSiteTimeTrackers: SiteTimeTracker[] = []
 function saveSiteTimeTrackers(): void {
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
-  // console.log('Saved site time trackers:', currentSiteTimeTrackers)
 }
 
 async function loadSiteTimeTrackers(): Promise<void> {

@@ -10,7 +10,7 @@ const App: Component = () => {
   const getLatestRelease = (): string => 'v1.2.6'
 
   // Call this function when you want to test the email send
-  //const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
+  const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
 
   return (
     <>
@@ -21,11 +21,11 @@ const App: Component = () => {
       </div>
       <p class="tip">Latest Release: {getLatestRelease()}</p>
       <div class="actions">
-        {/* <div class="action">
+        <div class="action">
           <a target="_blank" rel="noreferrer" onClick={testEmailSend}>
             Send Test Email
           </a>
-        </div> */}
+        </div>
         {/* <div class="action">
           <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
             Send IPC
