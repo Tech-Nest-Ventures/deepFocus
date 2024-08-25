@@ -15,9 +15,9 @@ describe('Authentication Endpoints', () => {
   })
 
   describe('POST /api/v1/auth/signup', () => {
-    it('should create a new user and return a token', async () => {
+    it('should create a new user and return a token, then delete the user', async () => {
       const res = await request(server).post('/api/v1/auth/signup').send({
-        username: 'testuser@gmail.com',
+        username: 'testuser1@gmail.com',
         password: 'testpassword',
         firstName: 'Test',
         lastName: 'User',
@@ -27,6 +27,11 @@ describe('Authentication Endpoints', () => {
 
       expect(res.status).to.equal(200)
       expect(res.body).to.have.property('token')
+
+      // Delete the user after creation
+      await request(server).delete('/api/v1/auth/delete').send({
+        username: 'testuser1@gmail.com'
+      })
     })
 
     it('should return 400 if username already exists', async () => {

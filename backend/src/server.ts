@@ -98,6 +98,21 @@ app.post('/api/v1/auth/login', async (req, res) => {
   }
 })
 
+// Add the delete user route
+app.delete('/api/v1/auth/delete', async (req, res) => {
+  const { username } = req.body
+
+  try {
+    const user = await User.findOneAndDelete({ username })
+    if (!user) {
+      return res.status(404).send('User not found')
+    }
+    res.status(200).send('User deleted successfully')
+  } catch (error) {
+    res.status(500).send('Internal server error')
+  }
+})
+
 app.listen(port, function () {
   console.log(`Server is running on port ${port}`)
 })
