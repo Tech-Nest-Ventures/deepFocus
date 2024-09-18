@@ -3,9 +3,10 @@ import request from 'supertest'
 import { expect } from 'chai'
 import { app } from '../../server'
 import { Server } from 'http'
-describe('Authentication Endpoints', () => {
+describe('Authentication Endpoints', function () {
   let server: Server
-
+  this.timeout(10000)
+  const baseUsername = 'testuser'
   before((done) => {
     server = app.listen(5001, done) // Start the server on a different port for testing
   })
@@ -14,44 +15,58 @@ describe('Authentication Endpoints', () => {
     server.close(done)
   })
 
+  afterEach(async () => {
+    await request(server)
+      .delete('/api/v1/auth/delete')
+      .send({
+        username: `${baseUsername}@gmail.com`
+      })
+  })
+
   describe('POST /api/v1/auth/signup', () => {
     it('should create a new user and return a token, then delete the user', async () => {
-      const res = await request(server).post('/api/v1/auth/signup').send({
-        username: 'testuser1@gmail.com',
-        password: 'testpassword',
-        firstName: 'Test',
-        lastName: 'User',
-        country: 'Testland',
-        language: 'English'
-      })
+      const res = await request(server)
+        .post('/api/v1/auth/signup')
+        .send({
+          username: `${baseUsername}@gmail.com`,
+          password: 'testpassword',
+          firstName: 'Test',
+          lastName: 'User',
+          country: 'Testland',
+          language: 'English'
+        })
 
       expect(res.status).to.equal(200)
       expect(res.body).to.have.property('token')
 
       // Delete the user after creation
       await request(server).delete('/api/v1/auth/delete').send({
-        username: 'testuser1@gmail.com'
+        username: 'testuser@gmail.com'
       })
     })
 
     it('should return 400 if username already exists', async () => {
-      await request(server).post('/api/v1/auth/signup').send({
-        username: 'testuser@gmail.com',
-        password: 'testpassword',
-        firstName: 'Test',
-        lastName: 'User',
-        country: 'Testland',
-        language: 'English'
-      })
+      await request(server)
+        .post('/api/v1/auth/signup')
+        .send({
+          username: `${baseUsername}@gmail.com`,
+          password: 'testpassword',
+          firstName: 'Test',
+          lastName: 'User',
+          country: 'Testland',
+          language: 'English'
+        })
 
-      const res = await request(server).post('/api/v1/auth/signup').send({
-        username: 'testuser@gmail.com',
-        password: 'testpassword',
-        firstName: 'Test',
-        lastName: 'User',
-        country: 'Testland',
-        language: 'English'
-      })
+      const res = await request(server)
+        .post('/api/v1/auth/signup')
+        .send({
+          username: `${baseUsername}@gmail.com`,
+          password: 'testpassword',
+          firstName: 'Test',
+          lastName: 'User',
+          country: 'Testland',
+          language: 'English'
+        })
 
       expect(res.status).to.equal(400)
       expect(res.text).to.equal('Username already exists')
@@ -60,18 +75,20 @@ describe('Authentication Endpoints', () => {
 
   describe('POST /api/v1/auth/login', () => {
     it('should login an existing user and return a token', async () => {
-      await request(server).post('/api/v1/auth/signup').send({
-        username: 'testuser2@gmail.com',
-        password: 'testpassword',
-        firstName: 'Test',
-        lastName: 'User',
-        country: 'Testland',
-        language: 'English'
-      })
+      await request(server)
+        .post('/api/v1/auth/signup')
+        .send({
+          username: `${baseUsername}@gmail.com`,
+          password: 'testpassword',
+          firstName: 'Test',
+          lastName: 'User',
+          country: 'Testland',
+          language: 'English'
+        })
 
       const res = await request(server)
         .post('/api/v1/auth/login')
-        .send({ username: 'testuser2@gmail.com', password: 'testpassword' })
+        .send({ username: `${baseUsername}@gmail.com`, password: 'testpassword' })
 
       expect(res.status).to.equal(200)
       expect(res.body).to.have.property('token')
