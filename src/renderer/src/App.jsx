@@ -1,17 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import type { Component } from 'solid-js'
 import Versions from './components/Versions'
 import logo from './assets/deepWork.svg'
-
-const App: Component = () => {
+const App = () => {
   // const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
   console.log(window?.electron)
-
-  const getLatestRelease = (): string => 'v1.2.6'
-
+  const getLatestRelease = () => 'v1.2.6'
   // Call this function when you want to test the email send
-  const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
-
+  const testEmailSend = () => window?.electron.ipcRenderer.send('test-email-send')
   return (
     <>
       <img alt="logo" class="logo" src={logo} />
@@ -45,5 +39,4 @@ const App: Component = () => {
     </>
   )
 }
-
 export default App
