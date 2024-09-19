@@ -16,6 +16,6 @@ module.exports = {
       }
     ],
     // Disable the no-unused-vars rule or allow specific patterns like unused state variables
-    'no-unused-vars': ['warn', { 'varsIgnorePattern': '^_' }]
+    'no-unused-vars': ['warn', { varsIgnorePattern: '^_' }]
   }
 }
