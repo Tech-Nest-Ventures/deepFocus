@@ -27,7 +27,7 @@ export type AuthForm = InferInput<typeof AuthSchema>
 
 function Login() {
   const [authForm, { Form, Field }] = createForm<AuthForm>()
-  const [loginError, setLoginError] = createSignal<null | string>(null)
+  const [_loginError, setLoginError] = createSignal<null | string>(null)
   const navigate = useNavigate()
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
