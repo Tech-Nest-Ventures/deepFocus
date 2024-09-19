@@ -1,49 +1,81 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import type { Component } from 'solid-js'
-import Versions from './components/Versions'
+import { lazy, Suspense, onMount, createSignal } from 'solid-js'
+import { Router, Route, A, useLocation } from '@solidjs/router'
+import { render } from 'solid-js/web'
+import './assets/main.css'
+
 import logo from './assets/deepWork.svg'
 
-const App: Component = () => {
-  // const ipcHandle = (): void => window?.electron.ipcRenderer.send('ping')
-  console.log(window?.electron)
+// Lazy load the components
+const Login = lazy(() => import('./Login'))
+const Signup = lazy(() => import('./Signup'))
+const Versions = lazy(() => import('./Versions'))
+const HelloWorld = () => <h1>Hello World!</h1>
 
-  const getLatestRelease = (): string => 'v1.2.6'
+const App = (props) => {
+  const [isLoggedIn, setIsLoggedIn] = createSignal(false)
+  const location = useLocation()
 
-  // Call this function when you want to test the email send
-  const testEmailSend = (): void => window?.electron.ipcRenderer.send('test-email-send')
+  // Check for the token in localStorage on component mount
+  onMount(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      setIsLoggedIn(true)
+    }
+  })
+
+  // Logout function to remove the token and set login state to false
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setIsLoggedIn(false)
+  }
 
   return (
     <>
-      <img alt="logo" class="logo" src={logo} />
-      <div class="text">
-        the future of <span class="solid">deep</span>
-        <span class="ts">Focus</span>
-      </div>
-      <h1 class="bg-gray-500 text-center text-white">Hi Tailwind has been integrated.</h1>
-      <p class="tip">Latest Release: {getLatestRelease()}</p>
-      <div class="actions">
-        <div class="action">
-          <a target="_blank" rel="noreferrer" onClick={testEmailSend}>
-            Send Test Email
-          </a>
+      <header class="flex justify-between items-center p-4 bg-gray-800 w-full mb-20">
+        <img alt="logo" class="logo" src={logo} />
+        <div class="text">
+          the future of <span class="solid">deep</span>
+          <span class="ts">Focus</span>
         </div>
-        {/* <div class="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div> */}
-        <div class="action">
-          <a
-            href="https://github.com/timeowilliams/deepFocus/releases/download/create-v1.2.6/deepfocus-1.2.6.dmg"
-            download="deepwork-1.2.6.dmg"
-          >
-            Download deepFocus (MacOS only)
-          </a>
-        </div>
-      </div>
-      <Versions />
+        <nav class="flex space-x-4">
+          <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
+            Home
+          </A>
+          {!isLoggedIn() ? (
+            <>
+              {location.pathname !== '/login' ? (
+                <A href="/signup" class="bg-blue-500 px-4 py-2 rounded text-white">
+                  Sign Up
+                </A>
+              ) : (
+                <A href="/login" class="bg-blue-500 px-4 py-2 rounded text-white">
+                  Login
+                </A>
+              )}
+            </>
+          ) : (
+            <button onClick={handleLogout} class="bg-red-500 px-4 py-2 rounded text-white">
+              Logout
+            </button>
+          )}
+        </nav>
+      </header>
+
+      {props.children}
     </>
   )
 }
 
-export default App
+render(
+  () => (
+    <Router root={App}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Route path="/" component={Versions} />
+        <Route path="/login" component={Login} />
+        <Route path="/hello-world" component={HelloWorld} />
+        <Route path="/signup" component={Signup} />
+      </Suspense>
+    </Router>
+  ),
+  document.getElementById('root') as HTMLElement
+)

@@ -1,32 +1,3 @@
-/*
-{
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "allowJs": true,
-    "noEmit": true,
-    "strict": true,
-    "types": [
-      "vinxi/types/client"
-    ],
-    "isolatedModules": true,
-    "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "~/src/renderer/*": [
-        "./src/*"
-      ]
-    }
-  }
-}
-  */
-
 {
   "files": [],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }]

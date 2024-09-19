@@ -8,6 +8,7 @@ body {
   background-image: url('./wavy-lines.svg');
   background-size: cover;
   user-select: none;
+  overflow-y: show;
 }
 
 code {
@@ -32,6 +33,8 @@ code {
   justify-content: center;
   flex-direction: column;
   margin-bottom: 80px;
+  width: 100%;
+  height: 100%;
 }
 
 .logo {

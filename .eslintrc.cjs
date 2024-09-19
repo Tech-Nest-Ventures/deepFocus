@@ -5,5 +5,15 @@ module.exports = {
     'plugin:solid/typescript',
     '@electron-toolkit/eslint-config-ts/recommended',
     '@electron-toolkit/eslint-config-prettier'
-  ]
+  ],
+  rules: {
+    '@typescript-eslint/explicit-function-return-type': [
+      'error',
+      {
+        allowExpressions: true, // Allow return types to be inferred for expressions
+        allowTypedFunctionExpressions: true, // Allow typed function expressions
+        allowMethods: true // Allow methods in classes to omit return types
+      }
+    ]
+  }
 }
