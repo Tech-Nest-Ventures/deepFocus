@@ -14,6 +14,8 @@ module.exports = {
         allowTypedFunctionExpressions: true, // Allow typed function expressions
         allowMethods: true // Allow methods in classes to omit return types
       }
-    ]
+    ],
+    // Disable the no-unused-vars rule or allow specific patterns like unused state variables
+    'no-unused-vars': ['warn', { 'varsIgnorePattern': '^_' }]
   }
 }
