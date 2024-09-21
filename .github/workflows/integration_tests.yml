@@ -29,5 +29,6 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{secrets.RESEND_API_KEY}}
         run: npm run test:integration
         working-directory: ./backend

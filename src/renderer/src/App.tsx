@@ -1,7 +1,9 @@
 import { lazy, Suspense, onMount, createSignal } from 'solid-js'
 import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
+import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
+import User from './types'
 
 import logo from './assets/deepWork.svg'
 
@@ -13,20 +15,24 @@ const HelloWorld = () => <h1>Hello World!</h1>
 
 const App = (props) => {
   const [isLoggedIn, setIsLoggedIn] = createSignal(false)
+  const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
 
   // Check for the token in localStorage on component mount
   onMount(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
+    const token = localStorage.getItem('token') as string
+    const user = localStorage.getItem('user')
+    if (token && user) {
       setIsLoggedIn(true)
+      sendUserToBackend(JSON.parse(user))
+      setIsNewUser(false)
     }
   })
 
-  // Logout function to remove the token and set login state to false
   const handleLogout = () => {
     localStorage.removeItem('token')
     setIsLoggedIn(false)
+    setIsNewUser(false)
   }
 
   return (
@@ -43,11 +49,18 @@ const App = (props) => {
           </A>
           {!isLoggedIn() ? (
             <>
-              {location.pathname !== '/login' ? (
-                <A href="/signup" class="bg-blue-500 px-4 py-2 rounded text-white">
-                  Sign Up
-                </A>
+              {isNewUser() ? (
+                location.pathname !== '/signup' ? (
+                  <A href="/signup" class="bg-blue-500 px-4 py-2 rounded text-white">
+                    Sign Up
+                  </A>
+                ) : (
+                  <A href="/login" class="bg-blue-500 px-4 py-2 rounded text-white">
+                    Login
+                  </A>
+                )
               ) : (
+                // Show Login by default for returning users
                 <A href="/login" class="bg-blue-500 px-4 py-2 rounded text-white">
                   Login
                 </A>

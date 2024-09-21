@@ -9,6 +9,11 @@
   "compilerOptions": {
     "composite": true,
     "target": "ESNext",
-    "types": ["electron-vite/node"]
-  }
+    "types": ["electron-vite/node"],
+    "baseUrl": ".",
+    "paths": {
+      "@electron-toolkit/*": ["node_modules/@electron-toolkit/*"]
+    }
+  },
+  "exclude": ["node_modules"]
 }

@@ -1,32 +1,50 @@
 import { parentPort } from 'worker_threads'
 import schedule from 'node-schedule'
 import axios from 'axios'
-import { currentSiteTimeTrackers, saveSiteTimeTrackers, store } from '.'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
-
-let currentUsername = null // Store the username globally
+let currentUsername = null
+let workerSiteTimeTrackers = []
+let workerStore = {}
 
 dayjs.extend(isoWeek)
 dayjs.extend(weekday)
 
 // Listen for messages from the main thread
 parentPort?.on('message', (message) => {
-  if (message.type === 'SET_USERNAME') {
-    console.log('message received from main thread', message.type)
-    currentUsername = message.username
+  console.log('Worker received message:', message)
+
+  if (message.type === 'SET_USER_INFO') {
+    const { username, firstName, lastName, country, language } = message.user
+    currentUsername = username
+    console.log(
+      `User info received in worker: ${firstName} ${lastName} from ${country} (${language})`
+    )
+  }
+  if (message.type === 'SET_TRACKERS') {
+    workerSiteTimeTrackers = message.currentSiteTimeTrackers
+    workerStore = message.storeData
+    console.log('Trackers and store data set in worker')
   }
 })
+
+// Just a simple function to confirm the worker is running
+setInterval(() => {
+  if (currentUsername) {
+    console.log('Worker is running for user:', currentUsername, 'at', dayjs().format())
+  } else {
+    console.log('Worker is running, but no username set yet.')
+  }
+}, 5000) // Log every 5 seconds to confirm the worker is alive
 
 // Schedule daily reset at midnight
 schedule.scheduleJob('0 0 * * *', () => {
   if (currentUsername) {
     console.log('Performing daily reset...')
     persistDailyData(currentUsername) // Provide the username
-    resetDailyCounters() // Still locally resetting
+    parentPort.postMessage({ type: 'RESET_DAILY' }) // Inform main thread to reset
   } else {
     console.error('No username available for daily reset.')
   }
@@ -37,7 +55,7 @@ schedule.scheduleJob('0 0 * * 0', () => {
   if (currentUsername) {
     console.log('Performing weekly aggregation...')
     aggregateWeeklyData(currentUsername) // Provide the username
-    resetWeeklyData() // Still locally resetting weekly data
+    parentPort.postMessage({ type: 'RESET_WEEKLY' }) // Inform main thread to reset
   } else {
     console.error('No username available for weekly aggregation.')
   }
@@ -48,7 +66,7 @@ async function persistDailyData(username) {
   const today = dayjs().format('YYYY-MM-DD')
   console.log('Today is ', today) // This will print the current date in 'YYYY-MM-DD' format
 
-  const dailyData = currentSiteTimeTrackers.map((tracker) => ({
+  const dailyData = workerSiteTimeTrackers.map((tracker) => ({
     username,
     url: tracker.url,
     title: tracker.title,
@@ -56,8 +74,7 @@ async function persistDailyData(username) {
     date: today
   }))
 
-  // Save the daily data to electron-store (locally)
-  store.set(`dailyData.${today}`, dailyData)
+  workerStore.set(`dailyData.${today}`, dailyData)
   console.log('Daily data persisted:', dailyData)
 
   try {
@@ -68,13 +85,6 @@ async function persistDailyData(username) {
   } catch (error) {
     console.error('Error sending daily activity data to backend:', error)
   }
-}
-
-function resetDailyCounters() {
-  currentSiteTimeTrackers.forEach((tracker) => {
-    tracker.timeSpent = 0 // Reset time spent on each site
-  })
-  saveSiteTimeTrackers()
 }
 
 async function aggregateWeeklyData(username) {
@@ -101,9 +111,4 @@ async function aggregateWeeklyData(username) {
   } catch (error) {
     console.error('Error sending weekly data to backend:', error)
   }
-}
-
-function resetWeeklyData() {
-  currentSiteTimeTrackers.length = 0
-  saveSiteTimeTrackers() // Clear the trackers for a new week
 }

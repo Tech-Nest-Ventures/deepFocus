@@ -20,24 +20,66 @@ console.log('Is app packaged?', app.isPackaged)
 
 let schedulerWorkerPath: string
 
-// if (app.isPackaged)  {
-//   // Use the compiled JavaScript file in production
-//   schedulerWorkerPath = join(__dirname, 'schedulerWorker.js');
-// } else {
-//   // Use TypeScript file in development, handled by Vite
-//   schedulerWorkerPath = new URL('./schedulerWorker.ts', import.meta.url).pathname;
-// }
 schedulerWorkerPath = join(__dirname, 'worker.js')
-
 console.log('schedulerWorkerPath', schedulerWorkerPath)
+
 // Create the worker thread
 const schedulerWorker = new Worker(schedulerWorkerPath)
-// Pass messages to the worker thread
-ipcMain.on('send-username', (event, username) => {
-  schedulerWorker.postMessage({ type: 'SET_USERNAME', username, event })
+
+// When the user logs in or signs up and sends user info
+ipcMain.on('send-username', (event, user) => {
+  console.log('Received user data from frontend:', user)
+
+  // Store user data in electron-store
+  store.set('user', {
+    username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    country: user.country,
+    language: user.language
+  })
+
+  // You can pass this data to the worker or use it elsewhere
+  schedulerWorker.postMessage({ type: 'SET_USER_INFO', user })
 })
 
-// Handle worker thread events, logging, or errors here
+// Optionally, you can check if the user data already exists when the app starts
+const savedUser = store.get('user')
+if (savedUser) {
+  console.log('User data loaded from electron-store:', savedUser)
+  schedulerWorker.postMessage({ type: 'SET_USER_INFO', user: savedUser })
+}
+
+ipcMain.on('send-data-to-worker', (event) => {
+  console.log('event is ', event)
+  schedulerWorker.postMessage({
+    type: 'SET_TRACKERS',
+    currentSiteTimeTrackers: store.get('siteTimeTrackers'),
+    storeData: store // Pass the whole store data if needed
+  })
+})
+
+schedulerWorker.on('message', (message) => {
+  if (message.type === 'RESET_DAILY') {
+    resetDailyCounters() // Reset the daily counters in main process
+  } else if (message.type === 'RESET_WEEKLY') {
+    resetWeeklyData() // Reset the weekly data in main process
+  }
+})
+
+function resetDailyCounters() {
+  currentSiteTimeTrackers.forEach((tracker) => {
+    tracker.timeSpent = 0 // Reset time spent on each site
+  })
+  store.set('siteTimeTrackers', currentSiteTimeTrackers)
+}
+
+function resetWeeklyData() {
+  currentSiteTimeTrackers.length = 0 // Clear all trackers for the new week
+  store.set('siteTimeTrackers', currentSiteTimeTrackers)
+}
+
+// Handle worker thread events, logging, or errors
 schedulerWorker.on('error', (err) => {
   console.error('Worker Error:', err)
 })
@@ -47,7 +89,7 @@ schedulerWorker.on('message', (message) => {
 })
 
 if (app.isPackaged) {
-  // Production logic here
+  // Production logic
   const envPath = path.join(process.resourcesPath, '.env')
   console.log('Env file path:', envPath)
   console.log('Env file exists:', fs.existsSync(envPath))
@@ -57,7 +99,7 @@ if (app.isPackaged) {
     console.error('Env file not found in production build')
   }
 } else {
-  // Development logic here
+  // Development logic
   dotenv.config()
 }
 
@@ -71,7 +113,6 @@ export function saveSiteTimeTrackers(): void {
 async function loadSiteTimeTrackers(): Promise<void> {
   const savedTrackers = store.get('siteTimeTrackers', [])
   currentSiteTimeTrackers = savedTrackers
-  // console.log('Loaded site time trackers:', currentSiteTimeTrackers)
 }
 
 // Call this function periodically, e.g., every 5 minutes
@@ -110,7 +151,6 @@ function processActivityData(_windowInfoData: ExtendedResult | undefined): {
   _windowInfoData: ExtendedResult | undefined
 } {
   console.log('processActivityScore')
-  // const productivityScore = calculateProductivityScore(_currOpenWindowsData)
 
   if (_windowInfoData?.siteTimeTracker) {
     console.log(
@@ -127,13 +167,11 @@ function processActivityData(_windowInfoData: ExtendedResult | undefined): {
 
 async function createWindow(): Promise<BrowserWindow> {
   console.log('createWindow()')
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: true,
     autoHideMenuBar: false,
-    ...(process.platform === 'linux' ? {} : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       nodeIntegrationInWorker: true,
@@ -150,13 +188,10 @@ async function createWindow(): Promise<BrowserWindow> {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    console.log(' mainWindow.webContents.setWindowOpenHandler')
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -166,43 +201,32 @@ async function createWindow(): Promise<BrowserWindow> {
   return mainWindow
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   console.log('app.whenReady()')
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
   ipcMain.on('test-email-send', async () => {
-    console.info('sending email')
     await emailService.testEmailSend()
   })
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   await createWindow()
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  ipcMain.on('logout', () => {
+    store.delete('user')
+    console.log('User data cleared from electron-store.')
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('before-quit', () => {
   schedulerWorker.terminate()
+})
+
+app.on('browser-window-created', (_, window) => {
+  optimizer.watchWindowShortcuts(window)
 })
 
 app.on('window-all-closed', () => {

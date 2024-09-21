@@ -3,11 +3,12 @@ import { createSignal } from 'solid-js'
 import { createForm } from '@modular-forms/solid'
 import { useNavigate } from '@solidjs/router'
 import { email, object, string, pipe, minLength, safeParse } from 'valibot'
-
+import { sendUserToBackend } from './lib/utils'
 import { IconBrandGithub, IconLoader } from './components/ui/icons'
 import { Button } from './components/ui/button'
 import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
+import User from './types'
 
 import type { InferInput } from 'valibot'
 
@@ -49,14 +50,13 @@ function Login() {
       }
 
       const result = await response.json()
-      console.log('User logged in successfully:', result)
+      const { token, user } = result as { token: string; user: User }
 
-      if (result.token) {
-        localStorage.setItem('token', result.token)
-        navigate('/')
-      }
-
-      // Handle successful login (e.g., redirect to dashboard)
+      // Store token and user info in localStorage
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      sendUserToBackend(user)
+      navigate('/')
     } catch (error) {
       console.error('Login error:', error)
       setLoginError('Login failed. Please try again.')

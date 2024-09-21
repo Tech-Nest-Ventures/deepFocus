@@ -1,6 +1,6 @@
-import { resolve } from 'path';
-import { defineConfig, externalizeDepsPlugin, bytecodePlugin } from 'electron-vite';
-import solid from 'vite-plugin-solid';
+import { resolve } from 'path'
+import { defineConfig, externalizeDepsPlugin, bytecodePlugin } from 'electron-vite'
+import solid from 'vite-plugin-solid'
 
 export default defineConfig({
   main: {
@@ -10,19 +10,24 @@ export default defineConfig({
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'src/main/index.ts'),
-          worker: resolve(__dirname, 'src/main/schedulerWorker.js')
+          worker: resolve(__dirname, 'src/main/schedulerWorker.js') // Correct path to worker file
         },
         output: {
           format: 'es',
-          entryFileNames: '[name].js',
-        }
+          entryFileNames: '[name].js'
+        },
+        // Externalize unnecessary dependencies from the worker
+        external: ['electron', 'path', 'fs', 'dotenv', '@electron-toolkit/utils', 'electron-store']
       }
     }
   },
   preload: {
     plugins: [externalizeDepsPlugin(), bytecodePlugin()],
     build: {
-      outDir: 'out/preload'
+      outDir: 'out/preload',
+      rollupOptions: {
+        external: ['electron']
+      }
     }
   },
   renderer: {
@@ -36,4 +41,4 @@ export default defineConfig({
       outDir: 'out/renderer'
     }
   }
-});
+})

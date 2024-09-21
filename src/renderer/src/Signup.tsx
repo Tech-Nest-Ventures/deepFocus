@@ -6,6 +6,8 @@ import { IconBrandGithub, IconLoader } from './components/ui/icons'
 import { Button } from './components/ui/button'
 import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
+import { sendUserToBackend } from './lib/utils'
+import User from './types'
 
 import type { SubmitHandler } from '@modular-forms/solid'
 import type { InferInput } from 'valibot'
@@ -51,13 +53,15 @@ function Signup() {
       const result = await response.json()
       console.log('User signed up successfully:', result)
 
-      if (result.token) {
-        localStorage.setItem('token', result.token)
-        navigate('/')
-        console.info('Navigating to home')
-      }
+      const { token, user } = result as { token: string; user: User }
 
-      // Handle successful signup (e.g., redirect to login)
+      // Store token and user info in localStorage
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      sendUserToBackend(user)
+      // Handle successful login (e.g., redirect to dashboard)
+      navigate('/')
+      console.info('Navigating to home')
     } catch (error) {
       console.error('Signup error:', error)
       setSignUpError('Sign-up failed. Please try again.')
