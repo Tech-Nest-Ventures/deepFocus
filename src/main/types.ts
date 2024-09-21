@@ -19,7 +19,7 @@ export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTime
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
-  set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void
+  set(key: string, value: any): void;
 }
 
 export { Store }

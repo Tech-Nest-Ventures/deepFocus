@@ -8,33 +8,33 @@ if (!uri) {
   throw new Error('MONGODB_URI is not defined in the environment variables')
 }
 
-let isConnected = false
+let isConnected = false // Track connection state
 
-async function connectToDB(): Promise<typeof mongoose> {
-  if (isConnected) {
+async function connectToDB() {
+  if (!isConnected) {
+    try {
+      await mongoose.connect(uri)
+
+      console.log('Connected successfully to MongoDB server')
+      isConnected = true
+    } catch (error) {
+      console.error('Error connecting to MongoDB:', error)
+      throw error
+    }
+  } else {
     console.log('Already connected to MongoDB')
-    return mongoose
-  }
-
-  try {
-    // Connect to the MongoDB server using Mongoose
-    await mongoose.connect(uri)
-    isConnected = true
-    console.log('Connected successfully to MongoDB server')
-    return mongoose
-  } catch (error) {
-    console.error('Error connecting to the database:', error)
-    throw error
   }
 }
 
-async function closeDBConnection(): Promise<void> {
-  try {
-    await mongoose.connection.close()
-    isConnected = false
-    console.log('Disconnected successfully from MongoDB server')
-  } catch (error) {
-    console.error('Error closing the database connection:', error)
+async function closeDBConnection() {
+  if (isConnected) {
+    try {
+      await mongoose.connection.close()
+      console.log('Disconnected successfully from MongoDB server')
+      isConnected = false
+    } catch (error) {
+      console.error('Error disconnecting from MongoDB:', error)
+    }
   }
 }
 

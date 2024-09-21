@@ -1,13 +1,29 @@
-import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import solid from 'vite-plugin-solid'
+import { resolve } from 'path';
+import { defineConfig, externalizeDepsPlugin, bytecodePlugin } from 'electron-vite';
+import solid from 'vite-plugin-solid';
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    build: {
+      outDir: 'out/main',
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'src/main/index.ts'),
+          worker: resolve(__dirname, 'src/main/schedulerWorker.js')
+        },
+        output: {
+          format: 'es',
+          entryFileNames: '[name].js',
+        }
+      }
+    }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    build: {
+      outDir: 'out/preload'
+    }
   },
   renderer: {
     resolve: {
@@ -15,6 +31,9 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [solid()]
+    plugins: [solid()],
+    build: {
+      outDir: 'out/renderer'
+    }
   }
-})
+});

@@ -21,6 +21,7 @@
     "format": "^0.2.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^8.5.4",
+    "resend": "^4.0.0",
     "tsx": "^4.18.0"
   },
   "devDependencies": {

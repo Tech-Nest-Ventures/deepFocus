@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose'
+import { Document, Schema, model } from 'mongoose'
 
 // Define the User interface
 interface IUser extends Document {
@@ -26,7 +26,7 @@ const UserSchema: Schema = new Schema({
 })
 
 // Create the User model
-const User = mongoose.model<IUser>('User', UserSchema)
+const User = model<IUser>('User', UserSchema)
 
 export default User
 export { IUser }

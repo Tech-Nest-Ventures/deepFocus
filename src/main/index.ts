@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, powerMonitor } from 'electron'
+import { Worker } from 'worker_threads'
 import path, { join } from 'path'
 import fs from 'fs'
 import dotenv from 'dotenv'
@@ -17,6 +18,34 @@ console.log('Is Development?', process.env.NODE_ENV === 'development')
 
 console.log('Is app packaged?', app.isPackaged)
 
+let schedulerWorkerPath: string
+
+// if (app.isPackaged)  {
+//   // Use the compiled JavaScript file in production
+//   schedulerWorkerPath = join(__dirname, 'schedulerWorker.js');
+// } else {
+//   // Use TypeScript file in development, handled by Vite
+//   schedulerWorkerPath = new URL('./schedulerWorker.ts', import.meta.url).pathname;
+// }
+schedulerWorkerPath = join(__dirname, 'worker.js')
+
+console.log('schedulerWorkerPath', schedulerWorkerPath)
+// Create the worker thread
+const schedulerWorker = new Worker(schedulerWorkerPath)
+// Pass messages to the worker thread
+ipcMain.on('send-username', (event, username) => {
+  schedulerWorker.postMessage({ type: 'SET_USERNAME', username, event })
+})
+
+// Handle worker thread events, logging, or errors here
+schedulerWorker.on('error', (err) => {
+  console.error('Worker Error:', err)
+})
+
+schedulerWorker.on('message', (message) => {
+  console.log('Worker Message:', message)
+})
+
 if (app.isPackaged) {
   // Production logic here
   const envPath = path.join(process.resourcesPath, '.env')
@@ -32,14 +61,10 @@ if (app.isPackaged) {
   dotenv.config()
 }
 
-if (!process.env.RESEND_API_KEY) {
-  console.log('RESEND API MISSING')
-}
-
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
 export let currentSiteTimeTrackers: SiteTimeTracker[] = []
-function saveSiteTimeTrackers(): void {
+export function saveSiteTimeTrackers(): void {
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
 }
 
@@ -54,7 +79,16 @@ setInterval(saveSiteTimeTrackers, 5 * 60 * 1000)
 
 function startActivityMonitoring(): void {
   console.log('startActivityMonitoring()')
+
   setInterval(async () => {
+    const idleTime = powerMonitor.getSystemIdleTime()
+
+    if (idleTime > 60) {
+      // If idle for over 1 minute, stop tracking
+      console.log(`System is idle for ${idleTime} seconds.`)
+      return
+    }
+
     try {
       const windowInfo = await activeWindow()
 
@@ -64,15 +98,12 @@ function startActivityMonitoring(): void {
           url: getUrlFromResult(windowInfo),
           siteTimeTracker: updateSiteTimeTracker(windowInfo)
         }
-        const result = processActivityData(extendedResult)
-        if (result?._windowInfoData?.url) {
-          console.log('result is ', result)
-        }
+        processActivityData(extendedResult)
       }
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 60000)
+  }, 60000) // Every minute
 }
 
 function processActivityData(_windowInfoData: ExtendedResult | undefined): {
@@ -105,6 +136,7 @@ async function createWindow(): Promise<BrowserWindow> {
     ...(process.platform === 'linux' ? {} : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
+      nodeIntegrationInWorker: true,
       sandbox: false
     }
   })
@@ -169,6 +201,10 @@ app.whenReady().then(async () => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+app.on('before-quit', () => {
+  schedulerWorker.terminate()
+})
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
