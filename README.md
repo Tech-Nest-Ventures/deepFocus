@@ -4,8 +4,8 @@
   <img src="resources/icon.png" alt="DeepFocus Logo" width="200" height="200">
 </p>
 
-[![Release](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/timeowilliams/deepFocus/actions/workflows/release.yml)
-[![Integration Tests](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/timeowilliams/deepFocus/actions/workflows/integration_tests.yml)
+[![Release](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml)
+[![Integration Tests](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/integration_tests.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -59,10 +59,10 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [x] Migrate to TypeScript and implement SolidJS
 - [x] Set up CI/CD pipeline and automatic releases
 - [x] Implement changelog using conventional commits
+- [x] Add integration and automated tests
+- [x] Implement user authentication and cloud-based data persistence
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
-- [ ] Add integration and automated tests
-- [ ] Implement user authentication and cloud-based data persistence
 
 ## Philosophy
 
