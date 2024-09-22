@@ -10,7 +10,7 @@ export default defineConfig({
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'src/main/index.ts'),
-          worker: resolve(__dirname, 'src/main/schedulerWorker.js') // Correct path to worker file
+          worker: resolve(__dirname, 'src/main/worker.ts')
         },
         output: {
           format: 'es',

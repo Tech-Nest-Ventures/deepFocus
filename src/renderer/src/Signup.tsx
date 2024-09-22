@@ -8,6 +8,7 @@ import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
 import { sendUserToBackend } from './lib/utils'
 import User from './types'
+import { API_BASE_URL } from './config'
 
 import type { SubmitHandler } from '@modular-forms/solid'
 import type { InferInput } from 'valibot'
@@ -31,7 +32,7 @@ function Signup() {
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
       console.log('values are ', values)
-      const response = await fetch('http://localhost:5000/api/v1/auth/signup', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

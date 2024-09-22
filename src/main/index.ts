@@ -1,12 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain, powerMonitor } from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
+import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { activeWindow } = await import('get-windows')
-import { EmailService } from './emailService'
 import Store from 'electron-store'
+
+import { EmailService } from './emailService'
 import { StoreSchema, SiteTimeTracker, TypedStore, ExtendedResult } from './types'
 import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productivityUtils'
 
@@ -39,8 +41,15 @@ ipcMain.on('send-username', (event, user) => {
     language: user.language
   })
 
-  // You can pass this data to the worker or use it elsewhere
-  schedulerWorker.postMessage({ type: 'SET_USER_INFO', user })
+  // Retrieve existing site time trackers (if available) or initialize an empty array
+  currentSiteTimeTrackers = store.get('siteTimeTrackers') || []
+
+  // Pass this data to the worker for tracking purposes
+  schedulerWorker.postMessage({
+    type: 'SET_USER_INFO',
+    user,
+    currentSiteTimeTrackers
+  })
 })
 
 // Optionally, you can check if the user data already exists when the app starts
@@ -203,6 +212,13 @@ async function createWindow(): Promise<BrowserWindow> {
 
 app.whenReady().then(async () => {
   console.log('app.whenReady()')
+  const today = dayjs().format('YYYY-MM-DD')
+  const lastResetDate = store.get('lastResetDate')
+
+  if (lastResetDate !== today) {
+    console.log('Missed daily reset from previous session, performing now.')
+    schedulerWorker.postMessage({ type: 'RESET_DAILY', username: 'last_logged_in_user' })
+  }
   electronApp.setAppUserModelId('com.electron')
 
   ipcMain.on('test-email-send', async () => {
@@ -215,9 +231,15 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
-  ipcMain.on('logout', () => {
+  ipcMain.on('logout-user', () => {
+    console.log('User logging out, clearing data...')
+
+    // Clear user data and site trackers from electron-store
     store.delete('user')
-    console.log('User data cleared from electron-store.')
+    store.set('siteTimeTrackers', []) // Reset trackers upon logout
+
+    // Pass a message to the worker to reset trackers
+    schedulerWorker.postMessage({ type: 'RESET_TRACKERS' })
   })
 })
 

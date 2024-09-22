@@ -1,10 +1,9 @@
 import { lazy, Suspense, onMount, createSignal } from 'solid-js'
 import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
+
 import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
-import User from './types'
-
 import logo from './assets/deepWork.svg'
 
 // Lazy load the components

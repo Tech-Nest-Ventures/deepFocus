@@ -3,14 +3,18 @@ import { createSignal } from 'solid-js'
 import { createForm } from '@modular-forms/solid'
 import { useNavigate } from '@solidjs/router'
 import { email, object, string, pipe, minLength, safeParse } from 'valibot'
+
 import { sendUserToBackend } from './lib/utils'
 import { IconBrandGithub, IconLoader } from './components/ui/icons'
 import { Button } from './components/ui/button'
 import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
 import User from './types'
+import { API_BASE_URL } from './config'
 
 import type { InferInput } from 'valibot'
+
+console.log(`Server URL: ${API_BASE_URL}`)
 
 export const AuthSchema = object({
   email: pipe(string(), email()),
@@ -34,7 +38,7 @@ function Login() {
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
       console.log('Login values are ', values)
-      const response = await fetch('http://localhost:5000/api/v1/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

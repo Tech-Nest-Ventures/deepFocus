@@ -12,7 +12,8 @@ export interface User {
 export interface StoreSchema {
   unproductiveSites?: string[]
   siteTimeTrackers: SiteTimeTracker[]
-  user?: User // Add the user field to StoreSchema
+  user?: User
+  lastResetDate?: string
 }
 export interface SiteTimeTracker {
   url: string
