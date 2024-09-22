@@ -21,11 +21,12 @@ export default defineConfig({
         },
         // Externalize unnecessary dependencies from the worker
         external: ['electron', 'path', 'fs', 'dotenv', '@electron-toolkit/utils', 'electron-store']
-      },
-
+      }
     },
     define: {
-      'process.env.API_BASE_URL': JSON.stringify(process.env.VITE_SERVER_URL_PROD || 'https://backend-production-5eec.up.railway.app'),
+      'process.env.API_BASE_URL': JSON.stringify(
+        process.env.VITE_SERVER_URL_PROD || 'https://backend-production-5eec.up.railway.app'
+      )
     }
   },
   preload: {
@@ -48,7 +49,9 @@ export default defineConfig({
       outDir: 'out/renderer'
     },
     define: {
-      'process.env.API_BASE_URL': JSON.stringify(process.env.VITE_SERVER_URL_PROD || 'https://backend-production-5eec.up.railway.app'),
+      'process.env.API_BASE_URL': JSON.stringify(
+        process.env.VITE_SERVER_URL_PROD || 'https://backend-production-5eec.up.railway.app'
+      )
     }
   }
 })

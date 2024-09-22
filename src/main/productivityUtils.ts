@@ -1,5 +1,5 @@
 import { parse } from 'url'
-import { MacOSResult, Result, SiteTimeTracker} from './types'
+import { MacOSResult, Result, SiteTimeTracker } from './types'
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -77,7 +77,10 @@ export function formatTime(milliseconds: number): string {
   }
 }
 
-export function updateSiteTimeTracker(windowInfo: Result, timeTrackers: SiteTimeTracker[]): SiteTimeTracker {
+export function updateSiteTimeTracker(
+  windowInfo: Result,
+  timeTrackers: SiteTimeTracker[]
+): SiteTimeTracker {
   const currentTime = Date.now()
   const url = getUrlFromResult(windowInfo) || windowInfo.title
 

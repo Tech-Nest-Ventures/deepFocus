@@ -1,4 +1,3 @@
-
 // Currently use electron-store for persisting data in our electron application.
 export interface User {
   username: string
@@ -22,7 +21,6 @@ export interface SiteTimeTracker {
 }
 
 export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTimeTracker }
-
 
 export type Options = {
   /**
