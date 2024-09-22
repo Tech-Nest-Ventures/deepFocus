@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**/*.ts'
+      - '**/*.js'
+      - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read # for checkout
