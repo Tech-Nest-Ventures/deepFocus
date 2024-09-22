@@ -58,6 +58,8 @@ function Login() {
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       sendUserToBackend(user)
+      window.location.reload()
+
       navigate('/')
     } catch (error) {
       console.error('Login error:', error)

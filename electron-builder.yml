@@ -14,7 +14,7 @@ extraResources:
 asar: true
 asarUnpack:
   - 'resources/**'
-  - 'node_modules/get-windows/main'
+  - 'node_modules/@deepfocus/get-windows/**/*'
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
@@ -22,6 +22,7 @@ mac:
     NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    NSAppleEventsUsageDescription: Please allow access to script browser applications to detect the current URL when triggering instant lookup
   notarize: true
 dmg:
   artifactName: ${name}-${version}.${ext}

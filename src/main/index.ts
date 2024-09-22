@@ -5,8 +5,9 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-const { activeWindow } = await import('get-windows')
+const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
+
 
 import { EmailService } from './emailService'
 import { StoreSchema, SiteTimeTracker, ExtendedResult } from './types'
@@ -27,9 +28,12 @@ setupEnvironment()
 const isProduction = process.env.ENV === 'production'
 console.log('isProduction?', isProduction)
 console.log('email', process.env.EMAIL)
-console.log('API_BASE_URL', process.env.VITE_SERVER_URL_PROD)
+console.log('API_BASE_URL', process.env.VITE_SERVER_URL_PROD )
+
+
 
 const emailService = new EmailService(process.env.EMAIL || '', store)
+
 
 // Initialize environment variables based on the environment
 function setupEnvironment(): void {
@@ -45,7 +49,7 @@ function setupEnvironment(): void {
 }
 
 // Store user data in the electron-store and send to worker
-function handleUserData(user): void {
+function  handleUserData(user): void {
   store.set('user', {
     username: user.username,
     firstName: user.firstName,
@@ -73,7 +77,7 @@ function loadUserData() {
 function resetCounters(type: 'daily' | 'weekly') {
   if (type === 'daily') {
     console.log('Resetting Daily Trackers')
-    currentSiteTimeTrackers.forEach((tracker) => (tracker.timeSpent = 0))
+    currentSiteTimeTrackers.forEach(tracker => (tracker.timeSpent = 0))
     store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
   } else if (type === 'weekly') {
     console.log('Resetting Weekly Trackers')
@@ -112,12 +116,8 @@ function startActivityMonitoring() {
 // Process activity data from active window
 function processActivityData(_windowInfoData: ExtendedResult | undefined) {
   if (_windowInfoData?.siteTimeTracker) {
-    console.log(
-      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}`
-    )
-    console.log(
-      `Last active timestamp: ${new Date(_windowInfoData.siteTimeTracker.lastActiveTimestamp).toISOString()}`
-    )
+    console.log(`Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}`)
+    console.log(`Last active timestamp: ${new Date(_windowInfoData.siteTimeTracker.lastActiveTimestamp).toISOString()}`)
   }
 }
 
@@ -158,7 +158,7 @@ async function createWindow(): Promise<BrowserWindow> {
   return mainWindow
 }
 
-app.commandLine.appendSwitch('remote-allow-origins', 'devtools://devtools')
+app.commandLine.appendSwitch('remote-allow-origins', 'devtools://devtools');
 // Main app ready event
 app.whenReady().then(async () => {
   console.log('ready!')
@@ -173,6 +173,7 @@ app.whenReady().then(async () => {
     console.log('Missed daily reset from previous session, performing now.')
     schedulerWorker.postMessage({ type: 'RESET_DAILY' })
   }
+
 
   await createWindow()
 
@@ -202,7 +203,7 @@ app.on('window-all-closed', () => {
 const schedulerWorkerPath = join(__dirname, 'worker.js')
 const schedulerWorker = new Worker(schedulerWorkerPath, {
   workerData: {
-    API_BASE_URL: process.env.VITE_SERVER_URL_PROD
+    API_BASE_URL: process.env.VITE_SERVER_URL_PROD 
   }
 })
 
@@ -212,3 +213,6 @@ schedulerWorker.on('message', (message) => {
 })
 schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
 schedulerWorker.on('message', (message) => console.log('Worker Message:', message))
+
+
+

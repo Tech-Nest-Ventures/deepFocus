@@ -60,6 +60,8 @@ function Signup() {
       localStorage.setItem('user', JSON.stringify(user))
       sendUserToBackend(user)
       // Handle successful login (e.g., redirect to dashboard)
+      window.location.reload()
+
       navigate('/')
       console.info('Navigating to home')
     } catch (error) {
