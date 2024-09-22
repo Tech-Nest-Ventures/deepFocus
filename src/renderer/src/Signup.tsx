@@ -31,7 +31,6 @@ function Signup() {
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
-      console.log('values are ', values)
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
         method: 'POST',
         headers: {

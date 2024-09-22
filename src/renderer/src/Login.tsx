@@ -21,13 +21,6 @@ export const AuthSchema = object({
   password: pipe(string(), minLength(8))
 })
 
-// Example usage
-const result = safeParse(AuthSchema, {
-  email: 'jane@example.com',
-  password: '12345678'
-})
-
-console.log(result)
 export type AuthForm = InferInput<typeof AuthSchema>
 
 function Login() {
@@ -37,6 +30,11 @@ function Login() {
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
+      console.log('Values are ', values)
+      safeParse(AuthSchema, {
+        email: values.email,
+        password: values.password
+      })
       console.log('Login values are ', values)
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
@@ -79,7 +77,7 @@ function Login() {
               </TextField>
             )}
           </Field>
-          <Field name="email">
+          <Field name="password">
             {(_, props) => (
               <TextField class="gap-1">
                 <TextFieldLabel class="sr-only">Password</TextFieldLabel>
