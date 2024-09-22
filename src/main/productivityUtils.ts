@@ -1,9 +1,8 @@
 import { parse } from 'url'
-import { currentSiteTimeTrackers } from '.'
-import { MacOSResult, Result, SiteTimeTracker } from './types'
+import { MacOSResult, Result, SiteTimeTracker} from './types'
 
 //TODO: Needs to be updated with user's specific sites
-const unproductiveSites = ['gmail.com', 'instagram.com', 'facebook.com']
+const unproductiveSites = ['instagram.com', 'facebook.com']
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {
@@ -78,11 +77,11 @@ export function formatTime(milliseconds: number): string {
   }
 }
 
-export function updateSiteTimeTracker(windowInfo: Result): SiteTimeTracker {
+export function updateSiteTimeTracker(windowInfo: Result, timeTrackers: SiteTimeTracker[]): SiteTimeTracker {
   const currentTime = Date.now()
   const url = getUrlFromResult(windowInfo) || windowInfo.title
 
-  let tracker = currentSiteTimeTrackers.find((t) => t.url === url)
+  let tracker = timeTrackers.find((t) => t.url === url)
   if (tracker) {
     console.log('Updating existing tracker')
     tracker.timeSpent += currentTime - tracker.lastActiveTimestamp
@@ -95,7 +94,7 @@ export function updateSiteTimeTracker(windowInfo: Result): SiteTimeTracker {
       timeSpent: 0,
       lastActiveTimestamp: currentTime
     }
-    currentSiteTimeTrackers.push(tracker)
+    timeTrackers.push(tracker)
   }
   return tracker
 }

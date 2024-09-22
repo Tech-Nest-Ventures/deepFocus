@@ -6,3 +6,4 @@ package-lock.json
 node_modules
 .env
 deepfocus.js
+test-results

@@ -1,4 +1,3 @@
-import Store from 'electron-store'
 
 // Currently use electron-store for persisting data in our electron application.
 export interface User {
@@ -24,14 +23,6 @@ export interface SiteTimeTracker {
 
 export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTimeTracker }
 
-export interface TypedStore extends Store<StoreSchema> {
-  get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
-  get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
-  set(key: string, value: any): void
-  delete<K extends keyof StoreSchema>(key: K): void
-}
-
-export { Store }
 
 export type Options = {
   /**

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as schedule from 'node-schedule'
-import { TypedStore } from './types'
+import { TypedStore } from './index'
 import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'

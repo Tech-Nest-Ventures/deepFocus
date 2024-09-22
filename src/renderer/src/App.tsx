@@ -2,6 +2,7 @@ import { lazy, Suspense, onMount, createSignal } from 'solid-js'
 import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
 
+
 import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
 import logo from './assets/deepWork.svg'
@@ -16,6 +17,7 @@ const App = (props) => {
   const [isLoggedIn, setIsLoggedIn] = createSignal(false)
   const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
+
 
   // Check for the token in localStorage on component mount
   onMount(() => {

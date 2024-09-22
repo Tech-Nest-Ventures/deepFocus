@@ -7,6 +7,7 @@ export function cn(...inputs: ClassValue[]): string {
 }
 
 export const sendUserToBackend = (user) => {
-  console.log('Sending username to backend:', user)
-  window?.electron.ipcRenderer.send('send-username', user)
+  console.log('Sending user data to backend:', user)
+  const sanitizedUser = JSON.parse(JSON.stringify(user))
+  window?.electron.ipcRenderer.send('send-user-data', sanitizedUser)
 }
