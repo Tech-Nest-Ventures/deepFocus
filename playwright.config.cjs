@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from '@playwright/test'
-import path from 'path'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -15,8 +14,8 @@ export default defineConfig({
   expect: {
     timeout: 60000
   },
-  workers: 3,
-  fullyParallel: true,
+  workers: 1,
+  fullyParallel: false,
   retries: 0,
   reporter: 'html'
 })

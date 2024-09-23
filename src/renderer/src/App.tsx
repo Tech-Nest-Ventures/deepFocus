@@ -42,6 +42,9 @@ const App = (props) => {
           the future of <span class="solid">deep</span>
           <span class="ts">Focus</span>
         </div>
+        <p>
+          <button id="new-window">Create new window</button>
+        </p>
         <nav class="flex space-x-4">
           <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
             Home

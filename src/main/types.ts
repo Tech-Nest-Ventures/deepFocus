@@ -122,3 +122,13 @@ export type WindowsResult = {
 } & BaseResult
 
 export type Result = MacOSResult | LinuxResult | WindowsResult
+
+export interface ElectronAPI {
+  sendUserData: (user: {
+    username: string
+    language: string
+    country: string
+    firstName: string
+    lastName: string
+  }) => void
+}
