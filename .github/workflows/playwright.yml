@@ -19,14 +19,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Python and distutils
-        run: |
-          brew install python
-          python3 -m ensurepip
-          python3 -m pip install --upgrade setuptools
-          python3 -m pip install --upgrade wheel
-          python3 -m pip install distutils
-
       - name: Install system dependencies for node-gyp
         run: |
           brew install cmake
@@ -44,5 +36,3 @@ jobs:
 
       - name: Run Playwright tests
         run: npx playwright test
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
