@@ -8,6 +8,7 @@ on:
       - '**/*.js'
       - 'package.json'
       - 'package-lock.json'
+      - '.github/workflows/release.yml'
 
 permissions:
   contents: read # for checkout
