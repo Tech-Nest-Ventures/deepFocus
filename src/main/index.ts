@@ -5,7 +5,8 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-const { activeWindow } = await import('get-windows')
+// const { activeWindow } = await import('get-windows')
+const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
 
 import { EmailService } from './emailService'
@@ -24,7 +25,7 @@ let currentSiteTimeTrackers: SiteTimeTracker[] = []
 
 setupEnvironment()
 
-const isProduction = process.env.ENV === 'production'
+const isProduction = process.env.NODEENV === 'production'
 console.log('isProduction?', isProduction)
 console.log('email', process.env.EMAIL)
 console.log('API_BASE_URL', process.env.VITE_SERVER_URL_PROD)
@@ -106,7 +107,7 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 3000) // change back to 600000
+  }, 30000) // change back to 600000
 }
 
 // Process activity data from active window

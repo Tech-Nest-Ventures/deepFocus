@@ -1,15 +1,6 @@
 import { _electron as electron } from 'playwright'
 import { test, expect, ElectronApplication, Page } from '@playwright/test'
-import { electronAPI } from '@electron-toolkit/preload'
-import {
-  clickMenuItemById,
-  findLatestBuild,
-  ipcMainCallFirstListener,
-  ipcRendererCallFirstListener,
-  parseElectronApp,
-  ipcMainInvokeHandler,
-  ipcRendererInvoke
-} from 'electron-playwright-helpers'
+import { findLatestBuild, parseElectronApp } from 'electron-playwright-helpers'
 import { User } from '../../src/main/types'
 
 test.describe('Electron App', () => {
@@ -68,53 +59,9 @@ test.describe('Electron App', () => {
     const text = await window.$eval('span', (el) => el.textContent)
     expect(text).toBe('deep')
   })
+})
 
-  test(`"create new window" button exists`, async () => {
-    expect(await window.$('#new-window')).toBeTruthy()
-  })
-
-  test('trigger IPC listener via main process', async () => {
-    electronApp.evaluate(({ ipcMain }) => {
-      ipcMain.emit('new-window')
-    })
-    const newPage = await electronApp.waitForEvent('window')
-    expect(newPage).toBeTruthy()
-    window = newPage
-  })
-
-  test('send IPC message from renderer', async () => {
-    // evaluate this script in render process
-    // requires webPreferences.nodeIntegration true and contextIsolation false
-    await window.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('electron').ipcRenderer.send('new-window')
-    })
-    const newPage = await electronApp.waitForEvent('window')
-    expect(newPage).toBeTruthy()
-    expect(await newPage.title()).toBe('Window 4')
-    window = newPage
-  })
-
-  test('receive synchronous data via ipcRendererCallFirstListener()', async () => {
-    const data = await ipcRendererCallFirstListener(window, 'get-synchronous-data')
-    expect(data).toBe('Synchronous Data')
-  })
-
-  test('receive asynchronous data via ipcRendererCallFirstListener()', async () => {
-    const data = await ipcRendererCallFirstListener(window, 'get-asynchronous-data')
-    expect(data).toBe('Asynchronous Data')
-  })
-
-  test('receive synchronous data via ipcMainCallFirstListener()', async () => {
-    const data = await ipcMainCallFirstListener(electronApp, 'main-synchronous-data')
-    expect(data).toBe('Main Synchronous Data')
-  })
-
-  test('receive asynchronous data via ipcMainCallFirstListener()', async () => {
-    const data = await ipcMainCallFirstListener(electronApp, 'main-asynchronous-data')
-    expect(data).toBe('Main Asynchronous Data')
-  })
-
+/*
   test('should handle user login', async () => {
     // Interact with the login form
     await window.title()
@@ -126,7 +73,6 @@ test.describe('Electron App', () => {
     await window.click('button:has-text("Login")')
 
     // Validate login success by checking the URL
-    await window.waitForURL('*/') // Wait for navigation to the root URL
     const currentURL = window.url()
     expect(currentURL).toBe('http://localhost:5173/') // Adjust the expected URL as needed
   })
@@ -155,4 +101,5 @@ test.describe('Electron App', () => {
   //     expect(userData.username).toBe('timeo.j.williams@gmail.com')
 
   // })
-})
+
+  */

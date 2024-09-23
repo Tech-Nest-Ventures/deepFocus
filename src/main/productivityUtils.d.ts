@@ -1,4 +1,5 @@
-import { Result, SiteTimeTracker, TypedStore } from './types'
+import { Result, SiteTimeTracker } from './types'
+import { TypedStore } from './index'
 export declare function getUrlFromResult(result: Result): string | undefined
 export declare function capitalizeFirstLetter(text: string): string
 export declare function formatUrl(input: string): string
