@@ -32,7 +32,7 @@ jobs:
         run: pnpm install
 
       - name: Rebuild native modules for Electron
-        run: npx electron-builder install-app-deps
+        run:  pnpm build:mac
 
       - name: Run Playwright tests
-        run: npx playwright test
+        run: pnpm test:e2e
