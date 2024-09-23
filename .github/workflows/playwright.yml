@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -19,14 +19,28 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install Python and distutils
+        run: |
+          brew install python
+          python3 -m ensurepip
+          python3 -m pip install --upgrade setuptools
+          python3 -m pip install --upgrade wheel
+          python3 -m pip install distutils
+
+      - name: Install system dependencies for node-gyp
+        run: |
+          brew install cmake
+          brew install pkg-config
+          brew install python3
+
       - name: Install pnpm
         run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Rebuild native modules for Electron
+        run: npx electron-builder install-app-deps
 
       - name: Run Playwright tests
         run: npx playwright test
