@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**/*.ts'
+      - '**/*.js'
+      - 'package.json'
+      - 'package-lock.json'
   pull_request:
 
 jobs:
@@ -32,7 +37,7 @@ jobs:
         run: pnpm install
 
       - name: Rebuild native modules for Electron
-        run:  pnpm build:mac
+        run: pnpm build:mac
 
       - name: Run Playwright tests
         run: pnpm test:e2e
