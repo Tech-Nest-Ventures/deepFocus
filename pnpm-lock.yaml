@@ -26,6 +26,9 @@ importers:
       '@modular-forms/solid':
         specifier: ^0.23.0
         version: 0.23.0(solid-js@1.8.22)(typescript@5.6.2)
+      '@solidjs/router':
+        specifier: ^0.14.5
+        version: 0.14.5(solid-js@1.8.22)
       axios:
         specifier: ^1.7.7
         version: 1.7.7
@@ -1336,6 +1339,11 @@ packages:
     resolution: {integrity: sha512-CqAwKb2T5Vi72+rhebSsqNZ9o67buYRdEJrIFzRXz3U59QqezuuxPsyzTSVCacwS5Pf109VRsgCJQoxKRoECZQ==}
     peerDependencies:
       solid-js: ^1.6.12
+
+  '@solidjs/router@0.14.5':
+    resolution: {integrity: sha512-J8ZMntnkDvNCSO9n4HyhlQlGdxYa1mandQLt5LMd0YiWAXGlYzjj+bB+OVtzsH1woWfoEJlVnBnGkMpf2lY/ig==}
+    peerDependencies:
+      solid-js: ^1.8.6
 
   '@swc/helpers@0.5.13':
     resolution: {integrity: sha512-UoKGxQ3r5kYI9dALKJapMmuK+1zWM/H17Z1+iwnNmzcJRnfFuevZs375TA5rW31pu4BS4NoSy1fRsexDXfWn5w==}
@@ -6298,6 +6306,10 @@ snapshots:
       solid-js: 1.8.22
 
   '@solid-primitives/utils@6.2.3(solid-js@1.8.22)':
+    dependencies:
+      solid-js: 1.8.22
+
+  '@solidjs/router@0.14.5(solid-js@1.8.22)':
     dependencies:
       solid-js: 1.8.22
 

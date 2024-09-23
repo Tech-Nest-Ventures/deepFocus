@@ -34,7 +34,10 @@ export default defineConfig({
     build: {
       outDir: 'out/preload',
       rollupOptions: {
-        external: ['electron']
+        external: ['electron'],
+        output: {
+          format: 'cjs'
+        }
       }
     }
   },
