@@ -48,6 +48,10 @@
 pnpm install
 ```
 
+```bash
+pnpm dev
+```
+
 ## Usage
 
 Note, for running this app locally, you may run into issues with active-window. Try running `npm install --ignore-scripts` to fix this. More info [here](https://github.com/sindresorhus/active-window/issues/10).
@@ -80,16 +84,10 @@ DeepFocus is built primarily for Software Engineers, Product Managers, and Desig
 - Create cloud synchronization for user data and preferences
 - Implement secure user authentication system
 
-## Contributing
-
-[Add contributing guidelines here]
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-[Timeo Williams] - [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
-
-Project Link: [https://github.com/timeowilliams/deepFocus](https://github.com/timeowilliams/deepFocus)
+Timeo Williams [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
