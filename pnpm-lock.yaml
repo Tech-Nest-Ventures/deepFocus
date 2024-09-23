@@ -60,7 +60,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       solid-js:
-        specifier: ^1.8.22
+        specifier: ^1.8.23
         version: 1.8.23
       tailwind-merge:
         specifier: ^2.5.2
@@ -85,7 +85,7 @@ importers:
         specifier: ^1.47.2
         version: 1.47.2
       '@types/node':
-        specifier: ^22.6.0
+        specifier: ^22.6.1
         version: 22.6.1
       autoprefixer:
         specifier: ^10.4.20
@@ -100,7 +100,7 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       eslint:
-        specifier: ^9.11.0
+        specifier: ^9.11.1
         version: 9.11.1(jiti@1.21.6)
       eslint-plugin-solid:
         specifier: ^0.14.3

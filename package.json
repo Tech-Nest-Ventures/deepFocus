@@ -40,7 +40,7 @@
     "electron-vite": "^2.3.0",
     "node-addon-api": "^8.1.0",
     "node-schedule": "^2.1.1",
-    "solid-js": "^1.8.22",
+    "solid-js": "^1.8.23",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "url": "^0.11.4"
@@ -50,12 +50,12 @@
     "@electron-toolkit/eslint-config-ts": "^2.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@playwright/test": "^1.47.2",
-    "@types/node": "^22.6.0",
+    "@types/node": "^22.6.1",
     "autoprefixer": "^10.4.20",
     "electron": "^32.1.2",
     "electron-builder": "^25.0.5",
     "electron-playwright-helpers": "^1.7.1",
-    "eslint": "^9.11.0",
+    "eslint": "^9.11.1",
     "eslint-plugin-solid": "^0.14.3",
     "playwright": "^1.47.2",
     "postcss": "^8.4.47",
@@ -70,5 +70,10 @@
     "vinxi": "^0.4.3",
     "vite": "^5.4.7",
     "vite-plugin-solid": "^2.10.2"
+  },
+  "pnpm": {
+    "resolutions": {
+      "eslint": "^9.11.1"
+    }
   }
 }
