@@ -23,7 +23,7 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
-    "@deepfocus/get-windows": "^1.0.18",
+    "@deepfocus/get-windows": "^1.0.19",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@fontsource/inter": "^5.1.0",
