@@ -5,7 +5,6 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// const { activeWindow } = await import('get-windows')
 const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
 
@@ -24,11 +23,7 @@ const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
 
 setupEnvironment()
-
-const isProduction = process.env.NODEENV === 'production'
-console.log('isProduction?', isProduction)
 console.log('email', process.env.EMAIL)
-console.log('API_BASE_URL', process.env.VITE_SERVER_URL_PROD)
 
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
@@ -107,14 +102,14 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 30000) // change back to 600000
+  }, 60000) // change back to 600000
 }
 
 // Process activity data from active window
 function processActivityData(_windowInfoData: ExtendedResult | undefined) {
   if (_windowInfoData?.siteTimeTracker) {
     console.log(
-      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}`
+      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}. URL is ${_windowInfoData.url}`
     )
     console.log(
       `Last active timestamp: ${new Date(_windowInfoData.siteTimeTracker.lastActiveTimestamp).toISOString()}`

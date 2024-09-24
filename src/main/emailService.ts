@@ -4,6 +4,8 @@ import { TypedStore } from './index'
 import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
+import dotenv from 'dotenv'
+dotenv.config()
 
 interface TopSite {
   url: string
@@ -45,10 +47,13 @@ export class EmailService {
     const emailBody = this.composeEmailBody(deepWorkHours, topSites)
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/emails/send-email', {
-        emailBody,
-        userEmail: this.userEmail
-      })
+      const response = await axios.post(
+        `${process.env.VITE_SERVER_URL_PROD}/api/v1/emails/send-email`,
+        {
+          emailBody,
+          userEmail: this.userEmail
+        }
+      )
 
       console.log('Email sent successfully:', response.data)
     } catch (error) {
@@ -73,10 +78,13 @@ export class EmailService {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/emails/send-email', {
-        emailBody,
-        userEmail: this.userEmail
-      })
+      const response = await axios.post(
+        `${process.env.VITE_SERVER_URL_PROD}/api/v1/emails/send-email`,
+        {
+          emailBody,
+          userEmail: this.userEmail
+        }
+      )
 
       console.log('Response from backend email send:', response.data)
     } catch (error) {
