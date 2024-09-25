@@ -5,31 +5,30 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// const { activeWindow } = await import('get-windows')
 const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
 
 import { EmailService } from './emailService'
 import { StoreSchema, SiteTimeTracker, ExtendedResult } from './types'
-import { getUrlFromResult, formatTime, updateSiteTimeTracker } from './productivityUtils'
+import {
+  getUrlFromResult,
+  formatTime,
+  updateSiteTimeTracker,
+  getBaseURL
+} from './productivityUtils'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
   set(key: string, value: any): void
   delete<K extends keyof StoreSchema>(key: K): void
+  clear(): void
 }
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
 
 setupEnvironment()
-
-const isProduction = process.env.NODEENV === 'production'
-console.log('isProduction?', isProduction)
-console.log('email', process.env.EMAIL)
-console.log('API_BASE_URL', process.env.VITE_SERVER_URL_PROD)
-
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
 // Initialize environment variables based on the environment
@@ -75,10 +74,12 @@ function resetCounters(type: 'daily' | 'weekly') {
   if (type === 'daily') {
     console.log('Resetting Daily Trackers')
     currentSiteTimeTrackers.forEach((tracker) => (tracker.timeSpent = 0))
+    console.log('currentSiteTimeTrackers after daily reset', currentSiteTimeTrackers)
+    console.log('store.get(lastResetDate)', store.get('lastResetDate'))
     store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
   } else if (type === 'weekly') {
     console.log('Resetting Weekly Trackers')
-    currentSiteTimeTrackers.length = 0
+    currentSiteTimeTrackers = []
   }
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
 }
@@ -86,14 +87,17 @@ function resetCounters(type: 'daily' | 'weekly') {
 // Periodic saving of time trackers
 function setupPeriodicSave() {
   setInterval(() => store.set('siteTimeTrackers', currentSiteTimeTrackers), 5 * 60 * 1000)
+  console.log('setupPeriodicSave', store.get('siteTimeTrackers'))
 }
 
 // Monitor system idle time and user activity
 function startActivityMonitoring() {
   setInterval(async () => {
     const idleTime = powerMonitor.getSystemIdleTime()
-    if (idleTime > 60) return console.log(`System idle for ${idleTime} seconds.`)
-
+    if (idleTime > 60) {
+      console.log(`System idle for ${idleTime} seconds.`)
+      return
+    }
     try {
       const windowInfo = await activeWindow()
       if (windowInfo && windowInfo!.platform === 'macos') {
@@ -107,14 +111,16 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 30000) // change back to 600000
+  }, 60000)
 }
 
 // Process activity data from active window
 function processActivityData(_windowInfoData: ExtendedResult | undefined) {
+  if (!_windowInfoData) return
+
   if (_windowInfoData?.siteTimeTracker) {
     console.log(
-      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}`
+      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}. URL is ${_windowInfoData?.url ? getBaseURL(_windowInfoData?.url) : `not defined`}`
     )
     console.log(
       `Last active timestamp: ${new Date(_windowInfoData.siteTimeTracker.lastActiveTimestamp).toISOString()}`
@@ -139,9 +145,6 @@ async function createWindow(): Promise<BrowserWindow> {
   mainWindow.on('ready-to-show', async () => {
     console.log('ready-to-show')
     mainWindow.show()
-    startActivityMonitoring()
-    currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-    emailService.scheduleEmailSend()
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -165,32 +168,42 @@ app.whenReady().then(async () => {
   console.log('ready!')
   electronApp.setAppUserModelId('com.electron')
 
-  loadUserData()
-
-  const now = dayjs()
-  const lastResetDate = dayjs(store.get('lastResetDate'))
-
-  if (!lastResetDate.isSame(now, 'day') || now.diff(lastResetDate, 'hours') > 24) {
-    console.log('Missed daily reset from previous session, performing now.')
-    schedulerWorker.postMessage({ type: 'RESET_DAILY' })
-  }
-
-  await createWindow()
-
-  setupPeriodicSave()
-
-  ipcMain.on('send-user-data', (event, user) => {
-    console.log('Received user data from frontend:', user, event.processId)
-    handleUserData(user)
+  await createWindow().then(() => {
+    loadUserData()
+    handleDailyReset()
+    setupPeriodicSave()
+    setupIPCListeners()
   })
-  ipcMain.on('test-email-send', async () => await emailService.testEmailSend())
-  ipcMain.on('logout-user', () => handleUserLogout())
+
+  emailService.scheduleEmailSend()
 })
 
 function handleUserLogout() {
   store.delete('user')
   store.set('siteTimeTrackers', [])
   schedulerWorker.postMessage({ type: 'RESET_TRACKERS' })
+}
+function setupIPCListeners() {
+  ipcMain.on('send-user-data', (event, user) => {
+    console.log('Received user data from frontend:', user, event.processId)
+    handleUserData(user)
+    const savedUser = store.get('user')
+    if (savedUser) {
+      startActivityMonitoring()
+      currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+      emailService.scheduleEmailSend()
+    }
+  })
+  ipcMain.on('test-email-send', async () => await emailService.testEmailSend())
+  ipcMain.on('logout-user', () => handleUserLogout())
+}
+function handleDailyReset() {
+  const now = dayjs()
+  const lastResetDate = dayjs(store.get('lastResetDate'))
+  if (!lastResetDate.isSame(now, 'day') || now.diff(lastResetDate, 'hours') > 24) {
+    console.log('Missed daily reset from previous session, performing now.')
+    schedulerWorker.postMessage({ type: 'RESET_DAILY' })
+  }
 }
 
 app.on('before-quit', () => schedulerWorker.terminate())

@@ -55,7 +55,7 @@ setInterval(() => {
   } else {
     console.log('Worker is running, but no username set yet.')
   }
-}, 30000)
+}, 60000)
 
 // Schedule daily reset at midnight
 schedule.scheduleJob('0 0 * * *', () => {

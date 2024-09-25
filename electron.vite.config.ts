@@ -7,7 +7,7 @@ dotenv.config()
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    plugins: [externalizeDepsPlugin()],
     build: {
       outDir: 'out/main',
       rollupOptions: {
@@ -30,13 +30,13 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    plugins: [externalizeDepsPlugin()],
     build: {
       outDir: 'out/preload',
       rollupOptions: {
         external: ['electron'],
         output: {
-          format: 'cjs'
+          format: 'es'
         }
       }
     }
