@@ -21,6 +21,16 @@ function getDomainFromUrl(url: string): string {
   return parsedUrl.hostname || ''
 }
 
+export function getBaseURL(url: string): string | null {
+  try {
+    const urlObj = new URL(url)
+    return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
+  } catch (error) {
+    console.error('Invalid URL:', error)
+    return null
+  }
+}
+
 function isProductiveUrl(url: string): boolean {
   const domain = getDomainFromUrl(url)
   console.log(
@@ -63,6 +73,15 @@ export function formatUrl(input: string): string {
   }
 }
 
+function isValidURL(url: string): boolean {
+  try {
+    new URL(url) // URL constructor will throw an error if it's not a valid URL
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 export function formatTime(milliseconds: number): string {
   const seconds = Math.floor(milliseconds / 1000)
   const minutes = Math.floor(seconds / 60)
@@ -84,7 +103,15 @@ export function updateSiteTimeTracker(
   const currentTime = Date.now()
   const url = getUrlFromResult(windowInfo) || windowInfo.title
 
-  let tracker = timeTrackers.find((t) => t.url === url)
+  // Check if this is a URL or an app (if URL extraction fails)
+  let trackerKey = url
+  if (url && isValidURL(url)) {
+    trackerKey = getBaseURL(url) as string // Use base URL to track all paths under one domain
+  } else {
+    trackerKey = windowInfo.title || 'Unknown App'
+  }
+
+  let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
     tracker.timeSpent += currentTime - tracker.lastActiveTimestamp
@@ -92,8 +119,8 @@ export function updateSiteTimeTracker(
   } else {
     console.log('Creating new tracker')
     tracker = {
-      url,
-      title: windowInfo.title,
+      url: trackerKey,
+      title: windowInfo.title || 'Unknown App',
       timeSpent: 0,
       lastActiveTimestamp: currentTime
     }

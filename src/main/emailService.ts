@@ -9,7 +9,7 @@ dotenv.config()
 
 interface TopSite {
   url: string
-  timeSpent: number
+  timeSpent: string
 }
 
 export class EmailService {
@@ -31,6 +31,11 @@ export class EmailService {
     schedule.scheduleJob('59 23 * * *', () => {
       this.sendDailySummary()
     })
+
+    if (!app.isPackaged) {
+      // For testing, send the email immediately
+      this.sendDailySummary()
+    }
   }
 
   private async sendDailySummary(): Promise<void> {
@@ -92,6 +97,15 @@ export class EmailService {
     }
   }
 
+  private formatTime(timeSpentInMinutes: number): string {
+    if (timeSpentInMinutes >= 60) {
+      const hours = Math.floor(timeSpentInMinutes / 60)
+      const minutes = timeSpentInMinutes % 60
+      return `${hours}h ${minutes}m`
+    }
+    return `${timeSpentInMinutes} minutes`
+  }
+
   public composeEmailBody(deepWorkHours: number, topSites: TopSite[]): string {
     return `
       <div style="font-family: Arial, sans-serif; color: #fff; background-color: #000; padding: 20px; border-radius: 8px; max-width: 80%; margin: auto;">
@@ -99,13 +113,13 @@ export class EmailService {
           <h1 style="color: #ecf0f1; margin: 0; font-style: italic; font-family: 'Montserrat', sans-serif;">deepFocus</h1>
         </div>
         <p style="font-size: 16px; margin-bottom: 20px;">Total Deep Work Hours: <strong>${deepWorkHours}</strong></p>
-        <h3 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 30px;">Top 5 Sites Visited</h3>
+        <h3 style="color: #ecf0f1; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 30px;">Top 3 Sites Visited</h3>
         <ul style="list-style-type: none; padding-left: 0;">
           ${topSites
             .map(
               (site) => `
                 <li style="background-color: #333; margin-bottom: 10px; padding: 10px; border-radius: 4px; border: 1px solid #555; color: #fff;">
-                  <strong>${site.url}</strong>: ${site.timeSpent} minutes
+                  <strong>${site.url}</strong>: ${site.timeSpent} 
                 </li>
               `
             )
@@ -123,18 +137,26 @@ export class EmailService {
       .filter((tracker) => !unproductiveSites?.includes(tracker.url))
       .reduce((total, tracker) => total + tracker.timeSpent, 0)
 
+    // Convert ms to hours and return rounded to 1 decimal place
     return parseFloat((productiveTime / (1000 * 60 * 60)).toFixed(1))
   }
 
   private async getTopSites(): Promise<TopSite[]> {
     const siteTimeTrackers = this.store.get('siteTimeTrackers', [])
 
+    const getTrimmedTitle = (title: string): string => {
+      const maxLength = 50
+      return title.length > maxLength ? title.slice(0, maxLength) + '...' : title
+    }
+
+    // Filter out trackers with zero time, then sort and slice to get top 3
     const topSites = siteTimeTrackers
+      .filter((tracker) => tracker.timeSpent > 0)
       .sort((a, b) => b.timeSpent - a.timeSpent)
-      .slice(0, 3)
+      .slice(0, 3) // Get top 3
       .map((tracker) => ({
-        url: tracker.url,
-        timeSpent: Math.round(tracker.timeSpent / (1000 * 60))
+        url: tracker.url || getTrimmedTitle(tracker.title || 'Unknown Title'),
+        timeSpent: this.formatTime(Math.round(tracker.timeSpent / (1000 * 60))) // Convert to minutes and format
       }))
 
     return topSites

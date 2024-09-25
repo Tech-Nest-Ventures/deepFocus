@@ -9,6 +9,7 @@ import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-
 import { sendUserToBackend } from './lib/utils'
 import User from './types'
 import { API_BASE_URL } from './config'
+import { useAuth } from './lib/AuthContext'
 
 import type { SubmitHandler } from '@modular-forms/solid'
 import type { InferInput } from 'valibot'
@@ -28,6 +29,7 @@ function Signup() {
   const [authForm, { Form, Field }] = createForm<AuthForm>()
   const [signUpError, setSignUpError] = createSignal<null | string>(null)
   const navigate = useNavigate()
+  const [loggedIn, setIsLoggedIn] = useAuth()
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
@@ -59,9 +61,7 @@ function Signup() {
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       sendUserToBackend(user)
-      // Handle successful login (e.g., redirect to dashboard)
-      window.location.reload()
-
+      setIsLoggedIn(true)
       navigate('/')
       console.info('Navigating to home')
     } catch (error) {

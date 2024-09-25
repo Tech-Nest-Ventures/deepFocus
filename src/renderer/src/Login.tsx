@@ -11,6 +11,7 @@ import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
 import User from './types'
 import { API_BASE_URL } from './config'
+import { useAuth } from './lib/AuthContext'
 
 import type { InferInput } from 'valibot'
 
@@ -27,6 +28,7 @@ function Login() {
   const [authForm, { Form, Field }] = createForm<AuthForm>()
   const [_loginError, setLoginError] = createSignal<null | string>(null)
   const navigate = useNavigate()
+  const [loggedIn, setIsLoggedIn] = useAuth()
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {
@@ -58,8 +60,7 @@ function Login() {
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       sendUserToBackend(user)
-      window.location.reload()
-
+      setIsLoggedIn(true)
       navigate('/')
     } catch (error) {
       console.error('Login error:', error)

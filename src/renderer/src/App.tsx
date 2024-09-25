@@ -1,6 +1,7 @@
-import { lazy, Suspense, onMount, createSignal } from 'solid-js'
+import { lazy, Suspense, onMount, createSignal, ComponentProps } from 'solid-js'
 import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
+import { AuthProvider, useAuth } from './lib/AuthContext'
 
 import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
@@ -12,8 +13,8 @@ const Signup = lazy(() => import('./Signup'))
 const Versions = lazy(() => import('./Versions'))
 const HelloWorld = () => <h1>Hello World!</h1>
 
-const App = (props) => {
-  const [isLoggedIn, setIsLoggedIn] = createSignal(false)
+const App = (props: ComponentProps<typeof Router>) => {
+  const [isLoggedIn, setIsLoggedIn] = useAuth()
   const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
 
@@ -83,14 +84,16 @@ const App = (props) => {
 
 render(
   () => (
-    <Router root={App}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Route path="/" component={Versions} />
-        <Route path="/login" component={Login} />
-        <Route path="/hello-world" component={HelloWorld} />
-        <Route path="/signup" component={Signup} />
-      </Suspense>
-    </Router>
+    <AuthProvider>
+      <Router root={App}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Route path="/" component={Versions} />
+          <Route path="/login" component={Login} />
+          <Route path="/hello-world" component={HelloWorld} />
+          <Route path="/signup" component={Signup} />
+        </Suspense>
+      </Router>
+    </AuthProvider>
   ),
   document.getElementById('root') as HTMLElement
 )
