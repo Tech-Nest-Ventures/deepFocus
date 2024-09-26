@@ -12,6 +12,7 @@ const Login = lazy(() => import('./Login'))
 const Signup = lazy(() => import('./Signup'))
 const Versions = lazy(() => import('./Versions'))
 const HelloWorld = () => <h1>Hello World!</h1>
+const BarChart = lazy(() => import('./BarChart'))
 
 const App = (props: ComponentProps<typeof Router>) => {
   const [isLoggedIn, setIsLoggedIn] = useAuth()
@@ -87,10 +88,11 @@ render(
     <AuthProvider>
       <Router root={App}>
         <Suspense fallback={<div>Loading...</div>}>
-          <Route path="/" component={Versions} />
+          <Route path="/" component={BarChart} />
           <Route path="/login" component={Login} />
           <Route path="/hello-world" component={HelloWorld} />
           <Route path="/signup" component={Signup} />
+          <Route path="/analytics" component={BarChart} />
         </Suspense>
       </Router>
     </AuthProvider>

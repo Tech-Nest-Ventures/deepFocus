@@ -174,8 +174,6 @@ app.whenReady().then(async () => {
     setupPeriodicSave()
     setupIPCListeners()
   })
-
-  emailService.scheduleEmailSend()
 })
 
 function handleUserLogout() {
@@ -191,7 +189,6 @@ function setupIPCListeners() {
     if (savedUser) {
       startActivityMonitoring()
       currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-      emailService.scheduleEmailSend()
     }
   })
   ipcMain.on('test-email-send', async () => await emailService.testEmailSend())
