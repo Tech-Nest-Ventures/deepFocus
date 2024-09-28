@@ -9,6 +9,15 @@ import { SiteTimeTracker } from './types'
 
 let currentUsername: string | null = null
 let workerSiteTimeTrackers: SiteTimeTracker[] = []
+let deepWorkHours = {
+  Monday: 0,
+  Tuesday: 0,
+  Wednesday: 0,
+  Thursday: 0,
+  Friday: 0,
+  Saturday: 0,
+  Sunday: 0
+}
 
 dayjs.extend(isoWeek)
 dayjs.extend(weekday)
@@ -17,12 +26,41 @@ const API_BASE_URL = workerData.API_BASE_URL
 
 console.log(`API_BASE_URL is ${API_BASE_URL}`)
 
+function updateDeepWorkHours(siteTrackers: SiteTimeTracker[]) {
+  const today = dayjs().format('dddd') // Get the current day of the week (e.g., Monday, Tuesday)
+  console.log('today is ', today)
+  // Calculate total deep work time spent for today
+  let totalDeepWorkTime = 0
+
+  siteTrackers.forEach((tracker) => {
+    if (isDeepWork(tracker.title)) {
+      totalDeepWorkTime += tracker.timeSpent
+    }
+  })
+
+  // Convert time from milliseconds to hours and update deep work hours for today
+  deepWorkHours[today] += totalDeepWorkTime / (1000 * 60 * 60) // Convert ms to hours
+  console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
+  return deepWorkHours[today]
+}
+
+// Determine if current activity is considered deep work
+function isDeepWork(windowInfo) {
+  // You can customize this condition based on specific apps, sites, or window titles
+  const deepWorkSites = ['vscode', 'notion', 'github'] // Example: deep work occurs in these apps
+  return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
+}
+
+// Function to reset daily counters
 function resetDailyCounters() {
   workerSiteTimeTrackers?.forEach((tracker) => {
     tracker.timeSpent = 0
     tracker.lastActiveTimestamp = Date.now()
   })
   console.log('Daily counters reset')
+  // Reset deep work hours
+  const today = dayjs().format('dddd')
+  deepWorkHours[today] = 0
 }
 
 function resetWeeklyData() {
@@ -46,6 +84,12 @@ parentPort?.on('message', (message) => {
     persistDailyData()
     resetDailyCounters()
   }
+  if (message.type === 'STORE_DATA') {
+    console.log('messageData', message.data)
+    const hoursSoFar = updateDeepWorkHours(message.data)
+    parentPort?.postMessage({ type: 'STORE_DATA', data: hoursSoFar })
+    console.log('hoursSoFar', hoursSoFar)
+  }
 })
 
 // Just a simple function to confirm the worker is running
@@ -55,7 +99,7 @@ setInterval(() => {
   } else {
     console.log('Worker is running, but no username set yet.')
   }
-}, 60000)
+}, 120000)
 
 // Schedule daily reset at midnight
 schedule.scheduleJob('0 0 * * *', () => {

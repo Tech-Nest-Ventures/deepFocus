@@ -71,7 +71,7 @@ function Signup() {
   }
 
   return (
-    <div class="grid gap-6">
+    <div class="grid gap-6 mt-20">
       {signUpError && <p class="text-red-500">{signUpError()}</p>}
       <Form onSubmit={handleSubmit}>
         <Grid class="gap-4">

@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, powerMonitor } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, powerMonitor, Notification } from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
 import dayjs from 'dayjs'
@@ -65,7 +65,15 @@ function loadUserData() {
   const savedUser = store.get('user')
   if (savedUser) {
     console.log('User data loaded from electron-store:', savedUser)
+    const savedUrls = store.get('unproductiveUrls', [])
+    console.log('Loaded unproductive URLs from store:', savedUrls)
     schedulerWorker.postMessage({ type: 'SET_USER_INFO', user: savedUser })
+
+    new Notification({
+      title: 'DeepFocus',
+      body: 'Welcome back, ' + savedUser.firstName,
+      icon: join(__dirname, 'resources/icon.png')
+    }).show()
   }
 }
 
@@ -100,6 +108,7 @@ function startActivityMonitoring() {
     }
     try {
       const windowInfo = await activeWindow()
+      console.log('windowInfo', windowInfo)
       if (windowInfo && windowInfo!.platform === 'macos') {
         const extendedResult: ExtendedResult = {
           ...windowInfo,
@@ -173,9 +182,8 @@ app.whenReady().then(async () => {
     handleDailyReset()
     setupPeriodicSave()
     setupIPCListeners()
+    setupWindowActivityListener()
   })
-
-  emailService.scheduleEmailSend()
 })
 
 function handleUserLogout() {
@@ -191,11 +199,51 @@ function setupIPCListeners() {
     if (savedUser) {
       startActivityMonitoring()
       currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-      emailService.scheduleEmailSend()
     }
   })
   ipcMain.on('test-email-send', async () => await emailService.testEmailSend())
   ipcMain.on('logout-user', () => handleUserLogout())
+  ipcMain.on('fetch-unproductive-urls', (event) => {
+    const urls = store.get('unproductiveUrls', [])
+    event.reply('unproductive-urls-response', urls)
+  })
+  ipcMain.on('add-unproductive-url', (event, urls) => {
+    store.set('unproductiveUrls', urls)
+    console.log('Unproductive URLs updated:', urls, event.processId)
+  })
+
+  // Event for removing unproductive URLs
+  ipcMain.on('remove-unproductive-url', (event, urls) => {
+    store.set('unproductiveUrls', urls)
+    console.log('Unproductive URLs updated:', urls, event.processId)
+  })
+
+  ipcMain.on('fetch-deep-work-data', (event) => {
+    // Fetch deep work hours data from electron-store
+    const deepWorkHours = store.get('deepWorkHours', {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0
+    })
+
+    // Convert the object into an array format expected by the chart
+    const chartData = [
+      deepWorkHours?.Monday || 0,
+      deepWorkHours?.Tuesday || 0,
+      deepWorkHours?.Wednesday || 0,
+      deepWorkHours?.Thursday || 0,
+      deepWorkHours?.Friday || 0,
+      deepWorkHours?.Saturday || 0,
+      deepWorkHours?.Sunday || 0
+    ]
+
+    // Send the data back to the renderer process
+    event.reply('deep-work-data-response', chartData)
+  })
 }
 function handleDailyReset() {
   const now = dayjs()
@@ -204,6 +252,17 @@ function handleDailyReset() {
     console.log('Missed daily reset from previous session, performing now.')
     schedulerWorker.postMessage({ type: 'RESET_DAILY' })
   }
+}
+
+function setupWindowActivityListener() {
+  // Send the store data to the worker thread every 10 minutes
+  setInterval(
+    () => {
+      const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+      schedulerWorker.postMessage({ type: 'STORE_DATA', data: currentSiteTimeTrackers })
+    },
+    10 * 60 * 1000
+  ) // Every 10 minutes
 }
 
 app.on('before-quit', () => schedulerWorker.terminate())
@@ -223,6 +282,7 @@ const schedulerWorker = new Worker(schedulerWorkerPath, {
 schedulerWorker.on('message', (message) => {
   if (message.type === 'RESET_DAILY') resetCounters('daily')
   if (message.type === 'RESET_WEEKLY') resetCounters('weekly')
+  if (message.type === 'STORE_DATA') store.set('deepWorkHours', message.data)
 })
 schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
 schedulerWorker.on('message', (message) => console.log('Worker Message:', message))

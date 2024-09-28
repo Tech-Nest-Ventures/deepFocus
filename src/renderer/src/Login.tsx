@@ -69,7 +69,7 @@ function Login() {
   }
 
   return (
-    <div class="grid gap-6">
+    <div class="grid gap-6 mt-20">
       <Form onSubmit={handleSubmit}>
         <Grid class="gap-4">
           <Field name="email">

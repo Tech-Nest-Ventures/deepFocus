@@ -6,12 +6,18 @@ import { AuthProvider, useAuth } from './lib/AuthContext'
 import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
 import logo from './assets/deepWork.svg'
+import '@fontsource/inter'
+import { IconSettings } from './components/ui/icons'
+import { Button } from './components/ui/button'
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
 const Signup = lazy(() => import('./Signup'))
-const Versions = lazy(() => import('./Versions'))
+const Home = lazy(() => import('./Home'))
 const HelloWorld = () => <h1>Hello World!</h1>
+const BarChart = lazy(() => import('./BarChart'))
+
+const Settings = lazy(() => import('./Settings'))
 
 const App = (props: ComponentProps<typeof Router>) => {
   const [isLoggedIn, setIsLoggedIn] = useAuth()
@@ -37,15 +43,8 @@ const App = (props: ComponentProps<typeof Router>) => {
 
   return (
     <>
-      <header class="flex justify-between items-center p-4 bg-gray-800 w-full mb-20">
+      <header class="flex justify-between items-center p-4 bg-gray-800 w-full">
         <img alt="logo" class="logo" src={logo} />
-        <div class="text">
-          the future of <span class="solid">deep</span>
-          <span class="ts">Focus</span>
-        </div>
-        <p>
-          <button id="new-window">Create new window</button>
-        </p>
         <nav class="flex space-x-4">
           <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
             Home
@@ -70,9 +69,21 @@ const App = (props: ComponentProps<typeof Router>) => {
               )}
             </>
           ) : (
-            <button onClick={handleLogout} class="bg-red-500 px-4 py-2 rounded text-white">
-              Logout
-            </button>
+            <>
+              <A href="/analytics" class="bg-green-500 px-4 py-2 rounded text-white">
+                Analytics
+              </A>
+              <A
+                href="/settings"
+                class="bg-gray-500 px-4 py-2 rounded text-white flex items-center"
+              >
+                <IconSettings class="w-5 h-5 mr-2" />
+                Settings
+              </A>
+              <Button onClick={handleLogout} class="bg-red-500 px-4 py-2 rounded text-white">
+                Logout
+              </Button>
+            </>
           )}
         </nav>
       </header>
@@ -87,10 +98,12 @@ render(
     <AuthProvider>
       <Router root={App}>
         <Suspense fallback={<div>Loading...</div>}>
-          <Route path="/" component={Versions} />
+          <Route path="/" component={Home} />
           <Route path="/login" component={Login} />
           <Route path="/hello-world" component={HelloWorld} />
           <Route path="/signup" component={Signup} />
+          <Route path="/analytics" component={BarChart} />
+          <Route path="/settings" component={Settings} />
         </Suspense>
       </Router>
     </AuthProvider>

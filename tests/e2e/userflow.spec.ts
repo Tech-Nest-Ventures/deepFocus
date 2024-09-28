@@ -54,52 +54,5 @@ test.describe('Electron App', () => {
     // Ensure the Electron app loads correctly
     const title = await window.title()
     expect(title).toBe('deepFocus')
-
-    await window.waitForSelector('span')
-    const text = await window.$eval('span', (el) => el.textContent)
-    expect(text).toBe('deep')
   })
 })
-
-/*
-  test('should handle user login', async () => {
-    // Interact with the login form
-    await window.title()
-    await window.click('xpath=/html/body/div/header/nav/a[2]', { delay: 1500 })
-    await window.click('input[name="email"]')
-    await window.fill('input[name="email"]', 'timeo.j.williams@gmail.com', { force: true })
-    await window.click('input[name="password"]')
-    await window.fill('input[name="password"]', 'test', { force: true })
-    await window.click('button:has-text("Login")')
-
-    // Validate login success by checking the URL
-    const currentURL = window.url()
-    expect(currentURL).toBe('http://localhost:5173/') // Adjust the expected URL as needed
-  })
-
-  // test('should send data via IPC', async () => {
-
-  //     // Simulate sending data from the renderer process to the main process
-  //     await window.evaluate(() => {
-  //       const user = {
-  //         username: 'timeo.j.williams@gmail.com',
-  //         language: 'English',
-  //         country: 'USA',
-  //         firstName: 'Timeo',
-  //         lastName: 'Williams'
-  //       }
-  //       window.sendUserData(user) // Use the exposed API from the preload script
-  //     })
-
-  //     // Simulate listening on the main process for the IPC event
-  //     const userData: User = await electronApp.evaluate(({ ipcMain }) => {
-  //       return new Promise((resolve) => {
-  //         ipcMain.on('send-user-data', (_, data) => resolve(data))
-  //       })
-  //     })
-
-  //     expect(userData.username).toBe('timeo.j.williams@gmail.com')
-
-  // })
-
-  */
