@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: deepfocus
+productName: Deep Focus
 directories:
   output: dist
   buildResources: build

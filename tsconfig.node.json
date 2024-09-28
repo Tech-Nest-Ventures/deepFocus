@@ -1,16 +1,9 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": [
-    "electron.vite.config.*",
-    "src/main/**/*",
-    "src/preload/**/*",
-    "src/main/*",
-    "src/main/**"
-  ],
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/main/*"],
   "compilerOptions": {
     "composite": true,
     "target": "ESNext",
-    "moduleResolution": "NodeNext",
     "types": ["electron-vite/node"],
     "baseUrl": ".",
     "paths": {

@@ -39,6 +39,7 @@
     "electron-store": "^10.0.0",
     "electron-updater": "^6.3.4",
     "electron-vite": "^2.3.0",
+    "gsap": "^3.12.5",
     "node-addon-api": "^8.1.0",
     "node-schedule": "^2.1.1",
     "solid-js": "^1.9.1",

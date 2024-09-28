@@ -1,5 +1,6 @@
 import { parse } from 'url'
 import { MacOSResult, Result, SiteTimeTracker } from './types'
+import { TypedStore } from './index'
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -95,22 +96,28 @@ export function formatTime(milliseconds: number): string {
     return `${seconds}s`
   }
 }
-
 export function updateSiteTimeTracker(
   windowInfo: Result,
   timeTrackers: SiteTimeTracker[]
 ): SiteTimeTracker {
   const currentTime = Date.now()
-  const url = getUrlFromResult(windowInfo) || windowInfo.title
 
-  // Check if this is a URL or an app (if URL extraction fails)
-  let trackerKey = url
+  // Check if the windowInfo has a valid URL, and if so, extract the base URL
+  const url = getUrlFromResult(windowInfo)
+  let trackerKey = ''
+  let trackerTitle = ''
+
   if (url && isValidURL(url)) {
-    trackerKey = getBaseURL(url) as string // Use base URL to track all paths under one domain
+    // For URLs, use the base URL as the tracker key and the title as the URL's base domain
+    trackerKey = getBaseURL(url) as string
+    trackerTitle = getBaseURL(url) as string
   } else {
-    trackerKey = windowInfo.title || 'Unknown App'
+    // If it's a desktop app (no valid URL), use the app path and name for the tracker
+    trackerKey = windowInfo.owner?.path || 'Unknown App'
+    trackerTitle = windowInfo.owner?.path.split('/').pop()?.replace('.app', '') || 'Unknown App'
   }
 
+  // Find an existing tracker or create a new one
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
@@ -120,11 +127,34 @@ export function updateSiteTimeTracker(
     console.log('Creating new tracker')
     tracker = {
       url: trackerKey,
-      title: windowInfo.title || 'Unknown App',
+      title: trackerTitle,
       timeSpent: 0,
       lastActiveTimestamp: currentTime
     }
     timeTrackers.push(tracker)
   }
+
+  console.log('tracker is ', tracker)
   return tracker
+}
+
+export function addUnproductiveURL(url, store: TypedStore) {
+  const unproductiveSites = store.get('unproductiveSites', [])
+  if (unproductiveSites && !unproductiveSites.includes(url)) {
+    unproductiveSites.push(url)
+    store.set('unproductiveSites', unproductiveSites)
+  }
+}
+
+// Remove an unproductive URL from store
+export function removeUnproductiveURL(url, store: TypedStore) {
+  let unproductiveSites = store.get('unproductiveSites', [])
+  unproductiveSites = unproductiveSites?.filter((site) => site !== url)
+  store.set('unproductiveSites', unproductiveSites)
+}
+
+// Check if a site is unproductive
+export function isUnproductiveSite(url, store: TypedStore): boolean {
+  const unproductiveSites = store.get('unproductiveSites', [])
+  return unproductiveSites?.includes(url) || false
 }
