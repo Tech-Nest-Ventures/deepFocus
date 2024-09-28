@@ -28,7 +28,7 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 win:
-  executableName: deepfocus
+  executableName: Deep Focus
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import os from 'os'
 
-const appName = 'deepfocus' // Replace with your actual app name
+const appName = 'Deep Focus' // Replace with your actual app name
 const appDataPath = path.join(os.homedir(), 'Library', 'Application Support', appName)
 console.log(appDataPath) // /Users/timeo/Library/Application Support/deepfocus
 
