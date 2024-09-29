@@ -66,6 +66,14 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [x] Implement user authentication and cloud-based data persistence
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
+- [ ] Implement progress bar for deep work visualization
+- [ ] Enhance data analysis and insights
+- [ ] Improve user onboarding experience
+- [ ] Develop comprehensive test suite for main and renderer processes
+- [ ] Create cloud synchronization for user data and preferences
+- [ ] Implement secure user authentication system
+- [ ] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
+- [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 
 ## Philosophy
 

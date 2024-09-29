@@ -1,5 +1,6 @@
 import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin, bytecodePlugin } from 'electron-vite'
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+// Use byteCodePlugin for future hashing
 import solid from 'vite-plugin-solid'
 import dotenv from 'dotenv'
 

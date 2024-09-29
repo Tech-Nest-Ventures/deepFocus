@@ -9,7 +9,7 @@ const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
 
 import { EmailService } from './emailService'
-import { StoreSchema, SiteTimeTracker, ExtendedResult } from './types'
+import { StoreSchema, SiteTimeTracker, ExtendedResult, DeepWorkHours } from './types'
 import {
   getUrlFromResult,
   formatTime,
@@ -27,7 +27,6 @@ export interface TypedStore extends Store<StoreSchema> {
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
-
 setupEnvironment()
 const emailService = new EmailService(process.env.EMAIL || '', store)
 
@@ -110,31 +109,12 @@ function startActivityMonitoring() {
       const windowInfo = await activeWindow()
       console.log('windowInfo', windowInfo)
       if (windowInfo && windowInfo!.platform === 'macos') {
-        const extendedResult: ExtendedResult = {
-          ...windowInfo,
-          url: getUrlFromResult(windowInfo),
-          siteTimeTracker: updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
-        }
-        processActivityData(extendedResult)
+        updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
       }
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 60000)
-}
-
-// Process activity data from active window
-function processActivityData(_windowInfoData: ExtendedResult | undefined) {
-  if (!_windowInfoData) return
-
-  if (_windowInfoData?.siteTimeTracker) {
-    console.log(
-      `Time spent on ${_windowInfoData.siteTimeTracker.title}: ${formatTime(_windowInfoData.siteTimeTracker.timeSpent)}. URL is ${_windowInfoData?.url ? getBaseURL(_windowInfoData?.url) : `not defined`}`
-    )
-    console.log(
-      `Last active timestamp: ${new Date(_windowInfoData.siteTimeTracker.lastActiveTimestamp).toISOString()}`
-    )
-  }
+  }, 60000) // every minute
 }
 
 // Create the browser window
@@ -171,7 +151,6 @@ async function createWindow(): Promise<BrowserWindow> {
   return mainWindow
 }
 
-app.commandLine.appendSwitch('remote-allow-origins', 'devtools://devtools')
 // Main app ready event
 app.whenReady().then(async () => {
   console.log('ready!')
@@ -219,6 +198,7 @@ function setupIPCListeners() {
   })
 
   ipcMain.on('fetch-deep-work-data', (event) => {
+    console.log('Received event for fetch-deep-work-data')
     // Fetch deep work hours data from electron-store
     const deepWorkHours = store.get('deepWorkHours', {
       Monday: 0,
@@ -228,7 +208,8 @@ function setupIPCListeners() {
       Friday: 0,
       Saturday: 0,
       Sunday: 0
-    })
+    }) as DeepWorkHours
+    console.log('deepWorkHours', deepWorkHours)
 
     // Convert the object into an array format expected by the chart
     const chartData = [
@@ -240,6 +221,8 @@ function setupIPCListeners() {
       deepWorkHours?.Saturday || 0,
       deepWorkHours?.Sunday || 0
     ]
+
+    console.log('chartData', chartData)
 
     // Send the data back to the renderer process
     event.reply('deep-work-data-response', chartData)
@@ -261,8 +244,8 @@ function setupWindowActivityListener() {
       const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
       schedulerWorker.postMessage({ type: 'STORE_DATA', data: currentSiteTimeTrackers })
     },
-    10 * 60 * 1000
-  ) // Every 10 minutes
+    2.5 * 60 * 1000
+  ) // Every 5 minutes
 }
 
 app.on('before-quit', () => schedulerWorker.terminate())

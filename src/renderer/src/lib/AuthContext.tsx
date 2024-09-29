@@ -1,4 +1,3 @@
-import { RouterProps } from '@solidjs/router'
 import { createContext, useContext, createSignal, Accessor, Setter, JSX } from 'solid-js'
 
 // Create a context with two signals: `isLoggedIn` and `setIsLoggedIn`

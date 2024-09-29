@@ -5,7 +5,7 @@ import { useNavigate } from '@solidjs/router'
 import { email, object, string, pipe, minLength, safeParse } from 'valibot'
 
 import { sendUserToBackend } from './lib/utils'
-import { IconBrandGithub, IconLoader } from './components/ui/icons'
+import { IconLoader } from './components/ui/icons'
 import { Button } from './components/ui/button'
 import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
@@ -94,22 +94,6 @@ function Login() {
           </Button>
         </Grid>
       </Form>
-      <div class="relative">
-        <div class="absolute inset-0 flex items-center">
-          <span class="w-full border-t" />
-        </div>
-        <div class="relative flex justify-center text-xs uppercase">
-          <span class="bg-background px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-      <Button variant="outline" type="button" disabled={authForm.submitting}>
-        {authForm.submitting ? (
-          <IconLoader class="mr-2 size-4 animate-spin" />
-        ) : (
-          <IconBrandGithub class="mr-2 size-4" />
-        )}{' '}
-        Github
-      </Button>
     </div>
   )
 }

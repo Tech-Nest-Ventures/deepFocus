@@ -30,6 +30,21 @@ export interface SiteTimeTracker {
   lastActiveTimestamp: number
 }
 
+export type DeepWorkHours = {
+  Monday: number
+  Tuesday: number
+  Wednesday: number
+  Thursday: number
+  Friday: number
+  Saturday: number
+  Sunday: number
+}
+
+export interface FocusInterval {
+  start: number
+  end: number
+}
+
 export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTimeTracker }
 
 export type Options = {
