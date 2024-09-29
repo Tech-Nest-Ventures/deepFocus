@@ -40,6 +40,11 @@ export type DeepWorkHours = {
   Sunday: number
 }
 
+export interface FocusInterval {
+  start: number
+  end: number
+}
+
 export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTimeTracker }
 
 export type Options = {

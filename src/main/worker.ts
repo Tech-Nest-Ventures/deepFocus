@@ -5,7 +5,7 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
-import { SiteTimeTracker, DeepWorkHours } from './types'
+import { SiteTimeTracker, DeepWorkHours, FocusInterval } from './types'
 
 let currentUsername: string | null = null
 let workerSiteTimeTrackers: SiteTimeTracker[] = []
@@ -24,33 +24,50 @@ dayjs.extend(weekday)
 
 const API_BASE_URL = workerData.API_BASE_URL
 
-console.log(`API_BASE_URL is ${API_BASE_URL}`)
-
 function updateDeepWorkHours(siteTrackers: SiteTimeTracker[]) {
   const today = dayjs().format('dddd') // Get the current day of the week (e.g., Monday, Tuesday)
-  console.log('today is ', today)
+  console.log('today is', today)
 
-  let totalDeepWorkTime = 0
+  const focusIntervals: FocusInterval[] = []
 
   siteTrackers.forEach((tracker) => {
-    totalDeepWorkTime += tracker.timeSpent
+    if (tracker) {
+      focusIntervals.push({
+        start: tracker.lastActiveTimestamp - tracker.timeSpent,
+        end: tracker.lastActiveTimestamp
+      })
+    }
   })
 
-  // Convert total time from milliseconds to hours and add it to the existing deep work hours for today
-  const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60)
+  // Merge overlapping intervals
+  const mergedIntervals = mergeOverlappingIntervals(focusIntervals)
 
-  deepWorkHours[today] = parseFloat((deepWorkHours[today] + timeSpentInHours).toFixed(2))
+  const totalDeepWorkTime = mergedIntervals.reduce((acc, interval) => {
+    return acc + (interval.end - interval.start)
+  }, 0)
+
+  // Convert total time from milliseconds to hours and update deep work hours for today
+  const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60)
+  deepWorkHours[today] = parseFloat(timeSpentInHours.toFixed(2))
 
   console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
   return deepWorkHours
 }
 
 //TODO: Add when logic is added in frontend +  Determine if current activity is considered deep work
-// function isDeepWork(windowInfo) {
-//   // You can customize this condition based on specific apps, sites, or window titles
-//   const deepWorkSites = ['vscode', 'notion', 'github'] // Example: deep work occurs in these apps
-//   return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
-// }
+function isDeepWork(windowInfo) {
+  // You can customize this condition based on specific apps, sites, or window titles
+  // Check if the tracker is a deep work app (e.g., VSCode, GitHub, etc.)
+
+  const deepWorkSites = [
+    'vscode',
+    'settings',
+    'notion',
+    'https://github.com',
+    'https://chatgpt.com'
+  ]
+  return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
+}
 
 // Function to reset daily counters
 function resetDailyCounters() {
@@ -177,4 +194,29 @@ async function aggregateWeeklyData() {
   } catch (error) {
     console.error('Error sending weekly data to backend:', error)
   }
+}
+
+// Function to merge overlapping time intervals
+function mergeOverlappingIntervals(intervals) {
+  if (!intervals.length) return []
+
+  // Sort intervals by the start time
+  intervals.sort((a, b) => a.start - b.start)
+
+  const mergedIntervals = [intervals[0]]
+
+  for (let i = 1; i < intervals.length; i++) {
+    const current = intervals[i]
+    const lastMerged = mergedIntervals[mergedIntervals.length - 1]
+
+    // If intervals overlap, merge them
+    if (current.start <= lastMerged.end) {
+      lastMerged.end = Math.max(lastMerged.end, current.end)
+    } else {
+      // Otherwise, add the current interval
+      mergedIntervals.push(current)
+    }
+  }
+
+  return mergedIntervals
 }

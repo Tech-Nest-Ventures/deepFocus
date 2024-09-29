@@ -73,6 +73,7 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [ ] Create cloud synchronization for user data and preferences
 - [ ] Implement secure user authentication system
 - [ ] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
+- [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 
 ## Philosophy
 
