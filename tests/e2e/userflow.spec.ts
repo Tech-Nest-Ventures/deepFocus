@@ -1,7 +1,6 @@
 import { _electron as electron } from 'playwright'
 import { test, expect, ElectronApplication, Page } from '@playwright/test'
 import { findLatestBuild, parseElectronApp } from 'electron-playwright-helpers'
-import { User } from '../../src/main/types'
 
 test.describe('Electron App', () => {
   let electronApp: ElectronApplication

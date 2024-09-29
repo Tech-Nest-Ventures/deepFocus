@@ -46,9 +46,6 @@ const App = (props: ComponentProps<typeof Router>) => {
       <header class="flex justify-between items-center p-4 bg-gray-800 w-full">
         <img alt="logo" class="logo" src={logo} />
         <nav class="flex space-x-4">
-          <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
-            Home
-          </A>
           {!isLoggedIn() ? (
             <>
               {isNewUser() ? (
@@ -70,6 +67,9 @@ const App = (props: ComponentProps<typeof Router>) => {
             </>
           ) : (
             <>
+              <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
+                Home
+              </A>
               <A href="/analytics" class="bg-green-500 px-4 py-2 rounded text-white">
                 Analytics
               </A>

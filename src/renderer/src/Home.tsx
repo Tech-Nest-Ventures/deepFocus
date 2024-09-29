@@ -30,20 +30,14 @@ const Home = () => {
           opacity: 0.9,
           duration,
           ease: 'power1.in',
-          delay,
-          onComplete: () => {
-            particle.style.opacity = 0 // Hide the particle after falling
-          }
+          delay
         }
       )
     }
   }
 
   onMount(() => {
-    createParticles() // Create and animate particles on mount
-
-    // Rotate the hourglass after a certain time
-    // gsap.to(logoRef, { rotation: '+=180', duration: 1, delay: 30, ease: "power2.inOut" });
+    createParticles()
   })
 
   return (

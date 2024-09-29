@@ -111,6 +111,10 @@ export function updateSiteTimeTracker(
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = getBaseURL(url) as string
     trackerTitle = getBaseURL(url) as string
+  } else if (windowInfo.owner.name === 'Arc') {
+    // If it's a browser, use the page title or URL
+    trackerKey = windowInfo.title
+    trackerTitle = windowInfo.title
   } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
     trackerKey = windowInfo.owner?.path || 'Unknown App'

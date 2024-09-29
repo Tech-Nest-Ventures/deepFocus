@@ -5,11 +5,11 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
-import { SiteTimeTracker } from './types'
+import { SiteTimeTracker, DeepWorkHours } from './types'
 
 let currentUsername: string | null = null
 let workerSiteTimeTrackers: SiteTimeTracker[] = []
-let deepWorkHours = {
+let deepWorkHours: DeepWorkHours = {
   Monday: 0,
   Tuesday: 0,
   Wednesday: 0,
@@ -29,27 +29,28 @@ console.log(`API_BASE_URL is ${API_BASE_URL}`)
 function updateDeepWorkHours(siteTrackers: SiteTimeTracker[]) {
   const today = dayjs().format('dddd') // Get the current day of the week (e.g., Monday, Tuesday)
   console.log('today is ', today)
-  // Calculate total deep work time spent for today
+
   let totalDeepWorkTime = 0
 
   siteTrackers.forEach((tracker) => {
-    if (isDeepWork(tracker.title)) {
-      totalDeepWorkTime += tracker.timeSpent
-    }
+    totalDeepWorkTime += tracker.timeSpent
   })
 
-  // Convert time from milliseconds to hours and update deep work hours for today
-  deepWorkHours[today] += totalDeepWorkTime / (1000 * 60 * 60) // Convert ms to hours
+  // Convert total time from milliseconds to hours and add it to the existing deep work hours for today
+  const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60)
+
+  deepWorkHours[today] = parseFloat((deepWorkHours[today] + timeSpentInHours).toFixed(2))
+
   console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
-  return deepWorkHours[today]
+  return deepWorkHours
 }
 
-// Determine if current activity is considered deep work
-function isDeepWork(windowInfo) {
-  // You can customize this condition based on specific apps, sites, or window titles
-  const deepWorkSites = ['vscode', 'notion', 'github'] // Example: deep work occurs in these apps
-  return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
-}
+//TODO: Add when logic is added in frontend +  Determine if current activity is considered deep work
+// function isDeepWork(windowInfo) {
+//   // You can customize this condition based on specific apps, sites, or window titles
+//   const deepWorkSites = ['vscode', 'notion', 'github'] // Example: deep work occurs in these apps
+//   return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
+// }
 
 // Function to reset daily counters
 function resetDailyCounters() {
@@ -85,7 +86,6 @@ parentPort?.on('message', (message) => {
     resetDailyCounters()
   }
   if (message.type === 'STORE_DATA') {
-    console.log('messageData', message.data)
     const hoursSoFar = updateDeepWorkHours(message.data)
     parentPort?.postMessage({ type: 'STORE_DATA', data: hoursSoFar })
     console.log('hoursSoFar', hoursSoFar)
@@ -102,7 +102,7 @@ setInterval(() => {
 }, 120000)
 
 // Schedule daily reset at midnight
-schedule.scheduleJob('0 0 * * *', () => {
+schedule.scheduleJob('0 0 19 * *', () => {
   if (currentUsername) {
     console.log('Performing daily reset...')
     persistDailyData()
@@ -113,7 +113,7 @@ schedule.scheduleJob('0 0 * * *', () => {
 })
 
 // Schedule weekly aggregation at the end of Sunday (midnight)
-schedule.scheduleJob('0 0 * * 0', () => {
+schedule.scheduleJob('0 19 * * 0', () => {
   if (currentUsername) {
     console.log('Performing weekly aggregation...')
     aggregateWeeklyData()
