@@ -49,8 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-
-       - name: Set Release Tag
+      - name: Set Release Tag
         run: echo "RELEASE_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
 
       - name: Upload DMG to GitHub Release
