@@ -16,7 +16,7 @@ permissions:
 jobs:
   release:
     name: Release
-    runs-on: self-hosted
+    runs-on: macos-latest
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
@@ -38,14 +38,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Rebuild native modules for Electron
+        run: pnpm build:mac
+
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: pnpm audit signatures
-
-      # Save the DMG file for later steps
-      - name: Save DMG output
-        run: |
-          ls dist/mac/*.dmg
-          echo "DMG_PATH=$(ls dist/mac/*.dmg)" >> $GITHUB_ENV
 
       - name: Semantic Release
         env:
@@ -53,8 +50,5 @@ jobs:
         run: npx semantic-release
 
       - name: Upload DMG to GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ${{ env.DMG_PATH }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2.0.8
+
