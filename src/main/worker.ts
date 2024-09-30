@@ -1,6 +1,5 @@
 import { workerData, parentPort } from 'worker_threads'
 import schedule from 'node-schedule'
-import axios, { AxiosResponse } from 'axios'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
@@ -131,10 +130,19 @@ async function persistDailyData(
   }))
 
   try {
-    const response: AxiosResponse<{ message: string }, { status: number }> = await axios.post(
-      `${API_BASE_URL}/api/v1/activity/persist`,
-      { dailyData, username: currentUsername, deepWorkHours, today }
-    )
+    const response = await fetch(`${API_BASE_URL}/api/v1/activity/persist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dailyData,
+        username: currentUsername,
+        deepWorkHours,
+        today
+      })
+    })
+    console.log('Response from backend:', response.status)
   } catch (error) {
     console.error('Error sending daily activity data to backend:', error)
   }
@@ -147,10 +155,16 @@ async function aggregateWeeklyData() {
   }
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/v1/activity/aggregate-weekly`, {
-      username: currentUsername
+    const response = await fetch(`${API_BASE_URL}/api/v1/activity/aggregate-weekly`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: currentUsername
+      })
     })
-    console.log('Weekly data sent to backend:', response.data)
+    console.log('Response from backend:', response.status)
   } catch (error) {
     console.error('Error sending weekly data to backend:', error)
   }

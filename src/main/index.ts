@@ -20,6 +20,10 @@ export interface TypedStore extends Store<StoreSchema> {
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
+let currentDeepWork = 0
+const deepWorkTarget = store.get('deepWorkTarget', 4) as number // Default to 4 hours if not set
+let mainWindow: BrowserWindow | null = null
+
 setupEnvironment()
 // Initialize environment variables based on the environment
 function setupEnvironment(): void {
@@ -32,6 +36,26 @@ function setupEnvironment(): void {
     console.log('app is not packaged')
     dotenv.config()
   }
+}
+
+function updateIconBasedOnProgress() {
+  if (!mainWindow) return
+
+  let iconPath
+
+  if (currentDeepWork >= deepWorkTarget) {
+    iconPath = getIconPath('icon_green.png') // Change to green icon when the target is hit
+  } else if (currentDeepWork > 0) {
+    console.log('Greater than 1. Setting to blue icon')
+    iconPath = getIconPath('icon_blue.png') // Change to yellow icon when there is progress
+  } else {
+    iconPath = getIconPath('icon_red.png') // Default red icon
+  }
+
+  mainWindow.setIcon(iconPath)
+  app.dock.setIcon(iconPath)
+  console.log('Icon path is ', iconPath)
+  console.log('Setting icon!')
 }
 
 // Store user data in the electron-store and send to worker
@@ -127,7 +151,7 @@ function startActivityMonitoring() {
 
 // Create the browser window
 async function createWindow(): Promise<BrowserWindow> {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: true,
@@ -141,7 +165,7 @@ async function createWindow(): Promise<BrowserWindow> {
 
   mainWindow.on('ready-to-show', async () => {
     console.log('ready-to-show')
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -215,6 +239,10 @@ function setupIPCListeners() {
       Sunday: 0
     }) as DeepWorkHours
     console.log('deepWorkHours', deepWorkHours)
+    schedulerWorker.postMessage({
+      type: MessageType.UPDATE_DATA,
+      data: { deepWorkHours, currentSiteTimeTrackers }
+    })
 
     // Convert the object into an array format expected by the chart
     const chartData = [
@@ -253,11 +281,19 @@ const schedulerWorker = new Worker(schedulerWorkerPath, {
   }
 })
 
-schedulerWorker.on('message', (message) => {
+schedulerWorker.on('message', (message: any) => {
   if (message.type === MessageType.RESET_DAILY) resetCounters('daily')
   if (message.type === MessageType.RESET_WEEKLY) resetCounters('weekly')
-  if (message.type === MessageType.UPDATE_DATA)
+  if (message.type === MessageType.UPDATE_DATA) {
     store.set('deepWorkHours', message.data as DeepWorkHours)
+    const today = dayjs().format('dddd')
+    currentDeepWork = message.data[today] || 0
+
+    console.log(`Current deep work hours: ${currentDeepWork} hours`)
+
+    // Update the app icon based on deep work progress
+    updateIconBasedOnProgress()
+  }
   if (message.type === MessageType.GET_DATA) {
     const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
     const deepWorkHours = store.get('deepWorkHours', {
@@ -277,3 +313,14 @@ schedulerWorker.on('message', (message) => {
 })
 schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
 schedulerWorker.on('message', (message) => console.log('Worker Message:', message))
+
+// Dynamically resolve the path to the resources directory
+function getIconPath(iconName) {
+  if (app.isPackaged) {
+    // In production, resolve the path from the asar-unpacked resources
+    return path.join(process.resourcesPath, 'resources', iconName)
+  } else {
+    // In development mode, resolve the path from your local development folder
+    return path.join(__dirname, '../../resources', iconName) // Adjust this if your dev structure is different
+  }
+}

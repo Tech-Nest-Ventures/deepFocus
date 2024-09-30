@@ -32,6 +32,7 @@ export interface StoreSchema {
     Saturday: number
     Sunday: number
   }
+  deepWorkTarget?: number
 }
 export interface SiteTimeTracker {
   url: string

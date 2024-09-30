@@ -9,8 +9,13 @@ files:
 extraResources:
   - from: '.env'
     to: '.env'
-  - from: 'src/main/emailTemplates'
-    to: 'emailTemplates'
+  - from: './resources/icon_blue.png'
+    to: 'resources/icon_blue.png'
+  - from: './resources/icon_green.png'
+    to: 'resources/icon_green.png'
+  - from: './resources/icon_red.png'
+    to: 'resources/icon_red.png'
+
 asar: true
 asarUnpack:
   - 'resources/**'
