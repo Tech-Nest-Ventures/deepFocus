@@ -29,7 +29,6 @@ setupEnvironment()
 function setupEnvironment(): void {
   if (app.isPackaged) {
     const envPath = path.join(process.resourcesPath, '.env')
-    console.log('app.isPackaged ', app.isPackaged)
     if (fs.existsSync(envPath)) dotenv.config({ path: envPath })
     else console.error('Env file not found in production build')
   } else {
@@ -54,8 +53,6 @@ function updateIconBasedOnProgress() {
 
   mainWindow.setIcon(iconPath)
   app.dock.setIcon(iconPath)
-  console.log('Icon path is ', iconPath)
-  console.log('Setting icon!')
 }
 
 // Store user data in the electron-store and send to worker
@@ -146,7 +143,7 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 120000) // every minute
+  }, 120000) // every 2 mins
 }
 
 // Create the browser window
@@ -164,7 +161,6 @@ async function createWindow(): Promise<BrowserWindow> {
   })
 
   mainWindow.on('ready-to-show', async () => {
-    console.log('ready-to-show')
     mainWindow?.show()
   })
 
@@ -177,7 +173,6 @@ async function createWindow(): Promise<BrowserWindow> {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-    console.log('ELECTRON_RENDERER_URL is not defined')
   }
 
   return mainWindow
@@ -185,7 +180,6 @@ async function createWindow(): Promise<BrowserWindow> {
 
 // Main app ready event
 app.whenReady().then(async () => {
-  console.log('ready!')
   electronApp.setAppUserModelId('com.electron')
 
   await createWindow().then(() => {
@@ -238,7 +232,6 @@ function setupIPCListeners() {
       Saturday: 0,
       Sunday: 0
     }) as DeepWorkHours
-    console.log('deepWorkHours', deepWorkHours)
     schedulerWorker.postMessage({
       type: MessageType.UPDATE_DATA,
       data: { deepWorkHours, currentSiteTimeTrackers }
@@ -321,6 +314,6 @@ function getIconPath(iconName) {
     return path.join(process.resourcesPath, 'resources', iconName)
   } else {
     // In development mode, resolve the path from your local development folder
-    return path.join(__dirname, '../../resources', iconName) // Adjust this if your dev structure is different
+    return path.join(__dirname, '../../resources', iconName)
   }
 }
