@@ -157,7 +157,7 @@ async function aggregateWeeklyData() {
 }
 
 // Function to merge overlapping time intervals
-function mergeOverlappingIntervals(intervals) {
+function mergeOverlappingIntervals(intervals: FocusInterval[]) {
   if (!intervals.length) return []
 
   // Sort intervals by the start time

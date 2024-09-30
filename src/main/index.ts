@@ -122,7 +122,7 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 60000) // every minute
+  }, 120000) // every minute
 }
 
 // Create the browser window
@@ -169,7 +169,6 @@ app.whenReady().then(async () => {
     handleDailyReset()
     setupPeriodicSave()
     setupIPCListeners()
-    setupWindowActivityListener()
   })
 })
 
@@ -236,43 +235,8 @@ function handleDailyReset() {
   const lastResetDate = dayjs(store.get('lastResetDate'))
   if (!lastResetDate.isSame(now, 'day') || now.diff(lastResetDate, 'hours') > 24) {
     console.log('Missed daily reset from previous session, performing now.')
-    const deepWorkHours = store.get('deepWorkHours', {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
-    }) as DeepWorkHours
-
-    deepWorkHours[now.format('dddd')] = 0
     resetCounters('daily')
-    store.set('deepWorkHours', deepWorkHours)
   }
-}
-
-function setupWindowActivityListener() {
-  // Send the store data to the worker thread every 10 minutes
-  setInterval(
-    () => {
-      const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-      const deepWorkHours = store.get('deepWorkHours', {
-        Monday: 0,
-        Tuesday: 0,
-        Wednesday: 0,
-        Thursday: 0,
-        Friday: 0,
-        Saturday: 0,
-        Sunday: 0
-      }) as DeepWorkHours
-      schedulerWorker.postMessage({
-        type: MessageType.UPDATE_DATA,
-        data: { currentSiteTimeTrackers, deepWorkHours }
-      })
-    },
-    2.5 * 60 * 1000
-  ) // Every 5 minutes
 }
 
 app.on('before-quit', () => schedulerWorker.terminate())
