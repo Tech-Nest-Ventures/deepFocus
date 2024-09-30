@@ -6,7 +6,6 @@ import { AuthProvider, useAuth } from './lib/AuthContext'
 import { sendUserToBackend } from './lib/utils'
 import './assets/main.css'
 import logo from './assets/deepWork.svg'
-import '@fontsource/inter'
 import { IconSettings } from './components/ui/icons'
 import { Button } from './components/ui/button'
 
