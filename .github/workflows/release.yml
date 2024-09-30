@@ -31,6 +31,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
+
       - name: Install pnpm
         run: npm install -g pnpm
 
@@ -39,7 +40,21 @@ jobs:
 
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: pnpm audit signatures
-      - name: Release
+
+      # Save the DMG file for later steps
+      - name: Save DMG output
+        run: |
+          ls dist/mac/*.dmg
+          echo "DMG_PATH=$(ls dist/mac/*.dmg)" >> $GITHUB_ENV
+
+      - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Upload DMG to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.DMG_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
