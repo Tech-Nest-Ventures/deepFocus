@@ -49,11 +49,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Get the tag created by semantic-release
-        if: success() # Run this step only if the previous step succeeds
-        run: echo "RELEASE_TAG=$(jq -r .release.tag_name < .releases.json)" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       - name: Set Release Tag
+        run: echo "RELEASE_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
 
       - name: Upload DMG to GitHub Release
         uses: softprops/action-gh-release@v2.0.8
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
