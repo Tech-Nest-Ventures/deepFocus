@@ -49,10 +49,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+# This step will retrieve the latest created tag
       - name: Set Release Tag
+        id: set_tag
         run: echo "RELEASE_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
 
+# Now, upload the DMG to the GitHub release
       - name: Upload DMG to GitHub Release
         uses: softprops/action-gh-release@v2.0.8
+        with:
+        tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
         env:
-          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
