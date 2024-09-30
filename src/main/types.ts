@@ -7,6 +7,16 @@ export interface User {
   language: string
 }
 
+export enum MessageType {
+  RESET_DAILY,
+  RESET_WEEKLY,
+  RESET_TRACKERS,
+  UPDATE_DATA,
+  GET_DATA,
+  REPLY_DATA,
+  SET_USER_INFO
+}
+
 export interface StoreSchema {
   unproductiveSites?: string[]
   siteTimeTrackers: SiteTimeTracker[]

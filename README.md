@@ -74,6 +74,8 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [ ] Implement secure user authentication system
 - [ ] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
 - [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
+- [ ] To do list like functionality? Have people add tasks to their list and mark as productive or not productive. Then, at the end of the day, they can see a list of tasks and see how productive they were.
+- [ ] Add a light
 
 ## Philosophy
 

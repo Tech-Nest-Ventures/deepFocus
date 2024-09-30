@@ -7,15 +7,8 @@ import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
-
-import { EmailService } from './emailService'
-import { StoreSchema, SiteTimeTracker, ExtendedResult, DeepWorkHours } from './types'
-import {
-  getUrlFromResult,
-  formatTime,
-  updateSiteTimeTracker,
-  getBaseURL
-} from './productivityUtils'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
+import { updateSiteTimeTracker } from './productivityUtils'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -28,8 +21,6 @@ export interface TypedStore extends Store<StoreSchema> {
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
 setupEnvironment()
-const emailService = new EmailService(process.env.EMAIL || '', store)
-
 // Initialize environment variables based on the environment
 function setupEnvironment(): void {
   if (app.isPackaged) {
@@ -44,7 +35,7 @@ function setupEnvironment(): void {
 }
 
 // Store user data in the electron-store and send to worker
-function handleUserData(user): void {
+function handleUserData(user: User): void {
   store.set('user', {
     username: user.username,
     firstName: user.firstName,
@@ -53,9 +44,8 @@ function handleUserData(user): void {
     language: user.language
   })
   schedulerWorker.postMessage({
-    type: 'SET_USER_INFO',
-    user,
-    currentSiteTimeTrackers: store.get('siteTimeTrackers', [])
+    type: MessageType.SET_USER_INFO,
+    user
   })
 }
 
@@ -63,10 +53,7 @@ function handleUserData(user): void {
 function loadUserData() {
   const savedUser = store.get('user')
   if (savedUser) {
-    console.log('User data loaded from electron-store:', savedUser)
-    const savedUrls = store.get('unproductiveUrls', [])
-    console.log('Loaded unproductive URLs from store:', savedUrls)
-    schedulerWorker.postMessage({ type: 'SET_USER_INFO', user: savedUser })
+    schedulerWorker.postMessage({ type: MessageType.SET_USER_INFO, user: savedUser })
 
     new Notification({
       title: 'DeepFocus',
@@ -79,22 +66,43 @@ function loadUserData() {
 // Reset counters logic
 function resetCounters(type: 'daily' | 'weekly') {
   if (type === 'daily') {
+    const now = dayjs()
     console.log('Resetting Daily Trackers')
     currentSiteTimeTrackers.forEach((tracker) => (tracker.timeSpent = 0))
-    console.log('currentSiteTimeTrackers after daily reset', currentSiteTimeTrackers)
-    console.log('store.get(lastResetDate)', store.get('lastResetDate'))
     store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
+    const deepWorkHours = store.get('deepWorkHours', {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0
+    }) as DeepWorkHours
+
+    deepWorkHours[now.format('dddd')] = 0
+    resetCounters('daily')
+    store.set('deepWorkHours', deepWorkHours)
+    store.set('siteTimeTrackers', currentSiteTimeTrackers)
   } else if (type === 'weekly') {
     console.log('Resetting Weekly Trackers')
     currentSiteTimeTrackers = []
+    store.set('deepWorkHours', {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0
+    })
+    store.set('siteTimeTrackers', currentSiteTimeTrackers)
   }
-  store.set('siteTimeTrackers', currentSiteTimeTrackers)
 }
 
 // Periodic saving of time trackers
 function setupPeriodicSave() {
   setInterval(() => store.set('siteTimeTrackers', currentSiteTimeTrackers), 5 * 60 * 1000)
-  console.log('setupPeriodicSave', store.get('siteTimeTrackers'))
 }
 
 // Monitor system idle time and user activity
@@ -107,8 +115,8 @@ function startActivityMonitoring() {
     }
     try {
       const windowInfo = await activeWindow()
-      console.log('windowInfo', windowInfo)
       if (windowInfo && windowInfo!.platform === 'macos') {
+        console.log('windowInfo', windowInfo)
         updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
       }
     } catch (error) {
@@ -168,11 +176,10 @@ app.whenReady().then(async () => {
 function handleUserLogout() {
   store.delete('user')
   store.set('siteTimeTrackers', [])
-  schedulerWorker.postMessage({ type: 'RESET_TRACKERS' })
+  schedulerWorker.postMessage({ type: MessageType.RESET_TRACKERS })
 }
 function setupIPCListeners() {
   ipcMain.on('send-user-data', (event, user) => {
-    console.log('Received user data from frontend:', user, event.processId)
     handleUserData(user)
     const savedUser = store.get('user')
     if (savedUser) {
@@ -180,7 +187,6 @@ function setupIPCListeners() {
       currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
     }
   })
-  ipcMain.on('test-email-send', async () => await emailService.testEmailSend())
   ipcMain.on('logout-user', () => handleUserLogout())
   ipcMain.on('fetch-unproductive-urls', (event) => {
     const urls = store.get('unproductiveUrls', [])
@@ -221,9 +227,6 @@ function setupIPCListeners() {
       deepWorkHours?.Saturday || 0,
       deepWorkHours?.Sunday || 0
     ]
-
-    console.log('chartData', chartData)
-
     // Send the data back to the renderer process
     event.reply('deep-work-data-response', chartData)
   })
@@ -233,7 +236,19 @@ function handleDailyReset() {
   const lastResetDate = dayjs(store.get('lastResetDate'))
   if (!lastResetDate.isSame(now, 'day') || now.diff(lastResetDate, 'hours') > 24) {
     console.log('Missed daily reset from previous session, performing now.')
-    schedulerWorker.postMessage({ type: 'RESET_DAILY' })
+    const deepWorkHours = store.get('deepWorkHours', {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0
+    }) as DeepWorkHours
+
+    deepWorkHours[now.format('dddd')] = 0
+    resetCounters('daily')
+    store.set('deepWorkHours', deepWorkHours)
   }
 }
 
@@ -242,7 +257,19 @@ function setupWindowActivityListener() {
   setInterval(
     () => {
       const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-      schedulerWorker.postMessage({ type: 'STORE_DATA', data: currentSiteTimeTrackers })
+      const deepWorkHours = store.get('deepWorkHours', {
+        Monday: 0,
+        Tuesday: 0,
+        Wednesday: 0,
+        Thursday: 0,
+        Friday: 0,
+        Saturday: 0,
+        Sunday: 0
+      }) as DeepWorkHours
+      schedulerWorker.postMessage({
+        type: MessageType.UPDATE_DATA,
+        data: { currentSiteTimeTrackers, deepWorkHours }
+      })
     },
     2.5 * 60 * 1000
   ) // Every 5 minutes
@@ -263,9 +290,26 @@ const schedulerWorker = new Worker(schedulerWorkerPath, {
 })
 
 schedulerWorker.on('message', (message) => {
-  if (message.type === 'RESET_DAILY') resetCounters('daily')
-  if (message.type === 'RESET_WEEKLY') resetCounters('weekly')
-  if (message.type === 'STORE_DATA') store.set('deepWorkHours', message.data)
+  if (message.type === MessageType.RESET_DAILY) resetCounters('daily')
+  if (message.type === MessageType.RESET_WEEKLY) resetCounters('weekly')
+  if (message.type === MessageType.UPDATE_DATA)
+    store.set('deepWorkHours', message.data as DeepWorkHours)
+  if (message.type === MessageType.GET_DATA) {
+    const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+    const deepWorkHours = store.get('deepWorkHours', {
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+      Sunday: 0
+    }) as DeepWorkHours
+    schedulerWorker.postMessage({
+      type: MessageType.REPLY_DATA,
+      data: { currentSiteTimeTrackers, deepWorkHours }
+    })
+  }
 })
 schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
 schedulerWorker.on('message', (message) => console.log('Worker Message:', message))
