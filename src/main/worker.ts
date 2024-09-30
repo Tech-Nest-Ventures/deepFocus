@@ -67,7 +67,6 @@ parentPort?.on('message', (message) => {
     const { deepWorkHours, currentSiteTimeTrackers } = message.data
     const hoursSoFar = updateDeepWorkHours(currentSiteTimeTrackers, deepWorkHours)
     parentPort?.postMessage({ type: MessageType.UPDATE_DATA, data: hoursSoFar })
-    console.log('hoursSoFar', hoursSoFar)
   }
 
   if (message.type === MessageType.REPLY_DATA) {
