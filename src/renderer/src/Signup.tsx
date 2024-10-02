@@ -62,8 +62,8 @@ function Signup() {
       localStorage.setItem('user', JSON.stringify(user))
       sendUserToBackend(user)
       setIsLoggedIn(true)
-      navigate('/')
-      console.info('Navigating to home')
+      navigate('/onboarding')
+      console.info('Navigating to Onboarding')
     } catch (error) {
       console.error('Signup error:', error)
       setSignUpError('Sign-up failed. Please try again.')

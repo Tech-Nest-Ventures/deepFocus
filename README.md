@@ -101,3 +101,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 Timeo Williams [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
+
+Problems:
+
+1. UI for Analytics doesn't send a request to get fresh data after 24 hours if
+   the user stays on the same Analytics page. Perhaps a refresh button would be
+   better? Or force a refresh after a certain amount of time?
+
+2. Need to allow customers to add websites that are productive
+   so that we can track the time spent on those sites.
+
+As a default, the Login Window and Settings page should be hidden.
+windowInfo {
+owner: {
+name: 'loginwindow',
+processId: 186,
+bundleId: 'com.apple.loginwindow',
+path: '/System/Library/CoreServices/loginwindow.app'
+},
+bounds: { width: 30000, y: -15000, height: 30000, x: -15000 },
+memoryUsage: 18672,
+title: '',
+platform: 'macos',
+id: 23597
+}
+windowInfo {
+owner: {
+processId: 516,
+bundleId: 'com.apple.finder',
+name: 'Finder',
+path: '/System/Library/CoreServices/Finder.app'
+},
+}
+
+Honestly, if any of the bundleIDs contain com.apple, it's probably not productive.
+
+Last, but not least, let's sign this App up for the Apple Developer Program.

@@ -1,5 +1,6 @@
 import { createContext, useContext, createSignal, Accessor, Setter, JSX } from 'solid-js'
-
+import { render } from 'solid-js/web'
+import App from '../App'
 // Create a context with two signals: `isLoggedIn` and `setIsLoggedIn`
 type AuthContextType = [Accessor<boolean>, Setter<boolean>]
 const AuthContext = createContext<AuthContextType>()

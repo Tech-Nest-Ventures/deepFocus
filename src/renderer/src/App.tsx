@@ -1,5 +1,5 @@
 import { lazy, Suspense, onMount, createSignal, ComponentProps } from 'solid-js'
-import { Router, Route, A, useLocation } from '@solidjs/router'
+import { Router, Route, A, useLocation, HashRouter } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 
@@ -8,6 +8,7 @@ import './assets/main.css'
 import logo from './assets/deepWork.svg'
 import { IconSettings } from './components/ui/icons'
 import { Button } from './components/ui/button'
+import Onboarding from './Onboarding'
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
@@ -23,7 +24,6 @@ const App = (props: ComponentProps<typeof Router>) => {
   const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
 
-  // Check for the token in localStorage on component mount
   onMount(() => {
     const token = localStorage.getItem('token') as string
     const user = localStorage.getItem('user')
@@ -40,7 +40,7 @@ const App = (props: ComponentProps<typeof Router>) => {
     setIsNewUser(false)
   }
 
-  return (
+  const NavBar = () => (
     <>
       <header class="flex justify-between items-center p-4 bg-gray-800 w-full">
         <img alt="logo" class="logo" src={logo} />
@@ -86,23 +86,33 @@ const App = (props: ComponentProps<typeof Router>) => {
           )}
         </nav>
       </header>
+    </>
+  )
 
+  return (
+    <>
+      <NavBar />
       {props.children}
     </>
   )
 }
+
+export default App
 
 render(
   () => (
     <AuthProvider>
       <Router root={App}>
         <Suspense fallback={<div>Loading...</div>}>
-          <Route path="/" component={Home} />
-          <Route path="/login" component={Login} />
-          <Route path="/hello-world" component={HelloWorld} />
-          <Route path="/signup" component={Signup} />
-          <Route path="/analytics" component={BarChart} />
-          <Route path="/settings" component={Settings} />
+          <>
+            <Route path="/" component={Home} />
+            <Route path="/login" component={Login} />
+            <Route path="/hello-world" component={() => <h1>Hello World!</h1>} />
+            <Route path="/signup" component={Signup} />
+            <Route path="/analytics" component={BarChart} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/onboarding" component={Onboarding} />
+          </>
         </Suspense>
       </Router>
     </AuthProvider>

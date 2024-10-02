@@ -9,6 +9,8 @@ const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
 import { updateSiteTimeTracker } from './productivityUtils'
+import { getInstalledApps } from './childProcess'
+import { get } from 'http'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -19,6 +21,7 @@ export interface TypedStore extends Store<StoreSchema> {
 }
 
 const store = new Store<StoreSchema>() as TypedStore
+store.clear()
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
 let currentDeepWork = 0
 const deepWorkTarget = store.get('deepWorkTarget', 4) as number // Default to 4 hours if not set
@@ -43,15 +46,16 @@ function updateIconBasedOnProgress() {
   let iconPath
 
   if (currentDeepWork >= deepWorkTarget) {
-    iconPath = getIconPath('icon_green.png') // Change to green icon when the target is hit
-  } else if (currentDeepWork > 0) {
+    iconPath = getIconPath('icon_green.png')
+  } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
     console.log('Greater than 1. Setting to blue icon')
-    iconPath = getIconPath('icon_blue.png') // Change to yellow icon when there is progress
+    iconPath = getIconPath('icon_yellow.png')
+  } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
+    iconPath = getIconPath('icon_blue.png')
   } else {
-    iconPath = getIconPath('icon_red.png') // Default red icon
+    iconPath = getIconPath('icon_red.png')
   }
 
-  mainWindow.setIcon(iconPath)
   app.dock.setIcon(iconPath)
 }
 
@@ -102,7 +106,6 @@ function resetCounters(type: 'daily' | 'weekly') {
     }) as DeepWorkHours
 
     deepWorkHours[now.format('dddd')] = 0
-    resetCounters('daily')
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', currentSiteTimeTrackers)
   } else if (type === 'weekly') {
@@ -159,6 +162,7 @@ async function createWindow(): Promise<BrowserWindow> {
       sandbox: false
     }
   })
+  app.dock.setIcon(getIconPath('icon.png'))
 
   mainWindow.on('ready-to-show', async () => {
     mainWindow?.show()
@@ -180,7 +184,7 @@ async function createWindow(): Promise<BrowserWindow> {
 
 // Main app ready event
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.deepfocus.app')
 
   await createWindow().then(() => {
     loadUserData()
@@ -205,19 +209,38 @@ function setupIPCListeners() {
     }
   })
   ipcMain.on('logout-user', () => handleUserLogout())
+
+  // Fetch Unproductive URLs
   ipcMain.on('fetch-unproductive-urls', (event) => {
     const urls = store.get('unproductiveUrls', [])
     event.reply('unproductive-urls-response', urls)
   })
+
+  // Fetch Unproductive Apps
+  ipcMain.on('fetch-unproductive-apps', (event) => {
+    const apps = store.get('unproductiveApps', [])
+    event.reply('unproductive-apps-response', apps)
+  })
+
+  // Add or update Unproductive URLs and persist them
   ipcMain.on('add-unproductive-url', (event, urls) => {
     store.set('unproductiveUrls', urls)
     console.log('Unproductive URLs updated:', urls, event.processId)
+    event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
 
-  // Event for removing unproductive URLs
+  // Update Unproductive Apps and persist them
+  ipcMain.on('update-unproductive-apps', (event, apps) => {
+    store.set('unproductiveApps', apps)
+    console.log('Updated unproductive apps:', apps)
+    event.reply('unproductive-apps-response', apps) // Send updated apps back
+  })
+
+  // Remove specific unproductive URL and persist
   ipcMain.on('remove-unproductive-url', (event, urls) => {
     store.set('unproductiveUrls', urls)
     console.log('Unproductive URLs updated:', urls, event.processId)
+    event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
 
   ipcMain.on('fetch-deep-work-data', (event) => {
@@ -232,6 +255,7 @@ function setupIPCListeners() {
       Saturday: 0,
       Sunday: 0
     }) as DeepWorkHours
+    currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
     schedulerWorker.postMessage({
       type: MessageType.UPDATE_DATA,
       data: { deepWorkHours, currentSiteTimeTrackers }
@@ -247,8 +271,17 @@ function setupIPCListeners() {
       deepWorkHours?.Saturday || 0,
       deepWorkHours?.Sunday || 0
     ]
-    // Send the data back to the renderer process
     event.reply('deep-work-data-response', chartData)
+  })
+  ipcMain.on('fetch-app-icons', async (event) => {
+    try {
+      const apps = await getInstalledApps()
+      console.log('Apps are ', apps)
+      event.reply('app-icons-response', apps)
+    } catch (error) {
+      console.error('Error fetching app icons:', error)
+      event.reply('app-icons-response', [])
+    }
   })
 }
 function handleDailyReset() {

@@ -19,6 +19,7 @@ export enum MessageType {
 
 export interface StoreSchema {
   unproductiveSites?: string[]
+  unproductiveApps?: string[]
   siteTimeTrackers: SiteTimeTracker[]
   user?: User
   lastResetDate?: string

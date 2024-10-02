@@ -17,11 +17,13 @@ function updateDeepWorkHours(siteTrackers: SiteTimeTracker[], deepWorkHours: Dee
   const focusIntervals: FocusInterval[] = []
 
   siteTrackers.forEach((tracker) => {
-    if (tracker) {
+    if (tracker && isDeepWork(tracker.title)) {
       focusIntervals.push({
         start: tracker.lastActiveTimestamp - tracker.timeSpent,
         end: tracker.lastActiveTimestamp
       })
+    } else {
+      console.log('Not deep work', tracker.title)
     }
   })
 
@@ -30,8 +32,10 @@ function updateDeepWorkHours(siteTrackers: SiteTimeTracker[], deepWorkHours: Dee
   const totalDeepWorkTime = mergedIntervals.reduce((acc, interval) => {
     return acc + (interval.end - interval.start)
   }, 0)
+  console.log('totalDeepWorkTime', totalDeepWorkTime)
 
   const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60)
+  console.log('timeSpentInHours', timeSpentInHours)
   deepWorkHours[today] = parseFloat(timeSpentInHours.toFixed(2))
 
   console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
@@ -39,18 +43,12 @@ function updateDeepWorkHours(siteTrackers: SiteTimeTracker[], deepWorkHours: Dee
 }
 
 //TODO: Add when logic is added in frontend +  Determine if current activity is considered deep work
-function isDeepWork(windowInfo) {
+function isDeepWork(item: string) {
   // You can customize this condition based on specific apps, sites, or window titles
   // Check if the tracker is a deep work app (e.g., VSCode, GitHub, etc.)
-
-  const deepWorkSites = [
-    'vscode',
-    'settings',
-    'notion',
-    'https://github.com',
-    'https://chatgpt.com'
-  ]
-  return deepWorkSites.includes(windowInfo?.title?.toLowerCase())
+  const formattedItem = item.replaceAll(' ', '').toLowerCase()
+  const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'linkedin', 'electron']
+  return deepWorkSites.filter((site) => formattedItem.includes(site)).length
 }
 
 // Listen for messages from the main thread

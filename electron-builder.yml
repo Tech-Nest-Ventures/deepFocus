@@ -15,6 +15,10 @@ extraResources:
     to: 'resources/icon_green.png'
   - from: './resources/icon_red.png'
     to: 'resources/icon_red.png'
+  - from: './resources/icon_yellow.png'
+    to: 'resources/icon_yellow.png'
+  - from: './resources/icon.png'
+    to: 'resources/icon.png'
 
 asar: true
 asarUnpack:
