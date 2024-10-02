@@ -2,7 +2,7 @@ import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { TextField, TextFieldLabel, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
 
-const UnproductiveWebsites = () => {
+const UnproductiveWebsites = (props: {}) => {
   const [site, setSite] = createSignal('')
   const [unproductiveSites, setUnproductiveSites] = createSignal<string[]>([])
 

@@ -42,7 +42,6 @@ function updateDeepWorkHours(siteTrackers: SiteTimeTracker[], deepWorkHours: Dee
   return deepWorkHours
 }
 
-//TODO: Add when logic is added in frontend +  Determine if current activity is considered deep work
 function isDeepWork(item: string) {
   // You can customize this condition based on specific apps, sites, or window titles
   // Check if the tracker is a deep work app (e.g., VSCode, GitHub, etc.)
@@ -111,19 +110,26 @@ async function persistDailyData(
     return
   }
 
+  const MIN_TIME_THRESHOLD = 60
+
+  // Filter out sites/apps with time spent less than the threshold
+  const filteredTrackers = workerSiteTimeTrackers.filter(
+    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD * 1000 // timeSpent is in milliseconds
+  )
+
+  if (filteredTrackers.length === 0) {
+    console.log('No site time trackers met the minimum time threshold to persist.')
+    return
+  }
+
   const today = dayjs().format('dddd') // Get back Monday, Tuesday, etc.
-  const dailyData: {
-    username: string
-    url: string
-    title: string
-    timeSpent: number
-    date: string
-  }[] = workerSiteTimeTrackers.map((tracker) => ({
+
+  const dailyData = filteredTrackers.map((tracker) => ({
     username: currentUsername,
     url: tracker.url,
     title: tracker.title,
     timeSpent: tracker.timeSpent,
-    date: dayjs().format('YYYY-MM-DD') // Get back 2023-09-27
+    date: dayjs().format('YYYY-MM-DD') // Get back 2024-09-30
   }))
 
   try {

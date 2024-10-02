@@ -10,6 +10,7 @@ import {
   Legend
 } from 'chart.js'
 import { Bar } from 'solid-chartjs'
+import { Button } from './components/ui/button'
 
 const BarChart = () => {
   const [chartData, setChartData] = createSignal({
@@ -24,41 +25,41 @@ const BarChart = () => {
       }
     ]
   })
+
+  let refreshIntervalId
+
+  const fetchDeepWorkData = () => {
+    window?.electron?.ipcRenderer.send('fetch-deep-work-data')
+  }
+
+  const handleDataResponse = (event, data) => {
+    if (data && data.length) {
+      console.log('Retrieved Data! ', data)
+      setChartData((prevData) => ({
+        ...prevData,
+        datasets: [{ ...prevData.datasets[0], data }]
+      }))
+    } else {
+      console.log('No data found for deep work hours.')
+    }
+  }
+
   onMount(() => {
     ChartJS.register(BarController, CategoryScale, BarElement, LinearScale, Tooltip, Title, Legend)
+    fetchDeepWorkData()
 
-    // Send the initial request to fetch deep work data
-    window?.electron.ipcRenderer.send('fetch-deep-work-data')
+    window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
 
-    // Listen for the deep work data response and update the chart
-    const deepWorkDataHandler = (event, data) => {
-      if (data && data.length) {
-        console.log('Retrieved Data! ', data)
+    refreshIntervalId = setInterval(() => fetchDeepWorkData(), 14400000) // Refresh every 4 hours
 
-        setChartData((prevData) => ({
-          ...prevData,
-          datasets: [
-            {
-              ...prevData.datasets[0],
-              data: data
-            }
-          ]
-        }))
-      } else {
-        console.log('No data found for deep work hours. Using default data.')
-      }
-    }
-
-    window?.electron.ipcRenderer.on('deep-work-data-response', deepWorkDataHandler)
-
-    // Clean up the event listener on unmount
     onCleanup(() => {
-      window?.electron.ipcRenderer.removeListener('deep-work-data-response', deepWorkDataHandler)
+      window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
+      clearInterval(refreshIntervalId)
     })
   })
 
   const chartOptions = {
-    responsive: false,
+    responsive: true,
     maintainAspectRatio: true,
     scales: {
       y: {
@@ -70,21 +71,25 @@ const BarChart = () => {
       }
     },
     plugins: {
-      title: {
-        display: true,
-        text: 'Deep Work Hours'
-      },
+      title: { display: true, text: 'Deep Work Hours' },
       tooltip: {
         callbacks: {
           label: function (context) {
-            const value = context.raw
-            return value === 0 ? 'Data coming soon' : `${value} hours`
+            return context.raw === 0 ? 'Data coming soon' : `${context.raw} hours`
           }
         }
       }
     }
   }
-  return <Bar data={chartData()} options={chartOptions} width={700} height={700} />
+
+  return (
+    <div>
+      <Button class="mb-4 p-2 bg-blue-500 text-white" onClick={fetchDeepWorkData}>
+        Refresh Data
+      </Button>
+      <Bar data={chartData()} options={chartOptions} width={500} height={500} />
+    </div>
+  )
 }
 
 export default BarChart

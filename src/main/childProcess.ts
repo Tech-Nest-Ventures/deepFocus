@@ -2,6 +2,13 @@ import fs from 'fs'
 import path from 'path'
 import plist from 'simple-plist'
 
+interface MacosAppInfo {
+  CFBundleIdentifier: string
+  CFBundleName: string
+  CFBundleExecutable: string
+  CFBundleIconFile: string
+}
+
 // Helper to read the Info.plist file
 async function readPlistFile(filePath: string) {
   return new Promise<MacosAppInfo>((resolve, reject) => {
@@ -22,7 +29,7 @@ async function readIcnsAsImageUri(file: string) {
     if (!buf) return ''
 
     const totalSize = buf.readInt32BE(4) - 8
-    const icons = []
+    const icons: { type: string; size: number; data: Buffer }[] = []
     let start = 0
     const buffer = buf.subarray(8)
 
@@ -41,15 +48,13 @@ async function readIcnsAsImageUri(file: string) {
     }
     return '' // No valid image data
   } catch (error) {
-    console.error(`Error reading .icns file: ${error.message}`)
+    console.error(`Error reading .icns file: ${error}`)
     return '' // Return an empty string or fallback icon
   }
 }
 
 // Updated getInstalledApps function
-export async function getInstalledApps(): Promise<
-  { name: string; path: string; icon: string | null }[]
-> {
+export async function getInstalledApps(): Promise<{ name: string; path: string; icon: string }[]> {
   const dir = '/Applications'
   const appPaths = await fs.promises.readdir(dir)
 
@@ -61,7 +66,7 @@ export async function getInstalledApps(): Promise<
       const info = await readPlistFile(plistPath)
       const iconPath = path.join(fullAppPath, 'Contents/Resources', info.CFBundleIconFile)
 
-      let icon = null
+      let icon: string | null = null
       if (fs.existsSync(iconPath)) {
         icon = await readIcnsAsImageUri(iconPath)
       } else {
@@ -82,5 +87,5 @@ export async function getInstalledApps(): Promise<
   })
 
   const apps = await Promise.all(appPromises)
-  return apps.filter(Boolean) // Remove null results
+  return apps.filter(Boolean) as { name: string; path: string; icon: string }[]
 }

@@ -1,83 +1,63 @@
-import { onMount } from 'solid-js'
-import { gsap } from 'gsap'
-import logo from './assets/deepWork.svg' // Your logo path
+import { onMount, createSignal, onCleanup, createEffect } from 'solid-js'
+import { useAuth } from './lib/AuthContext'
+import User from './types'
+import CircularProgress from './CircularProgress'
+import SandTimer from './SandTimer'
+import dayjs from 'dayjs'
 
 const Home = () => {
-  let logoRef
-  let particleContainerRef
+  const [loggedIn, setIsLoggedIn] = useAuth()
+  const user = (JSON.parse(localStorage.getItem('user') || '') as User) || {}
+  const [progress, setProgress] = createSignal(0)
+  const [deepWorkDone, setDeepWorkDone] = createSignal(0) // Changed to signal for reactivity
 
-  // Function to create and drop particles
-  const createParticles = () => {
-    const numberOfParticles = 100 // Number of sand particles
+  onMount(() => {
+    fetchDeepWorkData()
+    window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
 
-    for (let i = 0; i < numberOfParticles; i++) {
-      const particle = document.createElement('div')
-      particle.classList.add('sand-particle')
-      particleContainerRef.appendChild(particle)
+    // Cleanup the listener properly using onCleanup inside onMount
+    return () => {
+      window?.electron?.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
+    }
+  })
 
-      const delay = i * 0.3 // Delay for each particle to create the falling effect
-      const duration = 5 + Math.random() * 5 // Randomize the speed of each particle
+  createEffect(() => {
+    console.log('Updated progress:', progress())
+  })
 
-      gsap.fromTo(
-        particle,
-        {
-          x: Math.random() * 50 - 25, // Random horizontal position within the top part
-          y: 0,
-          opacity: 1
-        },
-        {
-          y: 150, // Fall to the bottom of the hourglass
-          opacity: 0.9,
-          duration,
-          ease: 'power1.in',
-          delay
-        }
-      )
+  const fetchDeepWorkData = () => {
+    window?.electron?.ipcRenderer.send('fetch-deep-work-data')
+  }
+
+  const handleDataResponse = (event, data) => {
+    const todayIndex = dayjs().day() - 1 // dayjs starts at 1
+    if (data && data.length) {
+      const workDone = data[todayIndex]
+      setDeepWorkDone(workDone)
+      const dailyTarget = 4
+      console.log('deepWorkDone', workDone)
+      setProgress(workDone / dailyTarget)
+    } else {
+      console.log('No data found for deep work hours.')
     }
   }
 
-  onMount(() => {
-    createParticles()
-  })
-
   return (
-    <div class="flex justify-center items-center h-screen flex-col">
-      <h1 class="mb-10 text-lg">Welcome to Deep Focus</h1>
-      <div style={{ display: 'flex', 'flex-direction': 'column', 'align-items': 'center' }}>
-        <div style={{ position: 'relative', width: '150px', height: '150px' }}>
-          <img
-            ref={(el) => (logoRef = el)}
-            src={logo}
-            alt="Deep Focus Logo"
-            style={{ width: '100%', height: '100%' }}
-          />
-
-          {/* Particle container */}
-          <div
-            ref={(el) => (particleContainerRef = el)}
-            style={{
-              position: 'absolute',
-              top: '0',
-              left: '65%',
-              transform: 'translateX(-50%)',
-              width: '50%',
-              height: '100%',
-              overflow: 'hidden' // Ensure particles don't overflow
-            }}
-          ></div>
+    <div class="flex justify-center items-center h-screen flex-col space-y-8">
+      {!loggedIn() && !user ? (
+        <div>
+          <h1 class="mb-10 text-lg">Welcome to Deep Focus</h1>
         </div>
-
-        {/* Additional CSS to style the particles */}
-        <style>{`
-        .sand-particle {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background-color: rgba(255, 165, 0, 0.9);
-          position: absolute;
-        }
-      `}</style>
-      </div>
+      ) : (
+        <div class=" space-y-8">
+          <h1 class="mb-10 text-lg">Welcome back {user.firstName}!</h1>
+          <div class="space-y-8">
+            <CircularProgress progress={progress()} />
+            <p class="italic">Tip: Take a break every 50 minutes to improve efficiency!</p>
+          </div>
+        </div>
+      )}
+      {!loggedIn() && <SandTimer />}
     </div>
   )
 }
