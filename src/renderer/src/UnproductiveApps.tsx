@@ -2,7 +2,7 @@ import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { Button } from './components/ui/button'
 
 const UnproductiveApps = () => {
-  const [apps, setApps] = createSignal([])
+  const [apps, setApps] = createSignal<{ name: string; path: string; icon: string }[]>([])
   const [unproductiveApps, setUnproductiveApps] = createSignal([]) // List of apps marked as unproductive
 
   // Fetch stored unproductive apps from Electron store on mount
@@ -30,17 +30,16 @@ const UnproductiveApps = () => {
     })
   })
 
-  // Toggle unproductive apps and persist them
   const toggleUnproductive = (app) => {
-    setUnproductiveApps((prev) => {
-      const updatedApps = prev.includes(app)
-        ? prev.filter((unproductiveApp) => unproductiveApp !== app) // Remove from unproductive apps
-        : [...prev, app] // Add to unproductive apps
-
-      // Persist updated unproductive apps to Electron store
-      window.electron.ipcRenderer.send('update-unproductive-apps', updatedApps)
-      return updatedApps
-    })
+    const getUpdatedUnproductiveApps = (prevApps) => {
+      return prevApps.includes(app)
+        ? prevApps.filter((unproductiveApp) => unproductiveApp !== app)
+        : [...prevApps, app]
+    }
+    const updatedUnproductiveApps = getUpdatedUnproductiveApps(unproductiveApps)
+    setUnproductiveApps(updatedUnproductiveApps)
+    window.electron.ipcRenderer.send('update-unproductive-apps', updatedUnproductiveApps)
+    return updatedUnproductiveApps
   }
 
   const fetchApps = () => {

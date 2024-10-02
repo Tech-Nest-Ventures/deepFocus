@@ -1,37 +1,12 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
 import { Button } from './components/ui/button'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
+import UnproductiveWebsites from './UnproductiveWebsites'
+import UnproductiveApps from './UnproductiveApps'
 
 const Settings = () => {
-  const [unproductiveUrls, setUnproductiveUrls] = createSignal<string[]>([])
-  const [newUrl, setNewUrl] = createSignal('')
-
-  onMount(() => {
-    window?.electron.ipcRenderer.send('fetch-unproductive-urls') // Request URLs from main process
-    window?.electron.ipcRenderer.on('unproductive-urls-response', (event, urls) => {
-      setUnproductiveUrls(urls || []) // Update the state with the received URLs
-      console.log('Unproductive URLs received from main process:', urls, event.processId)
-    })
-
-    onCleanup(() => {
-      window?.electron.ipcRenderer.removeAllListeners('unproductive-urls-response')
-    })
-  })
-
-  const handleAddUrl = () => {
-    if (newUrl().trim()) {
-      setUnproductiveUrls([...unproductiveUrls(), newUrl().trim()])
-      setNewUrl('')
-    }
-    console.log('Unproductive URLs updated:', unproductiveUrls())
-    window?.electron.ipcRenderer.send('add-unproductive-url', unproductiveUrls())
-  }
-
-  const handleRemoveUrl = (url: string) => {
-    const updatedUrls = unproductiveUrls().filter((item) => item !== url)
-    setUnproductiveUrls(updatedUrls)
-    window?.electron.ipcRenderer.send('remove-unproductive-url', unproductiveUrls())
-  }
+  const [showEditWebsites, setShowEditWebsites] = createSignal(false)
+  const [showEditApps, setShowEditApps] = createSignal(false)
 
   return (
     <div class="p-4">
@@ -39,31 +14,22 @@ const Settings = () => {
 
       <div class="mb-6">
         <h3 class="text-xl font-semibold mb-2">Unproductive Websites</h3>
-        <ul class="list-disc pl-6">
-          {unproductiveUrls().map((url) => (
-            <li class="mb-2 flex justify-between">
-              <span>{url}</span>
-              <Button type="submit" onClick={() => handleRemoveUrl(url)}>
-                Remove
-              </Button>
-            </li>
-          ))}
-        </ul>
 
-        <div class="mt-4 flex">
-          <TextField class="gap-1">
-            <TextFieldLabel class="sr-only">Unproductive Websites</TextFieldLabel>
-            <TextFieldInput
-              type="text"
-              placeholder="Enter a website or App"
-              value={newUrl()}
-              onInput={(e) => setNewUrl(e.currentTarget.value)}
-            />
-          </TextField>
-          <Button class="bg-blue-500 text-white px-4 py-2 ml-2 rounded" onClick={handleAddUrl}>
-            Add URL
-          </Button>
-        </div>
+        <Button class="mt-4" onClick={() => setShowEditWebsites(!showEditWebsites())}>
+          {showEditWebsites() ? 'Close Website Editor' : 'Edit Unproductive Websites'}
+        </Button>
+
+        {showEditWebsites() && <UnproductiveWebsites />}
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-semibold mb-2">Unproductive Apps</h3>
+
+        <Button class="mt-4" onClick={() => setShowEditApps(!showEditApps())}>
+          {showEditApps() ? 'Close App Editor' : 'Edit Unproductive Apps'}
+        </Button>
+
+        {showEditApps() && <UnproductiveApps />}
       </div>
     </div>
   )

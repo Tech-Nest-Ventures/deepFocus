@@ -10,7 +10,6 @@ import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
 import { updateSiteTimeTracker } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
-import { get } from 'http'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -21,10 +20,9 @@ export interface TypedStore extends Store<StoreSchema> {
 }
 
 const store = new Store<StoreSchema>() as TypedStore
-store.clear()
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
 let currentDeepWork = 0
-const deepWorkTarget = store.get('deepWorkTarget', 4) as number // Default to 4 hours if not set
+const deepWorkTarget = store.get('deepWorkTarget', 4) as number
 let mainWindow: BrowserWindow | null = null
 
 setupEnvironment()
@@ -140,8 +138,12 @@ function startActivityMonitoring() {
     try {
       const windowInfo = await activeWindow()
       if (windowInfo && windowInfo!.platform === 'macos') {
-        console.log('windowInfo', windowInfo)
-        updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
+        if (!windowInfo.owner.bundleId.includes('com.apple')) {
+          console.log('windowInfo', windowInfo)
+          updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
+        } else {
+          console.log('Ignoring Apple App', windowInfo.owner.bundleId)
+        }
       }
     } catch (error) {
       console.error('Error getting active window:', error)

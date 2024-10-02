@@ -8,7 +8,6 @@ import './assets/main.css'
 import logo from './assets/deepWork.svg'
 import { IconSettings } from './components/ui/icons'
 import { Button } from './components/ui/button'
-import Onboarding from './Onboarding'
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
@@ -16,6 +15,8 @@ const Signup = lazy(() => import('./Signup'))
 const Home = lazy(() => import('./Home'))
 const HelloWorld = () => <h1>Hello World!</h1>
 const BarChart = lazy(() => import('./BarChart'))
+
+const Onboarding = lazy(() => import('./Onboarding'))
 
 const Settings = lazy(() => import('./Settings'))
 

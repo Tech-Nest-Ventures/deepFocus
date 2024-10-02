@@ -64,18 +64,17 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [x] Implement changelog using conventional commits
 - [x] Add integration and automated tests
 - [x] Implement user authentication and cloud-based data persistence
+- [x] Implement progress bar for deep work visualization
+- [x] Improve user onboarding experience
+- [x] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
-- [ ] Implement progress bar for deep work visualization
 - [ ] Enhance data analysis and insights
-- [ ] Improve user onboarding experience
 - [ ] Develop comprehensive test suite for main and renderer processes
 - [ ] Create cloud synchronization for user data and preferences
 - [ ] Implement secure user authentication system
-- [ ] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
 - [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 - [ ] To do list like functionality? Have people add tasks to their list and mark as productive or not productive. Then, at the end of the day, they can see a list of tasks and see how productive they were.
-- [ ] Add a light
 
 ## Philosophy
 
@@ -101,39 +100,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 Timeo Williams [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
-
-Problems:
-
-1. UI for Analytics doesn't send a request to get fresh data after 24 hours if
-   the user stays on the same Analytics page. Perhaps a refresh button would be
-   better? Or force a refresh after a certain amount of time?
-
-2. Need to allow customers to add websites that are productive
-   so that we can track the time spent on those sites.
-
-As a default, the Login Window and Settings page should be hidden.
-windowInfo {
-owner: {
-name: 'loginwindow',
-processId: 186,
-bundleId: 'com.apple.loginwindow',
-path: '/System/Library/CoreServices/loginwindow.app'
-},
-bounds: { width: 30000, y: -15000, height: 30000, x: -15000 },
-memoryUsage: 18672,
-title: '',
-platform: 'macos',
-id: 23597
-}
-windowInfo {
-owner: {
-processId: 516,
-bundleId: 'com.apple.finder',
-name: 'Finder',
-path: '/System/Library/CoreServices/Finder.app'
-},
-}
-
-Honestly, if any of the bundleIDs contain com.apple, it's probably not productive.
-
-Last, but not least, let's sign this App up for the Apple Developer Program.
