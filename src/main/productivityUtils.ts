@@ -1,6 +1,14 @@
 import { parse } from 'url'
-import { MacOSResult, Result, SiteTimeTracker } from './types'
+import { MacOSResult, Result, SiteTimeTracker, FocusInterval } from './types'
 import { TypedStore } from './index'
+import pkg from 'node-mac-permissions'
+const {
+  getAuthStatus,
+  askForAccessibilityAccess,
+  askForScreenCaptureAccess,
+  askForMicrophoneAccess,
+  askForRemindersAccess
+} = pkg
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -161,4 +169,74 @@ export function removeUnproductiveURL(url, store: TypedStore) {
 export function isUnproductiveSite(url, store: TypedStore): boolean {
   const unproductiveSites = store.get('unproductiveSites', [])
   return unproductiveSites?.includes(url) || false
+}
+
+export function mergeOverlappingIntervals(intervals: FocusInterval[]) {
+  if (!intervals.length) return []
+
+  // Sort intervals by the start time
+  intervals.sort((a, b) => a.start - b.start)
+
+  const mergedIntervals = [intervals[0]]
+
+  for (let i = 1; i < intervals.length; i++) {
+    const current = intervals[i]
+    const lastMerged = mergedIntervals[mergedIntervals.length - 1]
+
+    // If intervals overlap, merge them
+    if (current.start <= lastMerged.end) {
+      lastMerged.end = Math.max(lastMerged.end, current.end)
+    } else {
+      // Otherwise, add the current interval
+      mergedIntervals.push(current)
+    }
+  }
+
+  return mergedIntervals
+}
+
+// Helper function to check if an app/site is "deep work"
+export function isDeepWork(item: string) {
+  const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
+  const formattedItem = item.replaceAll(' ', '').toLowerCase()
+  return deepWorkSites.some((site) => formattedItem.includes(site))
+}
+
+// Check for permissions and request if necessary
+export async function checkAndRequestPermissions() {
+  // Accessibility
+  let accessStatus = getAuthStatus('accessibility')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Accessibility Access...')
+    await askForAccessibilityAccess()
+  } else {
+    console.log('Accessibility access already granted.')
+  }
+
+  // Screen Recording
+  accessStatus = getAuthStatus('screen')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Screen Capture Access...')
+    await askForScreenCaptureAccess()
+  } else {
+    console.log('Screen capture access already granted.')
+  }
+
+  // Microphone
+  accessStatus = getAuthStatus('microphone')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Microphone Access...')
+    await askForMicrophoneAccess()
+  } else {
+    console.log('Microphone access already granted.')
+  }
+
+  // Reminders
+  accessStatus = getAuthStatus('reminders')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Reminders Access...')
+    await askForRemindersAccess()
+  } else {
+    console.log('Reminders access already granted.')
+  }
 }

@@ -7,8 +7,20 @@ import dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const { activeWindow } = await import('@deepfocus/get-windows')
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
-import { updateSiteTimeTracker } from './productivityUtils'
+import {
+  StoreSchema,
+  SiteTimeTracker,
+  DeepWorkHours,
+  MessageType,
+  User,
+  FocusInterval
+} from './types'
+import {
+  updateSiteTimeTracker,
+  mergeOverlappingIntervals,
+  isDeepWork,
+  checkAndRequestPermissions
+} from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 
 export interface TypedStore extends Store<StoreSchema> {
@@ -21,9 +33,20 @@ export interface TypedStore extends Store<StoreSchema> {
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
+let deepWorkHours = {
+  Monday: 0,
+  Tuesday: 0,
+  Wednesday: 0,
+  Thursday: 0,
+  Friday: 0,
+  Saturday: 0,
+  Sunday: 0
+} as DeepWorkHours
+
 let currentDeepWork = 0
 const deepWorkTarget = store.get('deepWorkTarget', 4) as number
 let mainWindow: BrowserWindow | null = null
+resetCounters('daily')
 
 setupEnvironment()
 // Initialize environment variables based on the environment
@@ -88,21 +111,12 @@ function loadUserData() {
 
 // Reset counters logic
 function resetCounters(type: 'daily' | 'weekly') {
+  const now = dayjs()
   if (type === 'daily') {
-    const now = dayjs()
     console.log('Resetting Daily Trackers')
-    currentSiteTimeTrackers.forEach((tracker) => (tracker.timeSpent = 0))
+    getSiteTrackers().forEach((tracker) => (tracker.timeSpent = 0))
     store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
-    const deepWorkHours = store.get('deepWorkHours', {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
-    }) as DeepWorkHours
-
+    const deepWorkHours = getDeepWorkHours()
     deepWorkHours[now.format('dddd')] = 0
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', currentSiteTimeTrackers)
@@ -118,16 +132,32 @@ function resetCounters(type: 'daily' | 'weekly') {
       Saturday: 0,
       Sunday: 0
     })
-    store.set('siteTimeTrackers', currentSiteTimeTrackers)
+    store.set('siteTimeTrackers', [])
   }
+  console.log(
+    'Finished reset. Current site time trackers:',
+    currentSiteTimeTrackers,
+    'Deep work hours:',
+    deepWorkHours,
+    'last reset date:',
+    store.get('lastResetDate')
+  )
 }
 
-// Periodic saving of time trackers
+// Periodic saving of time trackers, deep work hours, and icon progress
 function setupPeriodicSave() {
-  setInterval(() => store.set('siteTimeTrackers', currentSiteTimeTrackers), 5 * 60 * 1000)
+  setInterval(
+    () => {
+      store.set('siteTimeTrackers', currentSiteTimeTrackers)
+      store.set('deepWorkHours', deepWorkHours)
+      updateIconBasedOnProgress()
+      handleDailyReset()
+    },
+    5 * 60 * 1000
+  )
 }
 
-// Monitor system idle time and user activity
+// Monitor system idle time and user activity every 2 minutes
 function startActivityMonitoring() {
   setInterval(async () => {
     const idleTime = powerMonitor.getSystemIdleTime()
@@ -148,7 +178,46 @@ function startActivityMonitoring() {
     } catch (error) {
       console.error('Error getting active window:', error)
     }
-  }, 120000) // every 2 mins
+  }, 120000)
+}
+
+// Function to calculate and update deep work hours
+function calculateDeepWorkHours(
+  siteTrackers: SiteTimeTracker[],
+  deepWorkHours: DeepWorkHours
+): DeepWorkHours {
+  const today = dayjs().format('dddd')
+  const focusIntervals: FocusInterval[] = []
+
+  // Filter only deep work apps/sites
+  siteTrackers.forEach((tracker) => {
+    if (isDeepWork(tracker.title)) {
+      focusIntervals.push({
+        start: tracker.lastActiveTimestamp - tracker.timeSpent,
+        end: tracker.lastActiveTimestamp
+      })
+    }
+  })
+
+  // Merge overlapping intervals
+  const mergedIntervals = mergeOverlappingIntervals(focusIntervals)
+
+  // Calculate total deep work time
+  const totalDeepWorkTime = mergedIntervals.reduce(
+    (acc, interval) => acc + (interval.end - interval.start),
+    0
+  )
+  const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60) // Convert from ms to hours
+
+  // Update deep work hours for the current day
+  deepWorkHours[today] = parseFloat(timeSpentInHours.toFixed(2))
+
+  console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
+
+  // Persist the updated deep work hours to the store
+  store.set('deepWorkHours', deepWorkHours)
+
+  return deepWorkHours
 }
 
 // Create the browser window
@@ -187,19 +256,40 @@ async function createWindow(): Promise<BrowserWindow> {
 // Main app ready event
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.deepfocus.app')
+  currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+  deepWorkHours = store.get('deepWorkHours', {
+    Monday: 0,
+    Tuesday: 0,
+    Wednesday: 0,
+    Thursday: 0,
+    Friday: 0,
+    Saturday: 0,
+    Sunday: 0
+  }) as DeepWorkHours
 
   await createWindow().then(() => {
     loadUserData()
     handleDailyReset()
     setupPeriodicSave()
     setupIPCListeners()
+    checkAndRequestPermissions()
   })
 })
 
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
+
 function handleUserLogout() {
   store.delete('user')
-  store.set('siteTimeTrackers', [])
-  schedulerWorker.postMessage({ type: MessageType.RESET_TRACKERS })
+  resetCounters('daily')
 }
 function setupIPCListeners() {
   ipcMain.on('send-user-data', (event, user) => {
@@ -207,7 +297,7 @@ function setupIPCListeners() {
     const savedUser = store.get('user')
     if (savedUser) {
       startActivityMonitoring()
-      currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+      currentSiteTimeTrackers = getSiteTrackers()
     }
   })
   ipcMain.on('logout-user', () => handleUserLogout())
@@ -247,34 +337,23 @@ function setupIPCListeners() {
 
   ipcMain.on('fetch-deep-work-data', (event) => {
     console.log('Received event for fetch-deep-work-data')
-    // Fetch deep work hours data from electron-store
-    const deepWorkHours = store.get('deepWorkHours', {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
-    }) as DeepWorkHours
-    currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-    schedulerWorker.postMessage({
-      type: MessageType.UPDATE_DATA,
-      data: { deepWorkHours, currentSiteTimeTrackers }
-    })
 
-    // Convert the object into an array format expected by the chart
+    const updatedDeepWorkHours = getDeepWorkHours()
+
+    // Convert the object into an array format for the front-end chart
     const chartData = [
-      deepWorkHours?.Monday || 0,
-      deepWorkHours?.Tuesday || 0,
-      deepWorkHours?.Wednesday || 0,
-      deepWorkHours?.Thursday || 0,
-      deepWorkHours?.Friday || 0,
-      deepWorkHours?.Saturday || 0,
-      deepWorkHours?.Sunday || 0
+      updatedDeepWorkHours?.Monday || 0,
+      updatedDeepWorkHours?.Tuesday || 0,
+      updatedDeepWorkHours?.Wednesday || 0,
+      updatedDeepWorkHours?.Thursday || 0,
+      updatedDeepWorkHours?.Friday || 0,
+      updatedDeepWorkHours?.Saturday || 0,
+      updatedDeepWorkHours?.Sunday || 0
     ]
+
     event.reply('deep-work-data-response', chartData)
   })
+
   ipcMain.on('fetch-app-icons', async (event) => {
     try {
       const apps = await getInstalledApps()
@@ -296,6 +375,10 @@ function handleDailyReset() {
 }
 
 app.on('before-quit', () => schedulerWorker.terminate())
+app.on('will-quit', () => {
+  ipcMain.removeAllListeners()
+})
+
 app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
@@ -312,27 +395,9 @@ const schedulerWorker = new Worker(schedulerWorkerPath, {
 schedulerWorker.on('message', (message: any) => {
   if (message.type === MessageType.RESET_DAILY) resetCounters('daily')
   if (message.type === MessageType.RESET_WEEKLY) resetCounters('weekly')
-  if (message.type === MessageType.UPDATE_DATA) {
-    store.set('deepWorkHours', message.data as DeepWorkHours)
-    const today = dayjs().format('dddd')
-    currentDeepWork = message.data[today] || 0
-
-    console.log(`Current deep work hours: ${currentDeepWork} hours`)
-
-    // Update the app icon based on deep work progress
-    updateIconBasedOnProgress()
-  }
   if (message.type === MessageType.GET_DATA) {
-    const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-    const deepWorkHours = store.get('deepWorkHours', {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
-    }) as DeepWorkHours
+    const currentSiteTimeTrackers = getSiteTrackers()
+    const deepWorkHours = getDeepWorkHours()
     schedulerWorker.postMessage({
       type: MessageType.REPLY_DATA,
       data: { currentSiteTimeTrackers, deepWorkHours }
@@ -351,4 +416,13 @@ function getIconPath(iconName) {
     // In development mode, resolve the path from your local development folder
     return path.join(__dirname, '../../resources', iconName)
   }
+}
+
+function getDeepWorkHours(): DeepWorkHours {
+  calculateDeepWorkHours(getSiteTrackers(), deepWorkHours)
+  return deepWorkHours
+}
+
+function getSiteTrackers(): SiteTimeTracker[] {
+  return currentSiteTimeTrackers
 }

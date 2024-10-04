@@ -2,13 +2,37 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
+    <!-- Code execution entitlements -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
     <key>com.apple.security.cs.allow-dyld-environment-variables</key>
     <true/>
-     <key>com.apple.security.automation.apple-events</key>
+
+    <!-- Apple Events Automation (needed for active window info, etc.) -->
+    <key>com.apple.security.automation.apple-events</key>
     <true/>
+
+    <!-- Accessibility (needed for interacting with active windows, etc.) -->
+    <key>com.apple.security.accessibility</key>
+    <true/>
+
+    <!-- Screen Recording (needed for tracking productivity) -->
+    <key>com.apple.security.screen-recording</key>
+    <true/>
+
+    <!-- Other entitlements and usage descriptions -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>We need access to your calendar to synchronize work events.</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to your microphone for voice recognition features.</string>
+
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>We need access to capture your screen for productivity tracking.</string>
+
+    <key>NSAccessibilityUsageDescription</key>
+    <string>We need accessibility access to monitor window titles and other system events.</string>
   </dict>
 </plist>
