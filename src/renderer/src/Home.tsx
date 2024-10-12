@@ -1,4 +1,4 @@
-import { onMount, createSignal, onCleanup, createEffect } from 'solid-js'
+import { onMount, createSignal, createEffect, onCleanup } from 'solid-js'
 import { useAuth } from './lib/AuthContext'
 import User from './types'
 import CircularProgress from './CircularProgress'
@@ -18,10 +18,10 @@ const Home = () => {
       fetchDeepWorkData()
       window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
 
-      // Cleanup the listener properly using onCleanup inside onMount
-      return () => {
-        window?.electron?.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
-      }
+      onCleanup(() => {
+        window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
+      })
+
     } else {
       console.log('User is not logged in/Signed Up')
       return
@@ -37,12 +37,15 @@ const Home = () => {
   }
 
   const handleDataResponse = (event, data) => {
-    const todayIndex = dayjs().day() - 1 // dayjs starts at 1
+    const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day();
+    const dataIndex = todayIndex - 1;
+    console.log(todayIndex);    
     if (data && data.length) {
-      const workDone = data[todayIndex]
+      console.log('dataIndex is ', dataIndex, 'data is ', data)
+      const workDone = data[dataIndex]
       setDeepWorkDone(workDone)
       const dailyTarget = 4
-      console.log('deepWorkDone', workDone)
+      console.log('workDone', workDone)
       setProgress(workDone / dailyTarget)
     } else {
       console.log('No data found for deep work hours.')

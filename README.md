@@ -100,3 +100,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 Timeo Williams [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
+
+
+
+Current Issues: 
+
+1. Need to persist Activity Data to backend properly.
+2. Right now, I have 5 separate instances of VSCode open. But my logic for time tracking is adding all 5 instances together. 
+3. Test signing a basic electron app > and then running it locally.
+4. I found it interesting how rize-io didnt really do the whole asar unpack thing, but instead had the entire app in a single folder.
+5. Fix mocha tests for testing delay. 

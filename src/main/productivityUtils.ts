@@ -108,7 +108,8 @@ export function updateSiteTimeTracker(
   windowInfo: Result,
   timeTrackers: SiteTimeTracker[]
 ): SiteTimeTracker {
-  const currentTime = Date.now()
+  const currentTime = Number((Date.now() / 1000).toString().slice(0, -3));
+
 
   // Check if the windowInfo has a valid URL, and if so, extract the base URL
   const url = getUrlFromResult(windowInfo)
@@ -133,7 +134,7 @@ export function updateSiteTimeTracker(
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
-    tracker.timeSpent += currentTime - tracker.lastActiveTimestamp
+    tracker.timeSpent += 60
     tracker.lastActiveTimestamp = currentTime
   } else {
     console.log('Creating new tracker')

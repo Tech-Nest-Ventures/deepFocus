@@ -23,26 +23,46 @@ extraResources:
 asar: true
 asarUnpack:
   - 'resources/**'
-  - 'node_modules/@deepfocus/get-windows/main'
+  - 'node_modules/@deepfocus/get-windows'
+  - 'node_modules/node-mac-permissions'
+
 mac:
+  entitlements: build/entitlements.mac.plist 
   entitlementsInherit: build/entitlements.mac.plist
+  hardenedRuntime: true  # Enable hardened runtime for macOS builds
   extendInfo:
     NSCameraUsageDescription: Application requests access to the device's camera.
     NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
     NSAppleEventsUsageDescription: Please allow access to script browser applications to detect the current URL when triggering instant lookup.
+    NSCalendarsUsageDescription: Application needs access to calendars for productivity scheduling.
+    NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
+    NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
+  category: 'public.app-category.productivity'  # Optional: Set a category for the Mac App Store
+  notarize: true # Ensure that the application gets notarized for macOS
 
-  notarize: true
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: '${name}-${version}.${ext}'  # Specify how your dmg file will be named
+
 win:
-  executableName: Deep Focus
+  # Removed invalid properties like shortcutName, uninstallDisplayName, and createDesktopShortcut
+  target:
+    - nsis
+  artifactName: '${name}-${version}-setup.${ext}'
+  icon: './resources/icon.ico'
+
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+  oneClick: false
+  perMachine: true
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  installerIcon: './resources/icon.ico'
+  uninstallerIcon: './resources/icon.ico'
+  deleteAppDataOnUninstall: true
+  createDesktopShortcut: true  # This should be set in the `nsis` section
+  createStartMenuShortcut: true
+
 linux:
   target:
     - AppImage
@@ -50,9 +70,12 @@ linux:
     - deb
   maintainer: electronjs.org
   category: Utility
+
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: '${name}-${version}.${ext}'
+
 npmRebuild: false
+
 publish:
   provider: generic
   url: https://example.com/auto-updates
