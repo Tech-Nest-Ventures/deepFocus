@@ -28,7 +28,7 @@ parentPort?.on('message', (message) => {
       deepWorkHours
     }: { currentSiteTimeTrackers: SiteTimeTracker[]; deepWorkHours: DeepWorkHours } = message.data
     console.log('Persisting daily data...')
-    persistDailyData(currentSiteTimeTrackers, deepWorkHours) 
+    persistDailyData(currentSiteTimeTrackers, deepWorkHours)
   }
 })
 
@@ -50,13 +50,12 @@ schedule.scheduleJob('0 0 19 * *', () => {
 // Test: Run every 30 min
 schedule.scheduleJob('*/30 * * * *', () => {
   if (currentUsername) {
-      console.log('Performing reset every 30 minutes...');
-      requestData();
-      parentPort?.postMessage({ type: MessageType.RESET_DAILY });
+    console.log('Performing reset every 30 minutes...')
+    requestData()
   } else {
-      console.error('No username available for reset.');
+    console.error('No username available for reset.')
   }
-});
+})
 // Schedule weekly aggregation at the end of Sunday (midnight)
 schedule.scheduleJob('0 19 * * 0', () => {
   if (currentUsername) {
@@ -81,16 +80,14 @@ async function persistDailyData(
 
   // Filter out sites/apps with time spent less than the threshold
   const filteredTrackers = workerSiteTimeTrackers.filter(
-    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD 
+    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
   )
 
   if (filteredTrackers.length === 0) {
     console.log('No site time trackers met the minimum time threshold to persist.')
     return
   }
-  console.log(
-    'Sending data to backend'
-  )
+  console.log('Sending data to backend')
   const today = dayjs().format('dddd') // Get back Monday, Tuesday, etc.
 
   const dailyData = filteredTrackers.map((tracker) => ({

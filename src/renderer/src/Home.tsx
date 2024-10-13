@@ -21,7 +21,6 @@ const Home = () => {
       onCleanup(() => {
         window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
       })
-
     } else {
       console.log('User is not logged in/Signed Up')
       return
@@ -37,9 +36,9 @@ const Home = () => {
   }
 
   const handleDataResponse = (event, data) => {
-    const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day();
-    const dataIndex = todayIndex - 1;
-    console.log(todayIndex);    
+    const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
+    const dataIndex = todayIndex - 1
+    console.log(todayIndex)
     if (data && data.length) {
       console.log('dataIndex is ', dataIndex, 'data is ', data)
       const workDone = data[dataIndex]

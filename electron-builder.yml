@@ -1,5 +1,6 @@
-appId: com.deepfocus.app
+appId: com.electron.deepfocus
 productName: Deep Focus
+copyright: Copyright © 2024 Timeo Williams
 directories:
   output: dist
   buildResources: build
@@ -20,16 +21,22 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
+forceCodeSigning: false
+compression: 'store' # Change to 'maxium' to enable compression in PROD
+
 asar: true
 asarUnpack:
-  - 'resources/**'
   - 'node_modules/@deepfocus/get-windows'
   - 'node_modules/node-mac-permissions'
 
 mac:
-  entitlements: build/entitlements.mac.plist 
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  hardenedRuntime: true  # Enable hardened runtime for macOS builds
+  identity: Timeo Williams (3Y4F3KTSJA)
+  provisioningProfile: "Mac\ OS\ X\ Provisioning\ Profile\ Signing.cer"
+  darkModeSupport: true
+  binaries:
+    - ./node_modules/@deepfocus/get-windows/main
   extendInfo:
     NSCameraUsageDescription: Application requests access to the device's camera.
     NSMicrophoneUsageDescription: Application requests access to the device's microphone.
@@ -39,37 +46,37 @@ mac:
     NSCalendarsUsageDescription: Application needs access to calendars for productivity scheduling.
     NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
     NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
-  category: 'public.app-category.productivity'  # Optional: Set a category for the Mac App Store
-  notarize: true # Ensure that the application gets notarized for macOS
+  category: 'public.app-category.productivity'
+  notarize: true
 
 dmg:
-  artifactName: '${name}-${version}.${ext}'  # Specify how your dmg file will be named
+  artifactName: '${name}-${version}.${ext}' # Specify how your dmg file will be named
 
-win:
-  # Removed invalid properties like shortcutName, uninstallDisplayName, and createDesktopShortcut
-  target:
-    - nsis
-  artifactName: '${name}-${version}-setup.${ext}'
-  icon: './resources/icon.ico'
+# win:
+#   # Removed invalid properties like shortcutName, uninstallDisplayName, and createDesktopShortcut
+#   target:
+#     - nsis
+#   artifactName: '${name}-${version}-setup.${ext}'
+#   icon: './resources/icon.ico'
 
-nsis:
-  oneClick: false
-  perMachine: true
-  allowElevation: true
-  allowToChangeInstallationDirectory: true
-  installerIcon: './resources/icon.ico'
-  uninstallerIcon: './resources/icon.ico'
-  deleteAppDataOnUninstall: true
-  createDesktopShortcut: true  # This should be set in the `nsis` section
-  createStartMenuShortcut: true
+# nsis:
+#   oneClick: false
+#   perMachine: true
+#   allowElevation: true
+#   allowToChangeInstallationDirectory: true
+#   installerIcon: './resources/icon.ico'
+#   uninstallerIcon: './resources/icon.ico'
+#   deleteAppDataOnUninstall: true
+#   createDesktopShortcut: true  # This should be set in the `nsis` section
+#   createStartMenuShortcut: true
 
-linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
+# linux:
+#   target:
+#     - AppImage
+#     - snap
+#     - deb
+#   maintainer: electronjs.org
+#   category: Utility
 
 appImage:
   artifactName: '${name}-${version}.${ext}'

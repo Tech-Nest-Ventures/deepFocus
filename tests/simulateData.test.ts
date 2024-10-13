@@ -4,58 +4,25 @@ import { DeepWorkHours, StoreSchema } from '../src/main/types'
 import dayjs from 'dayjs'
 import { resetCounters } from '../src/main/utils'
 
-// Mock electron-store
 vi.mock('electron-store', () => {
-  const storeData = new Map();
+  const storeData = new Map()
   return {
     default: class {
       get(key: string, defaultValue: any) {
-        return storeData.has(key) ? storeData.get(key) : defaultValue;
+        return storeData.has(key) ? storeData.get(key) : defaultValue
       }
       set(key: string, value: any) {
-        storeData.set(key, value);
+        storeData.set(key, value)
       }
       clear() {
-        storeData.clear();
+        storeData.clear()
       }
       delete(key: string) {
-        storeData.delete(key);
+        storeData.delete(key)
       }
     }
   }
 })
-
-// Reset counters logic
-// export function resetCounters(
-//   type: 'daily' | 'weekly',
-//   store: any,
-//   siteTrackers: any[],
-//   deepWorkHours: DeepWorkHours
-// ) {
-//   const now = dayjs()
-//   if (type === 'daily') {
-//     siteTrackers.forEach((tracker) => {
-//       tracker.timeSpent = 0
-//       tracker.lastActiveTimestamp = 0
-//     })
-//     store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
-//     deepWorkHours[now.format('dddd')] = 0
-//     store.set('deepWorkHours', deepWorkHours)
-//     store.set('siteTimeTrackers', siteTrackers)
-//   } else if (type === 'weekly') {
-//     siteTrackers = []
-//     store.set('deepWorkHours', {
-//       Monday: 0,
-//       Tuesday: 0,
-//       Wednesday: 0,
-//       Thursday: 0,
-//       Friday: 0,
-//       Saturday: 0,
-//       Sunday: 0
-//     })
-//     store.set('siteTimeTrackers', [])
-//   }
-// }
 
 describe('Test Day Reset Logic', () => {
   let clock: ReturnType<typeof vi.useFakeTimers>
@@ -66,8 +33,8 @@ describe('Test Day Reset Logic', () => {
     clock = vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-10-07T00:00:00').getTime())
     // Create a new store mock for each test
-    const Store = (await import('electron-store')).default;
-    store = new Store<StoreSchema>();
+    const Store = (await import('electron-store')).default
+    store = new Store<StoreSchema>()
   })
 
   afterEach(() => {
