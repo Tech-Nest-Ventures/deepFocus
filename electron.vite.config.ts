@@ -22,7 +22,16 @@ export default defineConfig({
           entryFileNames: '[name].js'
         },
         // Externalize unnecessary dependencies from the worker
-        external: ['electron', 'path', 'fs', 'dotenv', '@electron-toolkit/utils', 'electron-store']
+        external: [
+          'electron',
+          'path',
+          'fs',
+          'dotenv',
+          '@electron-toolkit/utils',
+          'electron-store',
+          '@deepfocus/get-windows',
+          'node-mac-permissions'
+        ]
       }
     },
     define: {

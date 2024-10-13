@@ -4,6 +4,7 @@
   "compilerOptions": {
     "composite": true,
     "target": "ESNext",
+    "moduleResolution": "Node",
     "types": ["electron-vite/node"],
     "baseUrl": ".",
     "paths": {

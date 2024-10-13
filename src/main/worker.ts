@@ -3,7 +3,7 @@ import schedule from 'node-schedule'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
-import { SiteTimeTracker, DeepWorkHours, FocusInterval, MessageType } from './types'
+import { SiteTimeTracker, DeepWorkHours, MessageType } from './types'
 
 let currentUsername: string = ''
 
@@ -11,44 +11,6 @@ dayjs.extend(isoWeek)
 dayjs.extend(weekday)
 
 const API_BASE_URL = workerData.API_BASE_URL
-
-function updateDeepWorkHours(siteTrackers: SiteTimeTracker[], deepWorkHours: DeepWorkHours) {
-  const today = dayjs().format('dddd')
-  const focusIntervals: FocusInterval[] = []
-
-  siteTrackers.forEach((tracker) => {
-    if (tracker && isDeepWork(tracker.title)) {
-      focusIntervals.push({
-        start: tracker.lastActiveTimestamp - tracker.timeSpent,
-        end: tracker.lastActiveTimestamp
-      })
-    } else {
-      console.log('Not deep work', tracker.title)
-    }
-  })
-
-  const mergedIntervals = mergeOverlappingIntervals(focusIntervals)
-
-  const totalDeepWorkTime = mergedIntervals.reduce((acc, interval) => {
-    return acc + (interval.end - interval.start)
-  }, 0)
-  console.log('totalDeepWorkTime', totalDeepWorkTime)
-
-  const timeSpentInHours = totalDeepWorkTime / (1000 * 60 * 60)
-  console.log('timeSpentInHours', timeSpentInHours)
-  deepWorkHours[today] = parseFloat(timeSpentInHours.toFixed(2))
-
-  console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
-  return deepWorkHours
-}
-
-function isDeepWork(item: string) {
-  // You can customize this condition based on specific apps, sites, or window titles
-  // Check if the tracker is a deep work app (e.g., VSCode, GitHub, etc.)
-  const formattedItem = item.replaceAll(' ', '').toLowerCase()
-  const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'linkedin', 'electron']
-  return deepWorkSites.filter((site) => formattedItem.includes(site)).length
-}
 
 // Listen for messages from the main thread
 parentPort?.on('message', (message) => {
@@ -60,18 +22,13 @@ parentPort?.on('message', (message) => {
     console.log('Username set in worker:', currentUsername)
   }
 
-  if (message.type === MessageType.UPDATE_DATA) {
-    const { deepWorkHours, currentSiteTimeTrackers } = message.data
-    const hoursSoFar = updateDeepWorkHours(currentSiteTimeTrackers, deepWorkHours)
-    parentPort?.postMessage({ type: MessageType.UPDATE_DATA, data: hoursSoFar })
-  }
-
   if (message.type === MessageType.REPLY_DATA) {
     const {
       currentSiteTimeTrackers,
       deepWorkHours
     }: { currentSiteTimeTrackers: SiteTimeTracker[]; deepWorkHours: DeepWorkHours } = message.data
-    persistDailyData(currentSiteTimeTrackers, deepWorkHours) // Now persist the data with the latest info
+    console.log('Persisting daily data...')
+    persistDailyData(currentSiteTimeTrackers, deepWorkHours)
   }
 })
 
@@ -90,6 +47,15 @@ schedule.scheduleJob('0 0 19 * *', () => {
   }
 })
 
+// Test: Run every 30 min
+schedule.scheduleJob('*/30 * * * *', () => {
+  if (currentUsername) {
+    console.log('Performing reset every 30 minutes...')
+    requestData()
+  } else {
+    console.error('No username available for reset.')
+  }
+})
 // Schedule weekly aggregation at the end of Sunday (midnight)
 schedule.scheduleJob('0 19 * * 0', () => {
   if (currentUsername) {
@@ -114,14 +80,14 @@ async function persistDailyData(
 
   // Filter out sites/apps with time spent less than the threshold
   const filteredTrackers = workerSiteTimeTrackers.filter(
-    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD * 1000 // timeSpent is in milliseconds
+    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
   )
 
   if (filteredTrackers.length === 0) {
     console.log('No site time trackers met the minimum time threshold to persist.')
     return
   }
-
+  console.log('Sending data to backend')
   const today = dayjs().format('dddd') // Get back Monday, Tuesday, etc.
 
   const dailyData = filteredTrackers.map((tracker) => ({
@@ -171,31 +137,6 @@ async function aggregateWeeklyData() {
   } catch (error) {
     console.error('Error sending weekly data to backend:', error)
   }
-}
-
-// Function to merge overlapping time intervals
-function mergeOverlappingIntervals(intervals: FocusInterval[]) {
-  if (!intervals.length) return []
-
-  // Sort intervals by the start time
-  intervals.sort((a, b) => a.start - b.start)
-
-  const mergedIntervals = [intervals[0]]
-
-  for (let i = 1; i < intervals.length; i++) {
-    const current = intervals[i]
-    const lastMerged = mergedIntervals[mergedIntervals.length - 1]
-
-    // If intervals overlap, merge them
-    if (current.start <= lastMerged.end) {
-      lastMerged.end = Math.max(lastMerged.end, current.end)
-    } else {
-      // Otherwise, add the current interval
-      mergedIntervals.push(current)
-    }
-  }
-
-  return mergedIntervals
 }
 
 /*

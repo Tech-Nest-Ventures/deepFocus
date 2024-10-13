@@ -1,4 +1,4 @@
-import { onMount, createSignal, onCleanup, createEffect } from 'solid-js'
+import { onMount, createSignal, createEffect, onCleanup } from 'solid-js'
 import { useAuth } from './lib/AuthContext'
 import User from './types'
 import CircularProgress from './CircularProgress'
@@ -7,17 +7,23 @@ import dayjs from 'dayjs'
 
 const Home = () => {
   const [loggedIn, setIsLoggedIn] = useAuth()
-  const user = (JSON.parse(localStorage.getItem('user') || '') as User) || {}
+  const user = localStorage.getItem('user')
+    ? (JSON.parse(localStorage.getItem('user')) as User)
+    : undefined
   const [progress, setProgress] = createSignal(0)
-  const [deepWorkDone, setDeepWorkDone] = createSignal(0) // Changed to signal for reactivity
+  const [deepWorkDone, setDeepWorkDone] = createSignal(0)
 
   onMount(() => {
-    fetchDeepWorkData()
-    window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
+    if (user) {
+      fetchDeepWorkData()
+      window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
 
-    // Cleanup the listener properly using onCleanup inside onMount
-    return () => {
-      window?.electron?.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
+      onCleanup(() => {
+        window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
+      })
+    } else {
+      console.log('User is not logged in/Signed Up')
+      return
     }
   })
 
@@ -30,12 +36,15 @@ const Home = () => {
   }
 
   const handleDataResponse = (event, data) => {
-    const todayIndex = dayjs().day() - 1 // dayjs starts at 1
+    const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
+    const dataIndex = todayIndex - 1
+    console.log(todayIndex)
     if (data && data.length) {
-      const workDone = data[todayIndex]
+      console.log('dataIndex is ', dataIndex, 'data is ', data)
+      const workDone = data[dataIndex]
       setDeepWorkDone(workDone)
       const dailyTarget = 4
-      console.log('deepWorkDone', workDone)
+      console.log('workDone', workDone)
       setProgress(workDone / dailyTarget)
     } else {
       console.log('No data found for deep work hours.')
@@ -50,7 +59,7 @@ const Home = () => {
         </div>
       ) : (
         <div class=" space-y-8">
-          <h1 class="mb-10 text-lg">Welcome back {user.firstName}!</h1>
+          <h1 class="mb-10 text-lg">Welcome back {user?.firstName}!</h1>
           <div class="space-y-8">
             <CircularProgress progress={progress()} />
             <p class="italic">Tip: Take a break every 50 minutes to improve efficiency!</p>

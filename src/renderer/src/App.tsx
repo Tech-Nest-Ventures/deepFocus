@@ -36,7 +36,7 @@ const App = (props: ComponentProps<typeof Router>) => {
   })
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
+    localStorage.clear()
     setIsLoggedIn(false)
     setIsNewUser(false)
   }
@@ -108,7 +108,6 @@ render(
           <>
             <Route path="/" component={Home} />
             <Route path="/login" component={Login} />
-            <Route path="/hello-world" component={() => <h1>Hello World!</h1>} />
             <Route path="/signup" component={Signup} />
             <Route path="/analytics" component={BarChart} />
             <Route path="/settings" component={Settings} />
