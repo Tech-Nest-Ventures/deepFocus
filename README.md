@@ -40,16 +40,16 @@
 ### Prerequisites
 
 - Node.js LTS >=v20.12.2
-- npm v10.5.0 or pnpm
+- npm v10.5.0
 
 ### Installation
 
 ```bash
-pnpm install
+npm install
 ```
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 ## Usage
@@ -67,6 +67,8 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [x] Implement progress bar for deep work visualization
 - [x] Improve user onboarding experience
 - [x] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
+- [x] Implement a basic email notification system
+- [x] Sign & Notarize the app for macOS
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
 - [ ] Enhance data analysis and insights

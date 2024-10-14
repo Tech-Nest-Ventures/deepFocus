@@ -2,14 +2,14 @@ dist
 out
 .DS_Store
 *.log*
-package-lock.json
 node_modules
 .env
 deepfocus.js
 test-results
 playwright-report
-build/Certificates.p12
+build_assets/Certificates.p12
 build_assets/CertificatesDist.p12
+build_assets/DeveloperIDInstaller.p12
+
 Mac OS X Provisioning Profile Signing.cer
-forge.config.js
 electron-builder.yml

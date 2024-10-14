@@ -21,8 +21,7 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
-forceCodeSigning: true
-compression: 'store' # Change to 'maxium' to enable compression in PROD. tore can reduce build time significantly. 
+compression: 'maximum' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
 
 asar: true
 # This section handles which files are not to be packed into the asar archive and need signing
@@ -39,6 +38,7 @@ mac:
   hardenedRuntime: true
   notarize: false
   target: 
+    - pkg
     - dmg
   extendInfo:
     NSCameraUsageDescription: Application requests access to the device's camera.
@@ -50,40 +50,14 @@ mac:
     NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
     NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
   category: 'public.app-category.productivity'
-  
-
-# win:
-#   # Removed invalid properties like shortcutName, uninstallDisplayName, and createDesktopShortcut
-#   target:
-#     - nsis
-#   artifactName: '${name}-${version}-setup.${ext}'
-#   icon: './resources/icon.ico'
-
-# nsis:
-#   oneClick: false
-#   perMachine: true
-#   allowElevation: true
-#   allowToChangeInstallationDirectory: true
-#   installerIcon: './resources/icon.ico'
-#   uninstallerIcon: './resources/icon.ico'
-#   deleteAppDataOnUninstall: true
-#   createDesktopShortcut: true  # This should be set in the `nsis` section
-#   createStartMenuShortcut: true
-
-# linux:
-#   target:
-#     - AppImage
-#     - snap
-#     - deb
-#   maintainer: electronjs.org
-#   category: Utility
 
 appImage:
   artifactName: '${name}-${version}.${ext}'
 
 npmRebuild: false
 
-afterSign: scripts/notarize.js
+afterSign: scripts/signBinaries.js
+afterAllArtifactBuild: scripts/notarize.js
 
 publish:
   provider: generic
