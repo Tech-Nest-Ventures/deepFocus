@@ -21,22 +21,25 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
-forceCodeSigning: false
-compression: 'store' # Change to 'maxium' to enable compression in PROD
+forceCodeSigning: true
+compression: 'store' # Change to 'maxium' to enable compression in PROD. tore can reduce build time significantly. 
 
 asar: true
+# This section handles which files are not to be packed into the asar archive and need signing
 asarUnpack:
-  - 'node_modules/@deepfocus/get-windows'
-  - 'node_modules/node-mac-permissions'
+  - "node_modules/node-mac-permissions/build/Release/permissions.node"
+  - "node_modules/@deepfocus/get-windows/main"
+  - "node_modules/node-mac-permissions/build/node_gyp_bins/python3"
+  - "Frameworks/Electron Framework.framework/Libraries/*.dylib"
 
 mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  identity: Timeo Williams (3Y4F3KTSJA)
-  provisioningProfile: "Mac\ OS\ X\ Provisioning\ Profile\ Signing.cer"
   darkModeSupport: true
-  binaries:
-    - ./node_modules/@deepfocus/get-windows/main
+  hardenedRuntime: true
+  notarize: false
+  target: 
+    - dmg
   extendInfo:
     NSCameraUsageDescription: Application requests access to the device's camera.
     NSMicrophoneUsageDescription: Application requests access to the device's microphone.
@@ -47,10 +50,7 @@ mac:
     NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
     NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
   category: 'public.app-category.productivity'
-  notarize: true
-
-dmg:
-  artifactName: '${name}-${version}.${ext}' # Specify how your dmg file will be named
+  
 
 # win:
 #   # Removed invalid properties like shortcutName, uninstallDisplayName, and createDesktopShortcut
@@ -82,6 +82,8 @@ appImage:
   artifactName: '${name}-${version}.${ext}'
 
 npmRebuild: false
+
+afterSign: scripts/notarize.js
 
 publish:
   provider: generic

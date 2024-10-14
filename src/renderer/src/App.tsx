@@ -1,5 +1,5 @@
 import { lazy, Suspense, onMount, createSignal, ComponentProps } from 'solid-js'
-import { Router, Route, A, useLocation, HashRouter } from '@solidjs/router'
+import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 
@@ -13,7 +13,6 @@ import { Button } from './components/ui/button'
 const Login = lazy(() => import('./Login'))
 const Signup = lazy(() => import('./Signup'))
 const Home = lazy(() => import('./Home'))
-const HelloWorld = () => <h1>Hello World!</h1>
 const BarChart = lazy(() => import('./BarChart'))
 
 const Onboarding = lazy(() => import('./Onboarding'))

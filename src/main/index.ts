@@ -58,8 +58,7 @@ function setupEnvironment(): void {
 
 function updateIconBasedOnProgress() {
   console.log('attempting to update icon')
-  if (!mainWindow) return
-
+  console.log('deepWorkTarget', deepWorkTarget, 'currentDeepWork', currentDeepWork)
   let iconPath
 
   if (currentDeepWork >= deepWorkTarget) {
@@ -109,8 +108,10 @@ function loadUserData() {
 function setupPeriodicSave() {
   setInterval(
     () => {
+      const today = dayjs().format('dddd')
       store.set('siteTimeTrackers', currentSiteTimeTrackers)
       store.set('deepWorkHours', deepWorkHours)
+      currentDeepWork = deepWorkHours[today] || 0
       updateIconBasedOnProgress()
       handleDailyReset()
     },
@@ -118,13 +119,9 @@ function setupPeriodicSave() {
   )
 }
 
-let lastWindowInfo: Result | null = null
-let lastActiveTime = 0
-
 function startActivityMonitoring() {
   setInterval(async () => {
     const idleTime = powerMonitor.getSystemIdleTime()
-    const currentTime = Date.now() / 1000
 
     if (idleTime > 60) {
       console.log(`System idle for ${idleTime} seconds.`)
@@ -143,14 +140,8 @@ function startActivityMonitoring() {
         updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
 
         // Update lastWindowInfo and lastActiveTime for comparison and idle tracking
-        lastWindowInfo = windowInfo
-        lastActiveTime = currentTime
       } else {
         console.log('Ignoring App', windowInfo?.title || 'Unknown App')
-      }
-
-      if (currentTime - lastActiveTime > 120) {
-        console.log('System has been idle for over 2 minutes.')
       }
     } catch (error) {
       console.error('Error getting active window:', error)

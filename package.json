@@ -23,7 +23,7 @@
     "postinstall": "electron-builder install-app-deps && npx electron-rebuild",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "NODE_ENV=production electron-vite build && electron-builder --mac",
+    "build:mac": " DEBUG=electron-builder NODE_ENV=production electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux",
     "package": "electron-vite build --outDir=dist && electron-forge package",
     "make": "electron-vite build --outDir=dist && electron-forge make"

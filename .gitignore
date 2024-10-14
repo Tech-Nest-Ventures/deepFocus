@@ -8,6 +8,8 @@ node_modules
 deepfocus.js
 test-results
 playwright-report
-AuthKey_32R92U589C.p8
+build/Certificates.p12
+build_assets/CertificatesDist.p12
 Mac OS X Provisioning Profile Signing.cer
 forge.config.js
+electron-builder.yml
