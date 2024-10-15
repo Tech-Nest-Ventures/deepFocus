@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@corvu/utils": "^0.4.2",
-    "@deepfocus/get-windows": "^1.0.20",
     "@electron-toolkit/preload": "^3.0.1",
     "@kobalte/core": "^0.13.7",
     "@modular-forms/solid": "^0.23.0",
@@ -80,12 +79,7 @@
     "valibot": "^0.42.1",
     "vinxi": "^0.4.3",
     "vite": "^5.4.8",
-    "vitest": "^2.1.2",
-    "vite-plugin-solid": "^2.10.2"
-  },
-  "pnpm": {
-    "resolutions": {
-      "eslint": "^9.11.1"
-    }
+    "vite-plugin-solid": "^2.10.2",
+    "vitest": "^2.1.2"
   }
 }

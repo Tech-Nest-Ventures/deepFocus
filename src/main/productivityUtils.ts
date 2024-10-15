@@ -1,14 +1,10 @@
 import { parse } from 'url'
-import { MacOSResult, Result, SiteTimeTracker, FocusInterval } from './types'
+import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
 import { TypedStore } from './index'
+import { exec } from 'child_process'
+import { app, dialog, MessageBoxSyncOptions } from 'electron'
 import pkg from 'node-mac-permissions'
-const {
-  getAuthStatus,
-  askForAccessibilityAccess,
-  askForScreenCaptureAccess,
-  askForMicrophoneAccess,
-  askForRemindersAccess
-} = pkg
+const { getAuthStatus, askForAccessibilityAccess, askForScreenCaptureAccess } = pkg
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -105,13 +101,18 @@ export function formatTime(milliseconds: number): string {
   }
 }
 export function updateSiteTimeTracker(
-  windowInfo: Result,
-  timeTrackers: SiteTimeTracker[]
+  appName: string,
+  timeTrackers: SiteTimeTracker[],
+  parsedURL?: string
 ): SiteTimeTracker {
   const currentTime = Number((Date.now() / 1000).toString().slice(0, -3))
 
   // Check if the windowInfo has a valid URL, and if so, extract the base URL
-  const url = getUrlFromResult(windowInfo)
+  let url
+  if (parsedURL) {
+    console.log('testing sanity, ', parsedURL)
+    url = parsedURL
+  }
   let trackerKey = ''
   let trackerTitle = ''
 
@@ -119,21 +120,17 @@ export function updateSiteTimeTracker(
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = getBaseURL(url) as string
     trackerTitle = getBaseURL(url) as string
-  } else if (windowInfo.owner.name === 'Arc') {
-    // If it's a browser, use the page title or URL
-    trackerKey = windowInfo.title
-    trackerTitle = windowInfo.title
   } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
-    trackerKey = windowInfo.owner?.path || 'Unknown App'
-    trackerTitle = windowInfo.owner?.path.split('/').pop()?.replace('.app', '') || 'Unknown App'
+    trackerKey = appName || 'Unknown App'
+    trackerTitle = appName || 'Unknown App'
   }
 
   // Find an existing tracker or create a new one
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
-    tracker.timeSpent += 120
+    tracker.timeSpent += 15
     tracker.lastActiveTimestamp = currentTime
   } else {
     console.log('Creating new tracker')
@@ -171,35 +168,45 @@ export function isUnproductiveSite(url, store: TypedStore): boolean {
   return unproductiveSites?.includes(url) || false
 }
 
-export function mergeOverlappingIntervals(intervals: FocusInterval[]) {
-  if (!intervals.length) return []
-
-  // Sort intervals by the start time
-  intervals.sort((a, b) => a.start - b.start)
-
-  const mergedIntervals = [intervals[0]]
-
-  for (let i = 1; i < intervals.length; i++) {
-    const current = intervals[i]
-    const lastMerged = mergedIntervals[mergedIntervals.length - 1]
-
-    // If intervals overlap, merge them
-    if (current.start <= lastMerged.end) {
-      lastMerged.end = Math.max(lastMerged.end, current.end)
-    } else {
-      // Otherwise, add the current interval
-      mergedIntervals.push(current)
-    }
-  }
-
-  return mergedIntervals
-}
-
 // Helper function to check if an app/site is "deep work"
 export function isDeepWork(item: string) {
   const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
   const formattedItem = item.replaceAll(' ', '').toLowerCase()
   return deepWorkSites.some((site) => formattedItem.includes(site))
+}
+
+// Function to get the active window and its title
+export function getActiveWindowApp(): Promise<string | browser> {
+  return new Promise<string | browser>((resolve, reject) => {
+    const script = `osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`
+    exec(script, (err, stdout, stderr) => {
+      if (err) {
+        console.error(`Error getting active application: ${stderr}`)
+        resolve('') // Return empty string on error
+      } else {
+        resolve(stdout.trim())
+      }
+    })
+  })
+}
+
+// Function to get the URL for a specific browser
+export function getBrowserURL(browser: browser): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
+    if (browser === 'Safari') {
+      script = `osascript -e 'tell application "${browser}" to get URL of front document'`
+    }
+
+    exec(script, (err, stdout, stderr) => {
+      if (err) {
+        console.error(`Error getting URL for ${browser}: ${stderr}`)
+        resolve('') // Return an empty string if there's an error
+      } else {
+        resolve(stdout.trim())
+      }
+    })
+  })
 }
 
 // Check for permissions and request if necessary
@@ -220,23 +227,5 @@ export async function checkAndRequestPermissions() {
     await askForScreenCaptureAccess()
   } else {
     console.log('Screen capture access already granted.')
-  }
-
-  // Microphone
-  accessStatus = getAuthStatus('microphone')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Microphone Access...')
-    await askForMicrophoneAccess()
-  } else {
-    console.log('Microphone access already granted.')
-  }
-
-  // Reminders
-  accessStatus = getAuthStatus('reminders')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Reminders Access...')
-    await askForRemindersAccess()
-  } else {
-    console.log('Reminders access already granted.')
   }
 }

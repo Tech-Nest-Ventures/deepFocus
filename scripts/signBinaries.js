@@ -26,10 +26,6 @@ export default async function signBinaries(context) {
     ),
     path.join(
       appPath,
-      'Contents/Resources/app.asar.unpacked/node_modules/@deepfocus/get-windows/main'
-    ),
-    path.join(
-      appPath,
       'Contents/Resources/app.asar.unpacked/node_modules/node-mac-permissions/build/node_gyp_bins/python3'
     ),
     path.join(

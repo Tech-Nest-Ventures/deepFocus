@@ -52,11 +52,6 @@ export type DeepWorkHours = {
   Sunday: number
 }
 
-export interface FocusInterval {
-  start: number
-  end: number
-}
-
 export type ExtendedResult = Result & { url?: string; siteTimeTracker?: SiteTimeTracker }
 
 export type Options = {
@@ -169,3 +164,13 @@ export interface ElectronAPI {
     lastName: string
   }) => void
 }
+
+export type browser =
+  | 'Google Chrome'
+  | 'Arc'
+  | 'Brave Browser'
+  | 'Microsoft Edge'
+  | 'Vivaldi'
+  | 'Opera'
+  | 'Safari'
+  | 'Firefox'
