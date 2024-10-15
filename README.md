@@ -10,6 +10,8 @@
 
 > Building the Oura for productivity. Get insights on how productive you are.
 
+Primarily for MacOS. Coming to Windows & Linux shortly.
+
 ## Table of Contents
 
 - [Features](#features)
@@ -104,10 +106,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Timeo Williams [@timeowilliams](https://twitter.com/timeowilliams) - timeo.williams@gmail.com
 
-Current Issues:
+## Troubleshooting
 
-1. Need to persist Activity Data to backend properly.
-2. Right now, I have 5 separate instances of VSCode open. But my logic for time tracking is adding all 5 instances together.
-3. Test signing a basic electron app > and then running it locally.
-4. I found it interesting how rize-io didnt really do the whole asar unpack thing, but instead had the entire app in a single folder.
-5. Fix mocha tests for testing delay.
+1. Manually Open the Application
+   When macOS shows the “developer cannot be verified” error, you can bypass this warning by manually opening the app.
+
+Right-click on the Deep Focus app in the Applications folder.
+Select Open.
+You should see the same warning message, but this time there will be an Open button to proceed with opening the app.
+This will whitelist the app for future use.
+
+2. pnpm (not supported)
+   We saw some issues with how pnpm was bundling dependencies in the electron-builder stage and it's inability to target certain architectures. We recommend using npm for now.
+
+3. Signing the app
