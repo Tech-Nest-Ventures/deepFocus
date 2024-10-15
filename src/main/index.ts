@@ -5,19 +5,27 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, Result } from './types'
-import { updateSiteTimeTracker, isDeepWork, getActiveWindow, getBrowserURL } from './productivityUtils'
+import {
+  StoreSchema,
+  SiteTimeTracker,
+  DeepWorkHours,
+  MessageType,
+  User,
+  Result,
+  browser
+} from './types'
+import {
+  updateSiteTimeTracker,
+  isDeepWork,
+  getBrowserURL,
+  checkAndRequestPermissions,
+  getActiveWindowApp
+} from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 import { resetCounters } from './utils'
 
 const { app, shell, ipcMain, powerMonitor } = Electron
 import { BrowserWindow, Notification } from 'electron'
-let activeWindow
-;(async () => {
-  const module = await import('@deepfocus/get-windows')
-  activeWindow = module.activeWindow
-})()
-
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -29,6 +37,7 @@ export interface TypedStore extends Store<StoreSchema> {
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
+let monitoringInterval: NodeJS.Timeout | null = null; 
 let deepWorkHours = {
   Monday: 0,
   Tuesday: 0,
@@ -40,7 +49,7 @@ let deepWorkHours = {
 } as DeepWorkHours
 
 let currentDeepWork = 0
-const deepWorkTarget = store.get('deepWorkTarget', 4) as number
+let deepWorkTarget = store.get('deepWorkTarget', 8) as number
 let mainWindow: BrowserWindow | null = null
 
 setupEnvironment()
@@ -121,46 +130,61 @@ function setupPeriodicSave() {
   )
 }
 
-function startActivityMonitoring(mainWindow) {
-  setInterval(async () => {
+function isBrowser(appName: string): appName is browser {
+  return [
+    'Google Chrome',
+    'Arc',
+    'Brave Browser',
+    'Microsoft Edge',
+    'Vivaldi',
+    'Opera',
+    'Safari',
+    'Firefox'
+  ].includes(appName)
+}
+
+function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
+  monitoringInterval = setInterval(async () => {
     const idleTime = powerMonitor.getSystemIdleTime();
 
+    // Skip if the system has been idle for more than 60 seconds
     if (idleTime > 60) {
       console.log(`System idle for ${idleTime} seconds.`);
-      return; // Skip monitoring if the system is idle for more than 60 seconds
+      return;
     }
 
     try {
-      // Get the active window (application name and title)
-      const { appName, windowTitle }: { appName: string; windowTitle: string } = await getActiveWindow();
-      console.log(`Active Application: ${appName}`);
-      console.log(`Active Window Title: ${windowTitle}`);
-      
-      let URL = '';
+      const appName = await getActiveWindowApp(); // Get the active application name
+      if (!appName) {
+        console.log('No active window app found');
+        return;
+      }
 
-      // If the active window belongs to a browser, fetch the URL
-      if ([
-        'Google Chrome',
-        'Arc',
-        'Brave Browser',
-        'Microsoft Edge',
-        'Vivaldi',
-        'Opera',
-        'Safari',
-        'Firefox'
-      ].includes(appName)) {
+      console.log(`Active Application: ${appName}`);
+      let URL: string = '';
+
+      if (isBrowser(appName)) {
         URL = await getBrowserURL(appName);
       }
 
-      // Send the active window info and URL to the renderer process (UI)
+      updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL);
+      
+      // Send the active window info and URL to the renderer process
       if (mainWindow) {
-        mainWindow.webContents.send('active-window-info', { appName, windowTitle, URL });
+        mainWindow.webContents.send('active-window-info', { appName, URL });
       }
-
     } catch (error) {
       console.error('Error getting active window or URL:', error);
     }
-  }, 5000); // Run the monitoring function every 5 seconds
+  }, 15000); // Run the monitoring function every 15 seconds
+}
+
+function stopActivityMonitoring() {
+  if (monitoringInterval) {
+    clearInterval(monitoringInterval);  // Clear the interval
+    monitoringInterval = null;          // Reset the interval ID
+    console.log('Activity monitoring stopped.');
+  }
 }
 
 function calculateDeepWorkHours(
@@ -235,11 +259,32 @@ app.whenReady().then(async () => {
     Sunday: 0
   }) as DeepWorkHours
 
-  await createWindow().then(() => {
-    handleDailyReset()
-    loadUserData()
-    setupPeriodicSave()
-    setupIPCListeners()
+  await createWindow().then(async () => {
+    try {
+      // Wait for permissions before proceeding with other functions
+      await Promise.race([
+        checkAndRequestPermissions(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Permission request timeout')), 60000)
+        ) // 1-minute timeout
+      ])
+
+      // Proceed with other initialization only after permissions are handled
+      console.log('Permissions granted or handled. Proceeding...')
+      handleDailyReset()
+      loadUserData()
+      setupPeriodicSave()
+      setupIPCListeners()
+    } catch (error) {
+      console.error('Error during permission check or timeout:', error)
+
+      new Notification({
+        title: 'DeepFocus',
+        body: `Deep Focus can't function properly without permissions.`,
+        icon: join(__dirname, 'resources/icon.png')
+      })
+      app.quit()
+    }
   })
 })
 
@@ -255,17 +300,20 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 function handleUserLogout() {
+  console.log('Handling user logout')
   store.delete('user')
   resetCounters('daily', store, getSiteTrackers(), getDeepWorkHours())
+  stopActivityMonitoring()
 }
+
 function setupIPCListeners() {
   ipcMain.on('send-user-data', (event, user) => {
     handleUserData(user)
     console.log('event', event.ports)
     const savedUser = store.get('user')
-    if (savedUser) {
-      startActivityMonitoring(mainWindow)
+    if (savedUser && mainWindow) {
       currentSiteTimeTrackers = getSiteTrackers()
+      startActivityMonitoring(mainWindow)
     }
   })
   ipcMain.on('logout-user', () => handleUserLogout())
@@ -301,6 +349,16 @@ function setupIPCListeners() {
     store.set('unproductiveUrls', urls)
     console.log('Unproductive URLs updated:', urls, event.processId)
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
+  })
+
+  ipcMain.on('fetch-deep-work-target', (event) => {
+    deepWorkTarget = store.get('deepWorkTarget', 8) as number
+    event.reply('deep-work-target-response', deepWorkTarget)
+  })
+
+  ipcMain.on('update-deep-work-target', (event, newTarget: number) => {
+    store.set('deepWorkTarget', newTarget)
+    console.log(`Updated Deep Work Target: ${newTarget}`)
   })
 
   ipcMain.on('fetch-deep-work-data', (event) => {
@@ -363,7 +421,6 @@ app.on('window-all-closed', () => {
 })
 
 // Listen for permission changes (you could place this logic wherever it's most appropriate)
-
 
 // Initialize the worker
 const schedulerWorkerPath = join(__dirname, 'worker.js')

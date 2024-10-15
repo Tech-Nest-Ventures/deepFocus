@@ -26,7 +26,8 @@ compression: 'store' # Change to 'maximum' to enable compression in PROD. store 
 asar: true
 # This section handles which files are not to be packed into the asar archive and need signing
 asarUnpack:
-  - "node_modules/@deepfocus/get-windows/main"
+  - "node_modules/node-mac-permissions/build/Release/permissions.node"
+  - "node_modules/node-mac-permissions/build/node_gyp_bins/python3"
   - "Frameworks/Electron Framework.framework/Libraries/*.dylib"
 
 mac:
@@ -35,9 +36,13 @@ mac:
   darkModeSupport: true
   hardenedRuntime: true
   notarize: false
+  identity: null
   target: 
     - dmg
   extendInfo:
+    NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    NSAppleEventsUsageDescription: Please allow access to script browser applications to detect the current URL when triggering instant lookup.
     NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
     NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
   category: 'public.app-category.productivity'
@@ -47,5 +52,5 @@ appImage:
 
 npmRebuild: true
 
-afterSign: scripts/signBinaries.js
-afterAllArtifactBuild: scripts/notarize.js
+# afterSign: scripts/signBinaries.js
+# afterAllArtifactBuild: scripts/notarize.js

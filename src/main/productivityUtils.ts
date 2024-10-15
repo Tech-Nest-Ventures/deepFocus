@@ -1,7 +1,10 @@
 import { parse } from 'url'
 import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
 import { TypedStore } from './index'
-import {exec} from 'child_process';
+import { exec } from 'child_process'
+import { app, dialog, MessageBoxSyncOptions } from 'electron'
+import pkg from 'node-mac-permissions'
+const { getAuthStatus, askForAccessibilityAccess, askForScreenCaptureAccess } = pkg
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -98,16 +101,16 @@ export function formatTime(milliseconds: number): string {
   }
 }
 export function updateSiteTimeTracker(
-  windowInfo: Result,
+  appName: string,
   timeTrackers: SiteTimeTracker[],
   parsedURL?: string
 ): SiteTimeTracker {
   const currentTime = Number((Date.now() / 1000).toString().slice(0, -3))
 
   // Check if the windowInfo has a valid URL, and if so, extract the base URL
-  let url = getUrlFromResult(windowInfo) 
+  let url
   if (parsedURL) {
-    console.log("testing sanity, ", url)
+    console.log('testing sanity, ', parsedURL)
     url = parsedURL
   }
   let trackerKey = ''
@@ -117,17 +120,17 @@ export function updateSiteTimeTracker(
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = getBaseURL(url) as string
     trackerTitle = getBaseURL(url) as string
-  }  else {
+  } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
-    trackerKey = windowInfo.owner?.path || 'Unknown App'
-    trackerTitle = windowInfo.owner?.path.split('/').pop()?.replace('.app', '') || 'Unknown App'
+    trackerKey = appName || 'Unknown App'
+    trackerTitle = appName || 'Unknown App'
   }
 
   // Find an existing tracker or create a new one
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
-    tracker.timeSpent += 5
+    tracker.timeSpent += 15
     tracker.lastActiveTimestamp = currentTime
   } else {
     console.log('Creating new tracker')
@@ -172,91 +175,57 @@ export function isDeepWork(item: string) {
   return deepWorkSites.some((site) => formattedItem.includes(site))
 }
 
-// // Function to check Accessibility and Screen Capture permissions
-// export function checkPermissions() {
-//   const accessibilityStatus = systemPreferences.isTrustedAccessibilityClient(true); // false means don't prompt
-//   const screenCaptureStatus = systemPreferences.getMediaAccessStatus('screen');
-
-//   // Check Accessibility permission
-//   if (accessibilityStatus === false) {
-//     dialog.showMessageBox({
-//       type: 'warning',
-//       buttons: ['Quit', 'Cancel'],
-//       message: 'Deep Focus requires Accessibility permissions to track your activity accurately. Please enable it in System Preferences > Security & Privacy > Accessibility.',
-//     }).then(result => {
-//       if (result.response === 0) {
-//         app.quit();
-//       }
-//     });
-//   }
-
-//   // Check Screen Capture permission
-//   if (screenCaptureStatus !== 'granted') {
-//     dialog.showMessageBox({
-//       type: 'warning',
-//       buttons: ['Quit', 'Cancel'],
-//       message: 'Deep Focus requires Screen Capture permissions. Please enable it in System Preferences > Security & Privacy > Screen Recording.',
-//     }).then(result => {
-//       if (result.response === 0) {
-//         app.quit();
-//       }
-//     });
-//   }
-//       // Check accessibility permissions
-//       console.log('Accessibility permission:', accessibilityStatus);
-
-//       if (accessibilityStatus === false) {
-//         new Notification({
-//           title: 'DeepFocus',
-//           body: 'Please enable Accessibility permissions in System Preferences to track your productivity.',
-//           icon: join(__dirname, 'resources/icon.png')
-//         }).show();
-//         console.error("Accessibility permission is missing. Please enable it in System Preferences.");
-//         return; // Stop execution if permissions are missing
-//       }
-
-// }
-
 // Function to get the active window and its title
-export function getActiveWindow() {
-  return new Promise((resolve, reject) => {
-    const script = `
-      tell application "System Events"
-        set frontApp to name of first application process whose frontmost is true
-        set frontAppName to name of frontApp
-        tell process frontAppName
-          set winTitle to name of front window
-        end tell
-      end tell
-      return frontAppName & "|" & winTitle
-    `;
-    
-    exec(`osascript -e '${script}'`, (err, stdout, stderr) => {
+export function getActiveWindowApp(): Promise<string | browser> {
+  return new Promise<string | browser>((resolve, reject) => {
+    const script = `osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`
+    exec(script, (err, stdout, stderr) => {
       if (err) {
-        reject(`Error: ${stderr}`);
+        console.error(`Error getting active application: ${stderr}`)
+        resolve('') // Return empty string on error
       } else {
-        const [appName, windowTitle] = stdout.trim().split('|');
-        resolve({ appName, windowTitle });
+        resolve(stdout.trim())
       }
-    });
-  });
+    })
+  })
 }
 
 // Function to get the URL for a specific browser
-export function getBrowserURL(browser: browser) {
-  return new Promise((resolve, reject) => {
-    let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`;
+export function getBrowserURL(browser: browser): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
     if (browser === 'Safari') {
-      script = `osascript -e 'tell application "${browser}" to get URL of front document'`;
+      script = `osascript -e 'tell application "${browser}" to get URL of front document'`
     }
 
     exec(script, (err, stdout, stderr) => {
       if (err) {
-        console.error(`Error getting URL for ${browser}: ${stderr}`);
-        resolve(''); // Return an empty string if there's an error
+        console.error(`Error getting URL for ${browser}: ${stderr}`)
+        resolve('') // Return an empty string if there's an error
       } else {
-        resolve(stdout.trim());
+        resolve(stdout.trim())
       }
-    });
-  });
+    })
+  })
+}
+
+// Check for permissions and request if necessary
+export async function checkAndRequestPermissions() {
+  // Accessibility
+  let accessStatus = getAuthStatus('accessibility')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Accessibility Access...')
+    await askForAccessibilityAccess()
+  } else {
+    console.log('Accessibility access already granted.')
+  }
+
+  // Screen Recording
+  accessStatus = getAuthStatus('screen')
+  if (accessStatus !== 'authorized') {
+    console.log('Requesting Screen Capture Access...')
+    await askForScreenCaptureAccess()
+  } else {
+    console.log('Screen capture access already granted.')
+  }
 }

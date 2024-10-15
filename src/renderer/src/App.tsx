@@ -3,10 +3,10 @@ import { Router, Route, A, useLocation } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 
-import { sendUserToBackend } from './lib/utils'
+import { sendUserToBackend, stopActivityMonitoring } from './lib/utils'
 import './assets/main.css'
 import logo from './assets/deepWork.svg'
-import { IconSettings } from './components/ui/icons'
+import { IoSettingsSharp, SiSimpleanalytics, VsHome, IoLogOutOutline } from './components/ui/icons'
 import { Button } from './components/ui/button'
 
 // Lazy load the components
@@ -38,49 +38,46 @@ const App = (props: ComponentProps<typeof Router>) => {
     localStorage.clear()
     setIsLoggedIn(false)
     setIsNewUser(false)
+    stopActivityMonitoring()
   }
 
   const NavBar = () => (
     <>
       <header class="flex justify-between items-center p-4 bg-gray-800 w-full">
         <img alt="logo" class="logo" src={logo} />
-        <nav class="flex space-x-4">
+        <nav class="flex items-center justify-center space-x-4">
           {!isLoggedIn() ? (
             <>
               {isNewUser() ? (
                 location.pathname !== '/signup' ? (
-                  <A href="/signup" class="bg-blue-500 px-4 py-2 rounded text-white">
-                    Sign Up
+                  <A href="/signup" class="px-4 py-2 rounded text-white">
+                    <Button>Sign Up</Button>
                   </A>
                 ) : (
-                  <A href="/login" class="bg-blue-500 px-4 py-2 rounded text-white">
-                    Login
+                  <A href="/login" class="px-4 py-2 rounded text-white">
+                    <Button>Login</Button>
                   </A>
                 )
               ) : (
                 // Show Login by default for returning users
-                <A href="/login" class="bg-blue-500 px-4 py-2 rounded text-white">
-                  Login
+                <A href="/login" class="px-4 py-2 rounded text-white">
+                  <Button>Login</Button>
                 </A>
               )}
             </>
           ) : (
             <>
-              <A href="/" class="bg-blue-500 px-4 py-2 rounded text-white">
-                Home
+              <A href="/" class="px-4 py-2 rounded text-white">
+                <VsHome />
               </A>
-              <A href="/analytics" class="bg-green-500 px-4 py-2 rounded text-white">
-                Analytics
+              <A href="/analytics" class="px-4 py-2 rounded text-white">
+                <SiSimpleanalytics />
               </A>
-              <A
-                href="/settings"
-                class="bg-gray-500 px-4 py-2 rounded text-white flex items-center"
-              >
-                <IconSettings class="w-5 h-5 mr-2" />
-                Settings
+              <A href="/settings" class="px-4 py-2 rounded text-white flex items-center">
+                <IoSettingsSharp />
               </A>
-              <Button onClick={handleLogout} class="bg-red-500 px-4 py-2 rounded text-white">
-                Logout
+              <Button onClick={handleLogout} class="px-4 py-2 rounded text-white">
+                <IoLogOutOutline />
               </Button>
             </>
           )}

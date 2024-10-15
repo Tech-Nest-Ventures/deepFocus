@@ -165,5 +165,12 @@ export interface ElectronAPI {
   }) => void
 }
 
-
-export type browser = 'Google Chrome' | 'Arc' | 'Brave Browser' | 'Microsoft Edge' | 'Vivaldi' | 'Opera' | 'Safari' | 'Firefox';
+export type browser =
+  | 'Google Chrome'
+  | 'Arc'
+  | 'Brave Browser'
+  | 'Microsoft Edge'
+  | 'Vivaldi'
+  | 'Opera'
+  | 'Safari'
+  | 'Firefox'
