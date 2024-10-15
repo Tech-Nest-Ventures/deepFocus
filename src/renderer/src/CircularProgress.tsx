@@ -1,15 +1,15 @@
-import { createEffect } from 'solid-js';
+import { createEffect } from 'solid-js'
 
 const CircularProgress = (props) => {
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
+  const radius = 45
+  const circumference = 2 * Math.PI * radius
 
   createEffect(() => {
-    console.log('Progress value inside CircularProgress createEffect:', props.progress);
-  });
+    console.log('Progress value inside CircularProgress createEffect:', props.progress)
+  })
 
   // Ensure that progress never exceeds 100% (clamp to 1)
-  const clampedProgress = () => Math.min(props.progress, 1);
+  const clampedProgress = () => Math.min(props.progress, 1)
 
   return (
     <div class="circular-progress flex items-center">
@@ -32,7 +32,7 @@ const CircularProgress = (props) => {
         <p>Progress: {Math.min(Math.round(props.progress * 100), 100)}%</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CircularProgress;
+export default CircularProgress

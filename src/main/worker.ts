@@ -47,7 +47,6 @@ schedule.scheduleJob('0 0 19 * *', () => {
   }
 })
 
-
 // Schedule weekly aggregation at the end of Sunday (midnight)
 schedule.scheduleJob('0 19 * * 0', () => {
   if (currentUsername) {

@@ -1,4 +1,4 @@
-import { app, shell, ipcMain, powerMonitor, BrowserWindow, Notification} from 'electron'
+import { app, shell, ipcMain, powerMonitor, BrowserWindow, Notification } from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
 import dayjs from 'dayjs'
@@ -12,11 +12,17 @@ import {
   getBrowserURL,
   checkAndRequestPermissions,
   getActiveWindowApp,
-  getBaseURL,
+  getBaseURL
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
-import { resetCounters, checkForUpdates, getIconPath, updateIconBasedOnProgress, uploadLogs } from './utils'
-import log from 'electron-log/node.js';
+import {
+  resetCounters,
+  checkForUpdates,
+  getIconPath,
+  updateIconBasedOnProgress,
+  uploadLogs
+} from './utils'
+import log from 'electron-log/node.js'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -44,11 +50,10 @@ let user: User | null = null
 let iconPath: string = ''
 let deepWorkTarget = store.get('deepWorkTarget', 8) as number
 let mainWindow: BrowserWindow | null = null
-log.transports.file.level = "debug"
-log.transports.file.maxSize = 10 * 1024 * 1024;
+log.transports.file.level = 'debug'
+log.transports.file.maxSize = 10 * 1024 * 1024
 
-log.info('Log from the main process');
-
+log.info('Log from the main process')
 
 setupEnvironment()
 log.info('Set up Environment')
@@ -96,22 +101,22 @@ function loadUserData() {
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
 function setupPeriodicSave() {
-  if(user) {
-  setInterval(
-    () => {
-      const today = dayjs()
-      log.info('Periodic save triggered for today: ', today.format('dddd, HH:mm'))
-      store.set('siteTimeTrackers', currentSiteTimeTrackers)
-      store.set('deepWorkHours', deepWorkHours)
-      currentDeepWork = deepWorkHours[today.format('dddd')] || 0
-      iconPath = updateIconBasedOnProgress(iconPath, deepWorkTarget, currentDeepWork)
-      handleDailyReset()
-    },
-    2 * 60 * 1000
-  )
-} else {
-  log.info('User is not logged in. Not saving data.')
-}
+  if (user) {
+    setInterval(
+      () => {
+        const today = dayjs()
+        log.info('Periodic save triggered for today: ', today.format('dddd, HH:mm'))
+        store.set('siteTimeTrackers', currentSiteTimeTrackers)
+        store.set('deepWorkHours', deepWorkHours)
+        currentDeepWork = deepWorkHours[today.format('dddd')] || 0
+        iconPath = updateIconBasedOnProgress(iconPath, deepWorkTarget, currentDeepWork)
+        handleDailyReset()
+      },
+      2 * 60 * 1000
+    )
+  } else {
+    log.info('User is not logged in. Not saving data.')
+  }
 }
 
 function isBrowser(appName: string): appName is browser {
@@ -248,7 +253,7 @@ app.whenReady().then(async () => {
         checkAndRequestPermissions(),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Permission request timeout')), 60000)
-        ) 
+        )
       ])
 
       console.log('Permissions granted or handled. Proceeding...')
@@ -444,21 +449,21 @@ function getSiteTrackers(): SiteTimeTracker[] {
 
 // Catch uncaught exceptions in the Node process
 process.on('uncaughtException', (error) => {
-  log.error('Uncaught Exception:', error);
-  uploadLogs();
-});
+  log.error('Uncaught Exception:', error)
+  uploadLogs()
+})
 
 // Catch unhandled rejections in the Promise
 process.on('unhandledRejection', (reason, promise) => {
-  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  uploadLogs();
-});
+  log.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  uploadLogs()
+})
 
 // You can also trigger log uploads in other critical error-handling cases:
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    log.info('Application closed, uploading logs before quitting...');
-    uploadLogs();
-    app.quit();
+    log.info('Application closed, uploading logs before quitting...')
+    uploadLogs()
+    app.quit()
   }
-});
+})

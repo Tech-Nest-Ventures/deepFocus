@@ -120,7 +120,8 @@ This will whitelist the app for future use.
 2. pnpm (not supported)
    We saw some issues with how pnpm was bundling dependencies in the electron-builder stage and it's inability to target certain architectures. We recommend using npm for now.
 
-3. Verifying the app: 
+3. Verifying the app:
+
 ```bash
   codesign -vvv --deep --strict "${appPath}"
 
@@ -138,9 +139,9 @@ This will whitelist the app for future use.
   security cms -D -i "/Users/{yourname}/Library/Developer/Xcode/UserData/Provisioning\ Profiles/{nameOfProvisioningProfile}.provisionprofile"
 
 # Check stapler process
-xcrun stapler staple dist/mac-arm64/Deep\ Focus.app 
+xcrun stapler staple dist/mac-arm64/Deep\ Focus.app
 
-  ```
+```
 
-4. Find logs: 
-on macOS: ~/Library/Logs/{app name}/main.log
+4. Find logs:
+   on macOS: ~/Library/Logs/{app name}/main.log

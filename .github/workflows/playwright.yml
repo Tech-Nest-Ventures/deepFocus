@@ -18,23 +18,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: deepFocus/deepWork # Ensure this uses the correct path
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Set working directory  # Explicitly set the working directory
-        run: cd /Users/timeo/deepFocus/deepWork
-
       - name: Install system dependencies for node-gyp
+        working-directory: deepFocus/deepWork
         run: |
           brew install cmake
           brew install pkg-config
           brew install python3
 
       - name: Install dependencies
+        working-directory: deepFocus/deepWork
         run: npm install
 
       - name: Run Playwright tests
+        working-directory: deepFocus/deepWork
         run: npm run test:e2e
