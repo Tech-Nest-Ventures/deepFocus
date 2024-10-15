@@ -14,7 +14,7 @@ export const sendUserToBackend = (user: User) => {
   window?.electron.ipcRenderer.send('send-user-data', sanitizedUser)
 }
 
-export const stopActivityMonitoring = () => { 
+export const stopActivityMonitoring = () => {
   console.log('Stopping activity monitoring')
   window?.electron.ipcRenderer.send('logout-user')
-} 
+}

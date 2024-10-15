@@ -37,7 +37,7 @@ export interface TypedStore extends Store<StoreSchema> {
 
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = []
-let monitoringInterval: NodeJS.Timeout | null = null; 
+let monitoringInterval: NodeJS.Timeout | null = null
 let deepWorkHours = {
   Monday: 0,
   Tuesday: 0,
@@ -145,45 +145,45 @@ function isBrowser(appName: string): appName is browser {
 
 function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
   monitoringInterval = setInterval(async () => {
-    const idleTime = powerMonitor.getSystemIdleTime();
+    const idleTime = powerMonitor.getSystemIdleTime()
 
     // Skip if the system has been idle for more than 60 seconds
     if (idleTime > 60) {
-      console.log(`System idle for ${idleTime} seconds.`);
-      return;
+      console.log(`System idle for ${idleTime} seconds.`)
+      return
     }
 
     try {
-      const appName = await getActiveWindowApp(); // Get the active application name
+      const appName = await getActiveWindowApp() // Get the active application name
       if (!appName) {
-        console.log('No active window app found');
-        return;
+        console.log('No active window app found')
+        return
       }
 
-      console.log(`Active Application: ${appName}`);
-      let URL: string = '';
+      console.log(`Active Application: ${appName}`)
+      let URL: string = ''
 
       if (isBrowser(appName)) {
-        URL = await getBrowserURL(appName);
+        URL = await getBrowserURL(appName)
       }
 
-      updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL);
-      
+      updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
+
       // Send the active window info and URL to the renderer process
       if (mainWindow) {
-        mainWindow.webContents.send('active-window-info', { appName, URL });
+        mainWindow.webContents.send('active-window-info', { appName, URL })
       }
     } catch (error) {
-      console.error('Error getting active window or URL:', error);
+      console.error('Error getting active window or URL:', error)
     }
-  }, 15000); // Run the monitoring function every 15 seconds
+  }, 15000) // Run the monitoring function every 15 seconds
 }
 
 function stopActivityMonitoring() {
   if (monitoringInterval) {
-    clearInterval(monitoringInterval);  // Clear the interval
-    monitoringInterval = null;          // Reset the interval ID
-    console.log('Activity monitoring stopped.');
+    clearInterval(monitoringInterval) // Clear the interval
+    monitoringInterval = null // Reset the interval ID
+    console.log('Activity monitoring stopped.')
   }
 }
 
