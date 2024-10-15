@@ -10,7 +10,7 @@ export CSC_INSTALLER_KEY_PASSWORD="1courtney"
 echo $CSC_LINK
 echo $CSC_KEY_PASSWORD
 rm -rf dist
-rm -rf node_modules
+# rm -rf node_modules
 # if running into errors, revert back to npm
-npm install --arch=arm64
+# npm install --arch=arm64
 npm run build:mac

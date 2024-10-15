@@ -1,14 +1,7 @@
 import { parse } from 'url'
-import { MacOSResult, Result, SiteTimeTracker, FocusInterval } from './types'
+import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
 import { TypedStore } from './index'
-import pkg from 'node-mac-permissions'
-const {
-  getAuthStatus,
-  askForAccessibilityAccess,
-  askForScreenCaptureAccess,
-  askForMicrophoneAccess,
-  askForRemindersAccess
-} = pkg
+import {exec} from 'child_process';
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -106,12 +99,17 @@ export function formatTime(milliseconds: number): string {
 }
 export function updateSiteTimeTracker(
   windowInfo: Result,
-  timeTrackers: SiteTimeTracker[]
+  timeTrackers: SiteTimeTracker[],
+  parsedURL?: string
 ): SiteTimeTracker {
   const currentTime = Number((Date.now() / 1000).toString().slice(0, -3))
 
   // Check if the windowInfo has a valid URL, and if so, extract the base URL
-  const url = getUrlFromResult(windowInfo)
+  let url = getUrlFromResult(windowInfo) 
+  if (parsedURL) {
+    console.log("testing sanity, ", url)
+    url = parsedURL
+  }
   let trackerKey = ''
   let trackerTitle = ''
 
@@ -119,11 +117,7 @@ export function updateSiteTimeTracker(
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = getBaseURL(url) as string
     trackerTitle = getBaseURL(url) as string
-  } else if (windowInfo.owner.name === 'Arc') {
-    // If it's a browser, use the page title or URL
-    trackerKey = windowInfo.title
-    trackerTitle = windowInfo.title
-  } else {
+  }  else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
     trackerKey = windowInfo.owner?.path || 'Unknown App'
     trackerTitle = windowInfo.owner?.path.split('/').pop()?.replace('.app', '') || 'Unknown App'
@@ -133,7 +127,7 @@ export function updateSiteTimeTracker(
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
-    tracker.timeSpent += 120
+    tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
   } else {
     console.log('Creating new tracker')
@@ -171,30 +165,6 @@ export function isUnproductiveSite(url, store: TypedStore): boolean {
   return unproductiveSites?.includes(url) || false
 }
 
-export function mergeOverlappingIntervals(intervals: FocusInterval[]) {
-  if (!intervals.length) return []
-
-  // Sort intervals by the start time
-  intervals.sort((a, b) => a.start - b.start)
-
-  const mergedIntervals = [intervals[0]]
-
-  for (let i = 1; i < intervals.length; i++) {
-    const current = intervals[i]
-    const lastMerged = mergedIntervals[mergedIntervals.length - 1]
-
-    // If intervals overlap, merge them
-    if (current.start <= lastMerged.end) {
-      lastMerged.end = Math.max(lastMerged.end, current.end)
-    } else {
-      // Otherwise, add the current interval
-      mergedIntervals.push(current)
-    }
-  }
-
-  return mergedIntervals
-}
-
 // Helper function to check if an app/site is "deep work"
 export function isDeepWork(item: string) {
   const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
@@ -202,41 +172,91 @@ export function isDeepWork(item: string) {
   return deepWorkSites.some((site) => formattedItem.includes(site))
 }
 
-// Check for permissions and request if necessary
-export async function checkAndRequestPermissions() {
-  // Accessibility
-  let accessStatus = getAuthStatus('accessibility')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Accessibility Access...')
-    await askForAccessibilityAccess()
-  } else {
-    console.log('Accessibility access already granted.')
-  }
+// // Function to check Accessibility and Screen Capture permissions
+// export function checkPermissions() {
+//   const accessibilityStatus = systemPreferences.isTrustedAccessibilityClient(true); // false means don't prompt
+//   const screenCaptureStatus = systemPreferences.getMediaAccessStatus('screen');
 
-  // Screen Recording
-  accessStatus = getAuthStatus('screen')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Screen Capture Access...')
-    await askForScreenCaptureAccess()
-  } else {
-    console.log('Screen capture access already granted.')
-  }
+//   // Check Accessibility permission
+//   if (accessibilityStatus === false) {
+//     dialog.showMessageBox({
+//       type: 'warning',
+//       buttons: ['Quit', 'Cancel'],
+//       message: 'Deep Focus requires Accessibility permissions to track your activity accurately. Please enable it in System Preferences > Security & Privacy > Accessibility.',
+//     }).then(result => {
+//       if (result.response === 0) {
+//         app.quit();
+//       }
+//     });
+//   }
 
-  // Microphone
-  accessStatus = getAuthStatus('microphone')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Microphone Access...')
-    await askForMicrophoneAccess()
-  } else {
-    console.log('Microphone access already granted.')
-  }
+//   // Check Screen Capture permission
+//   if (screenCaptureStatus !== 'granted') {
+//     dialog.showMessageBox({
+//       type: 'warning',
+//       buttons: ['Quit', 'Cancel'],
+//       message: 'Deep Focus requires Screen Capture permissions. Please enable it in System Preferences > Security & Privacy > Screen Recording.',
+//     }).then(result => {
+//       if (result.response === 0) {
+//         app.quit();
+//       }
+//     });
+//   }
+//       // Check accessibility permissions
+//       console.log('Accessibility permission:', accessibilityStatus);
 
-  // Reminders
-  accessStatus = getAuthStatus('reminders')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Reminders Access...')
-    await askForRemindersAccess()
-  } else {
-    console.log('Reminders access already granted.')
-  }
+//       if (accessibilityStatus === false) {
+//         new Notification({
+//           title: 'DeepFocus',
+//           body: 'Please enable Accessibility permissions in System Preferences to track your productivity.',
+//           icon: join(__dirname, 'resources/icon.png')
+//         }).show();
+//         console.error("Accessibility permission is missing. Please enable it in System Preferences.");
+//         return; // Stop execution if permissions are missing
+//       }
+
+// }
+
+// Function to get the active window and its title
+export function getActiveWindow() {
+  return new Promise((resolve, reject) => {
+    const script = `
+      tell application "System Events"
+        set frontApp to name of first application process whose frontmost is true
+        set frontAppName to name of frontApp
+        tell process frontAppName
+          set winTitle to name of front window
+        end tell
+      end tell
+      return frontAppName & "|" & winTitle
+    `;
+    
+    exec(`osascript -e '${script}'`, (err, stdout, stderr) => {
+      if (err) {
+        reject(`Error: ${stderr}`);
+      } else {
+        const [appName, windowTitle] = stdout.trim().split('|');
+        resolve({ appName, windowTitle });
+      }
+    });
+  });
+}
+
+// Function to get the URL for a specific browser
+export function getBrowserURL(browser: browser) {
+  return new Promise((resolve, reject) => {
+    let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`;
+    if (browser === 'Safari') {
+      script = `osascript -e 'tell application "${browser}" to get URL of front document'`;
+    }
+
+    exec(script, (err, stdout, stderr) => {
+      if (err) {
+        console.error(`Error getting URL for ${browser}: ${stderr}`);
+        resolve(''); // Return an empty string if there's an error
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
 }

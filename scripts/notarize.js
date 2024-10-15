@@ -17,8 +17,8 @@ export default async function afterAllArtifactBuild(context) {
 
   if (!pkgPath || !fs.existsSync(pkgPath)) {
     console.error('PKG file does not exist:', pkgPath)
-    return
-  }
+  } 
+  else {
 
   // Create a new path for the signed PKG
   const signedPkgPath = path.join(path.dirname(pkgPath), 'Deep Focus-1.2.0-arm64-signed.pkg')
@@ -42,10 +42,10 @@ export default async function afterAllArtifactBuild(context) {
     })
     console.log('PKG Notarization complete.')
 
-    // Staple the notarization to the signed PKG
-    console.log('Stapling the notarization...')
-    execSync(`xcrun stapler staple "${signedPkgPath}"`, { stdio: 'inherit' })
-    console.log('Successfully stapled the notarization to the PKG.')
+    // Staple the notarization to the signed PKG (turning off for now)
+    // console.log('Stapling the notarization...')
+    // execSync(`xcrun stapler staple "${signedPkgPath}"`, { stdio: 'inherit' })
+    // console.log('Successfully stapled the notarization to the PKG.')
 
     // Verify the codesigning of the stapled PKG
     console.log('Verifying the codesigning of the stapled PKG...')
@@ -55,6 +55,8 @@ export default async function afterAllArtifactBuild(context) {
     console.error('PKG Notarization or Signing failed:', err)
   }
 
+}
+
   // Sign the DMG
   // Find the .pkg file from artifactPaths
   const dmgPath = artifactPaths.find((p) => p.endsWith('.dmg'))
@@ -62,13 +64,13 @@ export default async function afterAllArtifactBuild(context) {
 
   if (!dmgPath || !fs.existsSync(dmgPath)) {
     console.error('DMG file does not exist:', dmgPath)
-    return
   }
+  else {
 
   try {
     // Sign the DMG
     execSync(
-      `productsign --sign "Developer ID Installer: Timeo Williams (3Y4F3KTSJA)" "${dmgPath}"`,
+      `codesign --entitlements build/entitlements.mac.plist --force --deep --options runtime --sign "Developer ID Application: Timeo Williams (3Y4F3KTSJA)" "${dmgPath}"`,
       { stdio: 'inherit' }
     )
     console.log('Successfully signed the DMG.')
@@ -84,10 +86,10 @@ export default async function afterAllArtifactBuild(context) {
     })
     console.log('DMG Notarization complete.')
 
-    // Staple the notarization to the signed PKG
-    console.log('Stapling the notarization...')
-    execSync(`xcrun stapler staple "${dmgPath}"`, { stdio: 'inherit' })
-    console.log('Successfully stapled the notarization to the DMG.')
+    // Staple the notarization to the signed DMG (turning off for now)
+    // console.log('Stapling the notarization...')
+    // execSync(`xcrun stapler staple "${dmgPath}"`, { stdio: 'inherit' })
+    // console.log('Successfully stapled the notarization to the DMG.')
 
     // Verify the codesigning of the stapled PKG
     console.log('Verifying the codesigning of the stapled DMG...')
@@ -96,4 +98,5 @@ export default async function afterAllArtifactBuild(context) {
   } catch (err) {
     console.error('DMG Notarization or Signing failed:', err)
   }
+}
 }

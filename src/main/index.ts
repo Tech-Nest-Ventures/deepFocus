@@ -6,18 +6,18 @@ import fs from 'fs'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, Result } from './types'
-import { updateSiteTimeTracker, isDeepWork, checkAndRequestPermissions } from './productivityUtils'
+import { updateSiteTimeTracker, isDeepWork, getActiveWindow, getBrowserURL } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 import { resetCounters } from './utils'
 
 const { app, shell, ipcMain, powerMonitor } = Electron
 import { BrowserWindow, Notification } from 'electron'
-
 let activeWindow
 ;(async () => {
   const module = await import('@deepfocus/get-windows')
   activeWindow = module.activeWindow
 })()
+
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -62,19 +62,21 @@ function updateIconBasedOnProgress() {
   let iconPath
 
   if (currentDeepWork >= deepWorkTarget) {
+    console.log('Greater than or equal to target. Setting to green icon')
     iconPath = getIconPath('icon_green.png')
   } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
-    console.log('Greater than 1. Setting to blue icon')
+    console.log('Greater than 1 but less than 1/2 of target. Setting to yellow icon')
     iconPath = getIconPath('icon_yellow.png')
   } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
+    console.log('Half way there. Setting to blue icon')
     iconPath = getIconPath('icon_blue.png')
   } else {
+    console.log('Still at 0')
     iconPath = getIconPath('icon_red.png')
   }
 
   app.dock.setIcon(iconPath)
 }
-
 // Store user data in the electron-store and send to worker
 function handleUserData(user: User): void {
   store.set('user', {
@@ -119,34 +121,46 @@ function setupPeriodicSave() {
   )
 }
 
-function startActivityMonitoring() {
+function startActivityMonitoring(mainWindow) {
   setInterval(async () => {
-    const idleTime = powerMonitor.getSystemIdleTime()
+    const idleTime = powerMonitor.getSystemIdleTime();
 
     if (idleTime > 60) {
-      console.log(`System idle for ${idleTime} seconds.`)
-      return
+      console.log(`System idle for ${idleTime} seconds.`);
+      return; // Skip monitoring if the system is idle for more than 60 seconds
     }
 
     try {
-      const windowInfo: Result = await activeWindow()
+      // Get the active window (application name and title)
+      const { appName, windowTitle }: { appName: string; windowTitle: string } = await getActiveWindow();
+      console.log(`Active Application: ${appName}`);
+      console.log(`Active Window Title: ${windowTitle}`);
+      
+      let URL = '';
 
-      if (
-        windowInfo &&
-        windowInfo.platform === 'macos' &&
-        !windowInfo.owner.bundleId.includes('com.apple')
-      ) {
-        // Update tracker whether the window has changed or not
-        updateSiteTimeTracker(windowInfo, currentSiteTimeTrackers)
-
-        // Update lastWindowInfo and lastActiveTime for comparison and idle tracking
-      } else {
-        console.log('Ignoring App', windowInfo?.title || 'Unknown App')
+      // If the active window belongs to a browser, fetch the URL
+      if ([
+        'Google Chrome',
+        'Arc',
+        'Brave Browser',
+        'Microsoft Edge',
+        'Vivaldi',
+        'Opera',
+        'Safari',
+        'Firefox'
+      ].includes(appName)) {
+        URL = await getBrowserURL(appName);
       }
+
+      // Send the active window info and URL to the renderer process (UI)
+      if (mainWindow) {
+        mainWindow.webContents.send('active-window-info', { appName, windowTitle, URL });
+      }
+
     } catch (error) {
-      console.error('Error getting active window:', error)
+      console.error('Error getting active window or URL:', error);
     }
-  }, 120000) // Run every 2 minutes
+  }, 5000); // Run the monitoring function every 5 seconds
 }
 
 function calculateDeepWorkHours(
@@ -226,7 +240,6 @@ app.whenReady().then(async () => {
     loadUserData()
     setupPeriodicSave()
     setupIPCListeners()
-    checkAndRequestPermissions()
   })
 })
 
@@ -251,7 +264,7 @@ function setupIPCListeners() {
     console.log('event', event.ports)
     const savedUser = store.get('user')
     if (savedUser) {
-      startActivityMonitoring()
+      startActivityMonitoring(mainWindow)
       currentSiteTimeTrackers = getSiteTrackers()
     }
   })
@@ -348,6 +361,9 @@ app.on('will-quit', () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
+
+// Listen for permission changes (you could place this logic wherever it's most appropriate)
+
 
 // Initialize the worker
 const schedulerWorkerPath = join(__dirname, 'worker.js')

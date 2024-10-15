@@ -21,14 +21,12 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
-compression: 'maximum' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
+compression: 'store' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
 
 asar: true
 # This section handles which files are not to be packed into the asar archive and need signing
 asarUnpack:
-  - "node_modules/node-mac-permissions/build/Release/permissions.node"
   - "node_modules/@deepfocus/get-windows/main"
-  - "node_modules/node-mac-permissions/build/node_gyp_bins/python3"
   - "Frameworks/Electron Framework.framework/Libraries/*.dylib"
 
 mac:
@@ -38,15 +36,8 @@ mac:
   hardenedRuntime: true
   notarize: false
   target: 
-    - pkg
     - dmg
   extendInfo:
-    NSCameraUsageDescription: Application requests access to the device's camera.
-    NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-    NSAppleEventsUsageDescription: Please allow access to script browser applications to detect the current URL when triggering instant lookup.
-    NSCalendarsUsageDescription: Application needs access to calendars for productivity scheduling.
     NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
     NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
   category: 'public.app-category.productivity'
@@ -54,11 +45,7 @@ mac:
 appImage:
   artifactName: '${name}-${version}.${ext}'
 
-npmRebuild: false
+npmRebuild: true
 
 afterSign: scripts/signBinaries.js
 afterAllArtifactBuild: scripts/notarize.js
-
-publish:
-  provider: generic
-  url: https://example.com/auto-updates
