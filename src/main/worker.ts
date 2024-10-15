@@ -47,15 +47,6 @@ schedule.scheduleJob('0 0 19 * *', () => {
   }
 })
 
-// Test: Run every 30 min
-schedule.scheduleJob('*/30 * * * *', () => {
-  if (currentUsername) {
-    console.log('Performing reset every 30 minutes...')
-    requestData()
-  } else {
-    console.error('No username available for reset.')
-  }
-})
 // Schedule weekly aggregation at the end of Sunday (midnight)
 schedule.scheduleJob('0 19 * * 0', () => {
   if (currentUsername) {

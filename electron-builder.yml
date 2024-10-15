@@ -33,9 +33,12 @@ asarUnpack:
 mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  provisioningProfile: "/Users/timeo/Library/Developer/Xcode/UserData/Provisioning Profiles/052673ef-09f2-43fb-a609-24015238f5b0.provisionprofile"
   darkModeSupport: true
+  gatekeeperAssess: true
+  minimumSystemVersion: "10.13"
   hardenedRuntime: true
-  notarize: false
+  # notarize: true
   target: 
     - dmg
   extendInfo:

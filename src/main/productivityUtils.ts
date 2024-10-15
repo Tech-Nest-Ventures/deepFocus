@@ -173,12 +173,30 @@ export function getActiveWindowApp(): Promise<string | browser> {
         console.error(`Error getting active application: ${stderr}`)
         resolve('') // Return empty string on error
       } else {
-        resolve(stdout.trim())
+        let appName = stdout.trim()
+
+        // Handle VSCode specifically
+        if (appName === 'Electron') {
+          const checkVSCodeScript = `osascript -e 'tell application "System Events" to get bundle identifier of first application process whose frontmost is true'`
+          exec(checkVSCodeScript, (err, stdout, stderr) => {
+            if (err) {
+              console.error(`Error checking bundle identifier: ${stderr}`)
+              resolve('') // Return empty string on error
+            } else {
+              const bundleIdentifier = stdout.trim()
+              if (bundleIdentifier === 'com.microsoft.VSCode') {
+                appName = 'Visual Studio Code' // Special case for VSCode
+              }
+              resolve(appName)
+            }
+          })
+        } else {
+          resolve(appName) // Return other app names as-is
+        }
       }
     })
   })
 }
-
 // Function to get the URL for a specific browser
 export function getBrowserURL(browser: browser): Promise<string> {
   return new Promise<string>((resolve, reject) => {

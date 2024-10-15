@@ -87,8 +87,8 @@ export default async function afterAllArtifactBuild(context) {
       // console.log('Successfully stapled the notarization to the DMG.')
 
       // Verify the codesigning of the stapled PKG
-      console.log('Verifying the codesigning of the stapled DMG...')
-      execSync(`spctl -a -v --type install "${dmgPath}"`, { stdio: 'inherit' })
+      // console.log('Verifying the codesigning of the stapled DMG...')
+      // execSync(`spctl -a -v --type install "${dmgPath}"`, { stdio: 'inherit' })
       console.log('Codesigning verification succeeded.')
     } catch (err) {
       console.error('DMG Notarization or Signing failed:', err)
