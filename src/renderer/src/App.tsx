@@ -1,5 +1,5 @@
-import { lazy, Suspense, onMount, createSignal, ComponentProps } from 'solid-js'
-import { Router, Route, A, useLocation } from '@solidjs/router'
+import { lazy, Suspense, onMount, createSignal, ComponentProps, createEffect } from 'solid-js'
+import { Router, Route, A, useLocation, useNavigate } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 
@@ -8,11 +8,11 @@ import './assets/main.css'
 import logo from './assets/deepWork.svg'
 import { IoSettingsSharp, SiSimpleanalytics, VsHome, IoLogOutOutline } from './components/ui/icons'
 import { Button } from './components/ui/button'
+import Home from './Home'
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
 const Signup = lazy(() => import('./Signup'))
-const Home = lazy(() => import('./Home'))
 const BarChart = lazy(() => import('./BarChart'))
 
 const Onboarding = lazy(() => import('./Onboarding'))
@@ -23,6 +23,7 @@ const App = (props: ComponentProps<typeof Router>) => {
   const [isLoggedIn, setIsLoggedIn] = useAuth()
   const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
+  const navigate = useNavigate()
 
   onMount(() => {
     const token = localStorage.getItem('token') as string
@@ -39,11 +40,16 @@ const App = (props: ComponentProps<typeof Router>) => {
     setIsLoggedIn(false)
     setIsNewUser(false)
     stopActivityMonitoring()
+    navigate('/')
   }
+
+  createEffect(() => {
+    console.log('Updated loggedIn:', isLoggedIn())
+  })
 
   const NavBar = () => (
     <>
-      <header class="flex justify-between items-center p-4 bg-gray-800 w-full">
+      <header class="flex justify-between items-center p-4 bg-gray-800 opacity-[0.50] w-full">
         <img alt="logo" class="logo" src={logo} />
         <nav class="flex items-center justify-center space-x-4">
           {!isLoggedIn() ? (
@@ -58,10 +64,14 @@ const App = (props: ComponentProps<typeof Router>) => {
                     <Button>Login</Button>
                   </A>
                 )
-              ) : (
-                // Show Login by default for returning users
+              ) : location.pathname === '/' ? (
                 <A href="/login" class="px-4 py-2 rounded text-white">
                   <Button>Login</Button>
+                </A>
+              ) : (
+                // Show Login by default for returning users
+                <A href="/signup" class="px-4 py-2 rounded text-white">
+                  <Button>Sign Up</Button>
                 </A>
               )}
             </>
@@ -76,7 +86,7 @@ const App = (props: ComponentProps<typeof Router>) => {
               <A href="/settings" class="px-4 py-2 rounded text-white flex items-center">
                 <IoSettingsSharp />
               </A>
-              <Button onClick={handleLogout} class="px-4 py-2 rounded text-white">
+              <Button onClick={handleLogout} class="px-4 rounded text-white">
                 <IoLogOutOutline />
               </Button>
             </>

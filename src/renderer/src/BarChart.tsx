@@ -11,6 +11,7 @@ import {
 } from 'chart.js'
 import { Bar } from 'solid-chartjs'
 import { Button } from './components/ui/button'
+import { VsRefresh } from './components/ui/icons'
 
 const BarChart = () => {
   const [chartData, setChartData] = createSignal({
@@ -84,8 +85,8 @@ const BarChart = () => {
 
   return (
     <div>
-      <Button class="mb-4 p-2 bg-blue-500 text-white" onClick={fetchDeepWorkData}>
-        Refresh Data
+      <Button class="mt-2 px-4 rounded text-white" onClick={fetchDeepWorkData}>
+        <VsRefresh />
       </Button>
       <Bar data={chartData()} options={chartOptions} width={500} height={500} />
     </div>

@@ -30,14 +30,8 @@ jobs:
           brew install pkg-config
           brew install python3
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
-        run: pnpm install
-
-      - name: Rebuild native modules for Electron
-        run: pnpm build:mac
+        run: npm install
 
       - name: Run Playwright tests
-        run: pnpm test:e2e
+        run: npm run test:e2e

@@ -5,21 +5,14 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import {
-  StoreSchema,
-  SiteTimeTracker,
-  DeepWorkHours,
-  MessageType,
-  User,
-  Result,
-  browser
-} from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, browser } from './types'
 import {
   updateSiteTimeTracker,
   isDeepWork,
   getBrowserURL,
   checkAndRequestPermissions,
-  getActiveWindowApp
+  getActiveWindowApp,
+  getBaseURL
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 import { resetCounters } from './utils'
@@ -69,22 +62,32 @@ function updateIconBasedOnProgress() {
   console.log('attempting to update icon')
   console.log('deepWorkTarget', deepWorkTarget, 'currentDeepWork', currentDeepWork)
   let iconPath
+  let message
 
   if (currentDeepWork >= deepWorkTarget) {
     console.log('Greater than or equal to target. Setting to green icon')
+    message = `🎉 You've reached your target of ${deepWorkTarget} hours of deep work.`
     iconPath = getIconPath('icon_green.png')
   } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
     console.log('Greater than 1 but less than 1/2 of target. Setting to yellow icon')
+    message = `🚧 You're halfway there. Keep up the good work.`
     iconPath = getIconPath('icon_yellow.png')
   } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
     console.log('Half way there. Setting to blue icon')
+    message = `💡 You're close to the target. Keep it up.`
     iconPath = getIconPath('icon_blue.png')
   } else {
     console.log('Still at 0')
+    message = ` 🏁 Let's get started on your deep work!`
     iconPath = getIconPath('icon_red.png')
   }
 
   app.dock.setIcon(iconPath)
+  new Notification({
+    title: 'DeepFocus',
+    body: message,
+    icon: iconPath
+  }).show()
 }
 // Store user data in the electron-store and send to worker
 function handleUserData(user: User): void {
@@ -144,39 +147,42 @@ function isBrowser(appName: string): appName is browser {
 }
 
 function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
-  monitoringInterval = setInterval(async () => {
-    const idleTime = powerMonitor.getSystemIdleTime()
+  if (!monitoringInterval) {
+    monitoringInterval = setInterval(async () => {
+      const idleTime = powerMonitor.getSystemIdleTime()
 
-    // Skip if the system has been idle for more than 60 seconds
-    if (idleTime > 60) {
-      console.log(`System idle for ${idleTime} seconds.`)
-      return
-    }
-
-    try {
-      const appName = await getActiveWindowApp() // Get the active application name
-      if (!appName) {
-        console.log('No active window app found')
+      // Skip if the system has been idle for more than 60 seconds
+      if (idleTime > 60) {
+        console.log(`System idle for ${idleTime} seconds.`)
         return
       }
 
-      console.log(`Active Application: ${appName}`)
-      let URL: string = ''
+      try {
+        const appName = await getActiveWindowApp() // Get the active application name
+        if (!appName) {
+          console.log('No active window app found')
+          return
+        }
 
-      if (isBrowser(appName)) {
-        URL = await getBrowserURL(appName)
+        console.log(`Active Application: ${appName}`)
+        let URL: string = ''
+
+        if (isBrowser(appName)) {
+          URL = getBaseURL(await getBrowserURL(appName))
+        }
+
+        updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
+
+        // Send the active window info and URL to the renderer process
+        if (mainWindow) {
+          mainWindow.webContents.send('active-window-info', { appName, URL })
+        }
+      } catch (error) {
+        console.error('Error getting active window or URL:', error)
       }
-
-      updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
-
-      // Send the active window info and URL to the renderer process
-      if (mainWindow) {
-        mainWindow.webContents.send('active-window-info', { appName, URL })
-      }
-    } catch (error) {
-      console.error('Error getting active window or URL:', error)
-    }
-  }, 15000) // Run the monitoring function every 15 seconds
+    }, 15000) // Run the monitoring function every 15 seconds
+    console.log('Activity monitoring started.')
+  }
 }
 
 function stopActivityMonitoring() {
@@ -216,7 +222,7 @@ function calculateDeepWorkHours(
 // Create the browser window
 async function createWindow(): Promise<BrowserWindow> {
   mainWindow = new BrowserWindow({
-    width: 900,
+    width: 600,
     height: 670,
     show: true,
     autoHideMenuBar: false,
@@ -302,7 +308,6 @@ if (!app.requestSingleInstanceLock()) {
 function handleUserLogout() {
   console.log('Handling user logout')
   store.delete('user')
-  resetCounters('daily', store, getSiteTrackers(), getDeepWorkHours())
   stopActivityMonitoring()
 }
 
@@ -312,6 +317,7 @@ function setupIPCListeners() {
     console.log('event', event.ports)
     const savedUser = store.get('user')
     if (savedUser && mainWindow) {
+      console.log('setting up listeners & monitoring')
       currentSiteTimeTrackers = getSiteTrackers()
       startActivityMonitoring(mainWindow)
     }
