@@ -1,7 +1,6 @@
 import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest'
 import { generateLargeFakeData } from '../scripts/generateFakeData'
 import { DeepWorkHours, StoreSchema } from '../src/main/types'
-import dayjs from 'dayjs'
 import { resetCounters } from '../src/main/utils'
 
 vi.mock('electron-store', () => {

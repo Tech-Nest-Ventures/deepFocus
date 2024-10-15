@@ -102,19 +102,15 @@ export function updateIconBasedOnProgress(iconPath: string, deepWorkTarget: numb
   let message: string = ''
 
   if (currentDeepWork >= deepWorkTarget) {
-    console.log('Greater than or equal to target. Setting to green icon')
     message = `🎉 You've reached your target of ${deepWorkTarget} hours of deep work.`
     iconPath = getIconPath('icon_green.png')
   } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
-    console.log('Greater than 1 but less than 1/2 of target. Setting to yellow icon')
     message = `🚧 You're halfway there. Keep up the good work.`
     iconPath = getIconPath('icon_yellow.png')
   } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
-    console.log('Half way there. Setting to blue icon')
     message = `💡 You're close to the target. Keep it up.`
     iconPath = getIconPath('icon_blue.png')
   } else {
-    console.log('Still at 0')
     message = ` 🏁 Let's get started on your deep work!`
     iconPath = getIconPath('icon_red.png')
   }
