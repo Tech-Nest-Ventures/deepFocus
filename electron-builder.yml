@@ -21,7 +21,7 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
-compression: 'store' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
+compression: 'maximum' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
 
 asar: true
 # This section handles which files are not to be packed into the asar archive and need signing
@@ -36,7 +36,6 @@ mac:
   darkModeSupport: true
   hardenedRuntime: true
   notarize: false
-  identity: null
   target: 
     - dmg
   extendInfo:
@@ -52,5 +51,5 @@ appImage:
 
 npmRebuild: true
 
-# afterSign: scripts/signBinaries.js
-# afterAllArtifactBuild: scripts/notarize.js
+afterSign: scripts/signBinaries.js
+afterAllArtifactBuild: scripts/notarize.js

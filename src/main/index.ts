@@ -144,39 +144,42 @@ function isBrowser(appName: string): appName is browser {
 }
 
 function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
-  monitoringInterval = setInterval(async () => {
-    const idleTime = powerMonitor.getSystemIdleTime()
+  if (!monitoringInterval) {
+    monitoringInterval = setInterval(async () => {
+      const idleTime = powerMonitor.getSystemIdleTime()
 
-    // Skip if the system has been idle for more than 60 seconds
-    if (idleTime > 60) {
-      console.log(`System idle for ${idleTime} seconds.`)
-      return
-    }
-
-    try {
-      const appName = await getActiveWindowApp() // Get the active application name
-      if (!appName) {
-        console.log('No active window app found')
+      // Skip if the system has been idle for more than 60 seconds
+      if (idleTime > 60) {
+        console.log(`System idle for ${idleTime} seconds.`)
         return
       }
 
-      console.log(`Active Application: ${appName}`)
-      let URL: string = ''
+      try {
+        const appName = await getActiveWindowApp() // Get the active application name
+        if (!appName) {
+          console.log('No active window app found')
+          return
+        }
 
-      if (isBrowser(appName)) {
-        URL = await getBrowserURL(appName)
+        console.log(`Active Application: ${appName}`)
+        let URL: string = ''
+
+        if (isBrowser(appName)) {
+          URL = await getBrowserURL(appName)
+        }
+
+        updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
+
+        // Send the active window info and URL to the renderer process
+        if (mainWindow) {
+          mainWindow.webContents.send('active-window-info', { appName, URL })
+        }
+      } catch (error) {
+        console.error('Error getting active window or URL:', error)
       }
-
-      updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
-
-      // Send the active window info and URL to the renderer process
-      if (mainWindow) {
-        mainWindow.webContents.send('active-window-info', { appName, URL })
-      }
-    } catch (error) {
-      console.error('Error getting active window or URL:', error)
-    }
-  }, 15000) // Run the monitoring function every 15 seconds
+    }, 15000) // Run the monitoring function every 15 seconds
+    console.log('Activity monitoring started.')
+  }
 }
 
 function stopActivityMonitoring() {
@@ -302,7 +305,6 @@ if (!app.requestSingleInstanceLock()) {
 function handleUserLogout() {
   console.log('Handling user logout')
   store.delete('user')
-  resetCounters('daily', store, getSiteTrackers(), getDeepWorkHours())
   stopActivityMonitoring()
 }
 
@@ -312,6 +314,7 @@ function setupIPCListeners() {
     console.log('event', event.ports)
     const savedUser = store.get('user')
     if (savedUser && mainWindow) {
+      console.log('setting up listeners & monitoring')
       currentSiteTimeTrackers = getSiteTrackers()
       startActivityMonitoring(mainWindow)
     }

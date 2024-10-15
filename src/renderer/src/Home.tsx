@@ -43,6 +43,7 @@ const Home = () => {
   createEffect(() => {
     console.log('Updated progress:', progress())
     console.log('Updated windowInfo:', activeWindowInfo())
+    console.log('Updated loggedIn:', loggedIn())
   })
 
   const handleActiveWindowInfo = (event, windowInfo) => {
@@ -90,6 +91,7 @@ const Home = () => {
       {!loggedIn() || !user ? (
         <div>
           <h1 class="mb-10 text-2xl font-light">Welcome to Deep Focus</h1>
+          <SandTimer />
         </div>
       ) : (
         <div class="space-y-8">
@@ -115,7 +117,6 @@ const Home = () => {
           )}
         </div>
       )}
-      {!loggedIn() && <SandTimer />}
     </div>
   )
 }
