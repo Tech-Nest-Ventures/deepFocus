@@ -24,6 +24,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Set working directory  # Explicitly set the working directory
+        run: cd /Users/timeo/deepFocus/deepWork
+
       - name: Install system dependencies for node-gyp
         run: |
           brew install cmake

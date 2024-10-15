@@ -7,10 +7,11 @@
 [![Release](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
 
 > Building the Oura for productivity. Get insights on how productive you are.
 
-Primarily for MacOS. Coming to Windows & Linux shortly.
+Primarily for macOS. Coming to Windows & Linux shortly.
 
 ## Table of Contents
 
@@ -119,4 +120,27 @@ This will whitelist the app for future use.
 2. pnpm (not supported)
    We saw some issues with how pnpm was bundling dependencies in the electron-builder stage and it's inability to target certain architectures. We recommend using npm for now.
 
-3. Signing the app
+3. Verifying the app: 
+```bash
+  codesign -vvv --deep --strict "${appPath}"
+
+  # Check the code signing status of a binary
+  codesign -vvv --strict --verbose "${binary}"
+
+  # Check the notarization status of app
+  spctl -a -v --type install "${dmgPath}"
+
+  # Notarize the .dmg after its signed
+  xcrun notarytool log "UUID" --apple-id "my apple ID" --team-id "my team id" --password "my app password"
+
+
+  # Check contents of provision profile
+  security cms -D -i "/Users/{yourname}/Library/Developer/Xcode/UserData/Provisioning\ Profiles/{nameOfProvisioningProfile}.provisionprofile"
+
+# Check stapler process
+xcrun stapler staple dist/mac-arm64/Deep\ Focus.app 
+
+  ```
+
+4. Find logs: 
+on macOS: ~/Library/Logs/{app name}/main.log

@@ -1,4 +1,4 @@
-import Electron from 'electron'
+import { app, shell, ipcMain, powerMonitor, BrowserWindow, Notification} from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
 import dayjs from 'dayjs'
@@ -12,13 +12,11 @@ import {
   getBrowserURL,
   checkAndRequestPermissions,
   getActiveWindowApp,
-  getBaseURL
+  getBaseURL,
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
-import { resetCounters } from './utils'
-
-const { app, shell, ipcMain, powerMonitor } = Electron
-import { BrowserWindow, Notification } from 'electron'
+import { resetCounters, checkForUpdates, getIconPath, updateIconBasedOnProgress, uploadLogs } from './utils'
+import log from 'electron-log/node.js';
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -42,10 +40,18 @@ let deepWorkHours = {
 } as DeepWorkHours
 
 let currentDeepWork = 0
+let user: User | null = null
+let iconPath: string = ''
 let deepWorkTarget = store.get('deepWorkTarget', 8) as number
 let mainWindow: BrowserWindow | null = null
+log.transports.file.level = "debug"
+log.transports.file.maxSize = 10 * 1024 * 1024;
+
+log.info('Log from the main process');
+
 
 setupEnvironment()
+log.info('Set up Environment')
 // Initialize environment variables based on the environment
 function setupEnvironment(): void {
   if (app.isPackaged) {
@@ -58,37 +64,6 @@ function setupEnvironment(): void {
   }
 }
 
-function updateIconBasedOnProgress() {
-  console.log('attempting to update icon')
-  console.log('deepWorkTarget', deepWorkTarget, 'currentDeepWork', currentDeepWork)
-  let iconPath
-  let message
-
-  if (currentDeepWork >= deepWorkTarget) {
-    console.log('Greater than or equal to target. Setting to green icon')
-    message = `🎉 You've reached your target of ${deepWorkTarget} hours of deep work.`
-    iconPath = getIconPath('icon_green.png')
-  } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
-    console.log('Greater than 1 but less than 1/2 of target. Setting to yellow icon')
-    message = `🚧 You're halfway there. Keep up the good work.`
-    iconPath = getIconPath('icon_yellow.png')
-  } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
-    console.log('Half way there. Setting to blue icon')
-    message = `💡 You're close to the target. Keep it up.`
-    iconPath = getIconPath('icon_blue.png')
-  } else {
-    console.log('Still at 0')
-    message = ` 🏁 Let's get started on your deep work!`
-    iconPath = getIconPath('icon_red.png')
-  }
-
-  app.dock.setIcon(iconPath)
-  new Notification({
-    title: 'DeepFocus',
-    body: message,
-    icon: iconPath
-  }).show()
-}
 // Store user data in the electron-store and send to worker
 function handleUserData(user: User): void {
   store.set('user', {
@@ -106,7 +81,7 @@ function handleUserData(user: User): void {
 
 // Load user data if available on app start
 function loadUserData() {
-  const savedUser = store.get('user')
+  const savedUser: User | null = store.get('user') || null
   if (savedUser) {
     schedulerWorker.postMessage({ type: MessageType.SET_USER_INFO, user: savedUser })
 
@@ -116,21 +91,27 @@ function loadUserData() {
       icon: join(__dirname, 'resources/icon.png')
     }).show()
   }
+  return savedUser
 }
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
 function setupPeriodicSave() {
+  if(user) {
   setInterval(
     () => {
-      const today = dayjs().format('dddd')
+      const today = dayjs()
+      log.info('Periodic save triggered for today: ', today.format('dddd, HH:mm'))
       store.set('siteTimeTrackers', currentSiteTimeTrackers)
       store.set('deepWorkHours', deepWorkHours)
-      currentDeepWork = deepWorkHours[today] || 0
-      updateIconBasedOnProgress()
+      currentDeepWork = deepWorkHours[today.format('dddd')] || 0
+      iconPath = updateIconBasedOnProgress(iconPath, deepWorkTarget, currentDeepWork)
       handleDailyReset()
     },
     2 * 60 * 1000
   )
+} else {
+  log.info('User is not logged in. Not saving data.')
+}
 }
 
 function isBrowser(appName: string): appName is browser {
@@ -148,6 +129,7 @@ function isBrowser(appName: string): appName is browser {
 
 function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
   if (!monitoringInterval) {
+    const today = dayjs()
     monitoringInterval = setInterval(async () => {
       const idleTime = powerMonitor.getSystemIdleTime()
 
@@ -160,7 +142,7 @@ function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
       try {
         const appName = await getActiveWindowApp() // Get the active application name
         if (!appName) {
-          console.log('No active window app found')
+          log.info('No active window app found')
           return
         }
 
@@ -181,7 +163,7 @@ function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
         console.error('Error getting active window or URL:', error)
       }
     }, 15000) // Run the monitoring function every 15 seconds
-    console.log('Activity monitoring started.')
+    log.info('Activity monitoring started.', today.format('dddd, HH:mm'))
   }
 }
 
@@ -190,6 +172,7 @@ function stopActivityMonitoring() {
     clearInterval(monitoringInterval) // Clear the interval
     monitoringInterval = null // Reset the interval ID
     console.log('Activity monitoring stopped.')
+    log.info('Activity monitoring stopped.')
   }
 }
 
@@ -206,16 +189,10 @@ function calculateDeepWorkHours(
       totalDeepWorkTime += tracker.timeSpent
     }
   })
-
   const timeSpentInHours = Number((totalDeepWorkTime / (60 * 60)).toFixed(2)) // Convert from sec to hours
-
   deepWorkHours[today] = timeSpentInHours
-
-  console.log(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
-
-  // Persist the updated deep work hours to the store
+  log.info(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
   store.set('deepWorkHours', deepWorkHours)
-
   return deepWorkHours
 }
 
@@ -248,7 +225,6 @@ async function createWindow(): Promise<BrowserWindow> {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-
   return mainWindow
 }
 
@@ -272,13 +248,12 @@ app.whenReady().then(async () => {
         checkAndRequestPermissions(),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Permission request timeout')), 60000)
-        ) // 1-minute timeout
+        ) 
       ])
 
-      // Proceed with other initialization only after permissions are handled
       console.log('Permissions granted or handled. Proceeding...')
       handleDailyReset()
-      loadUserData()
+      user = loadUserData()
       setupPeriodicSave()
       setupIPCListeners()
     } catch (error) {
@@ -294,6 +269,11 @@ app.whenReady().then(async () => {
   })
 })
 
+app.on('ready', () => {
+  log.info('Checking for updates')
+  checkForUpdates()
+})
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -306,17 +286,17 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 function handleUserLogout() {
-  console.log('Handling user logout')
+  const today = dayjs()
+  log.info('Handling user logout', today.format('dddd, HH:mm'))
   store.delete('user')
+  user = null
   stopActivityMonitoring()
 }
 
 function setupIPCListeners() {
-  ipcMain.on('send-user-data', (event, user) => {
+  ipcMain.on('send-user-data', (event, user: User) => {
     handleUserData(user)
-    console.log('event', event.ports)
-    const savedUser = store.get('user')
-    if (savedUser && mainWindow) {
+    if (user && mainWindow) {
       console.log('setting up listeners & monitoring')
       currentSiteTimeTrackers = getSiteTrackers()
       startActivityMonitoring(mainWindow)
@@ -356,17 +336,17 @@ function setupIPCListeners() {
     console.log('Unproductive URLs updated:', urls, event.processId)
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
-
+  // Fetch the user's deep work target daily
   ipcMain.on('fetch-deep-work-target', (event) => {
     deepWorkTarget = store.get('deepWorkTarget', 8) as number
     event.reply('deep-work-target-response', deepWorkTarget)
   })
-
+  // Update the user's deep work target daily
   ipcMain.on('update-deep-work-target', (event, newTarget: number) => {
     store.set('deepWorkTarget', newTarget)
     console.log(`Updated Deep Work Target: ${newTarget}`)
   })
-
+  // Fetch the user's current deep work hours daily
   ipcMain.on('fetch-deep-work-data', (event) => {
     console.log('Received event for fetch-deep-work-data')
 
@@ -385,7 +365,7 @@ function setupIPCListeners() {
 
     event.reply('deep-work-data-response', chartData)
   })
-
+  // Fetch the App icons of the Users installed apps (MacOS)
   ipcMain.on('fetch-app-icons', async (event) => {
     try {
       const apps = await getInstalledApps()
@@ -453,17 +433,6 @@ schedulerWorker.on('message', (message: any) => {
 schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
 schedulerWorker.on('message', (message) => console.log('Worker Message:', message))
 
-// Dynamically resolve the path to the resources directory
-function getIconPath(iconName) {
-  if (app.isPackaged) {
-    // In production, resolve the path from the asar-unpacked resources
-    return path.join(process.resourcesPath, 'resources', iconName)
-  } else {
-    // In development mode, resolve the path from your local development folder
-    return path.join(__dirname, '../../resources', iconName)
-  }
-}
-
 function getDeepWorkHours(): DeepWorkHours {
   calculateDeepWorkHours(getSiteTrackers(), deepWorkHours)
   return deepWorkHours
@@ -472,3 +441,24 @@ function getDeepWorkHours(): DeepWorkHours {
 function getSiteTrackers(): SiteTimeTracker[] {
   return currentSiteTimeTrackers
 }
+
+// Catch uncaught exceptions in the Node process
+process.on('uncaughtException', (error) => {
+  log.error('Uncaught Exception:', error);
+  uploadLogs();
+});
+
+// Catch unhandled rejections in the Promise
+process.on('unhandledRejection', (reason, promise) => {
+  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  uploadLogs();
+});
+
+// You can also trigger log uploads in other critical error-handling cases:
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    log.info('Application closed, uploading logs before quitting...');
+    uploadLogs();
+    app.quit();
+  }
+});
