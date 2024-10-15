@@ -77,6 +77,7 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [ ] Implement secure user authentication system
 - [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 - [ ] To do list like functionality? Have people add tasks to their list and mark as productive or not productive. Then, at the end of the day, they can see a list of tasks and see how productive they were.
+- [] Add toast components.
 
 ## Philosophy
 

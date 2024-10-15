@@ -5,21 +5,14 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import {
-  StoreSchema,
-  SiteTimeTracker,
-  DeepWorkHours,
-  MessageType,
-  User,
-  Result,
-  browser
-} from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, browser } from './types'
 import {
   updateSiteTimeTracker,
   isDeepWork,
   getBrowserURL,
   checkAndRequestPermissions,
-  getActiveWindowApp
+  getActiveWindowApp,
+  getBaseURL
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 import { resetCounters } from './utils'
@@ -165,7 +158,7 @@ function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
         let URL: string = ''
 
         if (isBrowser(appName)) {
-          URL = await getBrowserURL(appName)
+          URL = getBaseURL(await getBrowserURL(appName))
         }
 
         updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)

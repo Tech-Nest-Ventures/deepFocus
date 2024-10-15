@@ -26,14 +26,9 @@ function getDomainFromUrl(url: string): string {
   return parsedUrl.hostname || ''
 }
 
-export function getBaseURL(url: string): string | null {
-  try {
-    const urlObj = new URL(url)
-    return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
-  } catch (error) {
-    console.error('Invalid URL:', error)
-    return null
-  }
+export function getBaseURL(url: string): string {
+  const urlObj = new URL(url)
+  return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
 }
 
 function isProductiveUrl(url: string): boolean {
@@ -103,23 +98,17 @@ export function formatTime(milliseconds: number): string {
 export function updateSiteTimeTracker(
   appName: string,
   timeTrackers: SiteTimeTracker[],
-  parsedURL?: string
+  url?: string
 ): SiteTimeTracker {
   const currentTime = Number((Date.now() / 1000).toString().slice(0, -3))
 
-  // Check if the windowInfo has a valid URL, and if so, extract the base URL
-  let url
-  if (parsedURL) {
-    console.log('testing sanity, ', parsedURL)
-    url = parsedURL
-  }
   let trackerKey = ''
   let trackerTitle = ''
 
   if (url && isValidURL(url)) {
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
-    trackerKey = getBaseURL(url) as string
-    trackerTitle = getBaseURL(url) as string
+    trackerKey = url
+    trackerTitle = url
   } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
     trackerKey = appName || 'Unknown App'
