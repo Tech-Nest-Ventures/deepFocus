@@ -24,7 +24,7 @@ const App = (props: ComponentProps<typeof Router>) => {
   const [isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
   const navigate = useNavigate()
-  console.log('location: ',location.pathname)
+  console.log('location: ', location.pathname)
 
   onMount(() => {
     const token = localStorage.getItem('token') as string
@@ -34,7 +34,7 @@ const App = (props: ComponentProps<typeof Router>) => {
       sendUserToBackend(JSON.parse(user))
       setIsNewUser(false)
     }
-    navigate('/') 
+    navigate('/')
   })
 
   const handleLogout = () => {
@@ -54,17 +54,16 @@ const App = (props: ComponentProps<typeof Router>) => {
       <header class="flex justify-between items-center p-4 bg-gray-800 opacity-[0.50] w-full">
         <img alt="logo" class="logo" src={logo} />
         <nav class="flex items-center justify-center space-x-4">
-          {!isLoggedIn() ? 
-             (
-                location.pathname !== '/signup' ? (
-                  <A href="/signup" class="px-4 py-2 rounded text-white">
-                    <Button>Sign Up</Button>
-                  </A>
-                ) : (
-                  <A href="/login" class="px-4 py-2 rounded text-white">
-                    <Button>Login</Button>
-                  </A>
-                )
+          {!isLoggedIn() ? (
+            location.pathname !== '/signup' ? (
+              <A href="/signup" class="px-4 py-2 rounded text-white">
+                <Button>Sign Up</Button>
+              </A>
+            ) : (
+              <A href="/login" class="px-4 py-2 rounded text-white">
+                <Button>Login</Button>
+              </A>
+            )
           ) : (
             <>
               <A href="/" class="px-4 py-2 rounded text-white">
@@ -99,13 +98,13 @@ export default App
 render(
   () => (
     <AuthProvider>
-      <Router root={App} >
-            <Route path="/" component={Home}  />
-            <Route path="/login" component={Login} />
-            <Route path="/signup" component={Signup} />
-            <Route path="/analytics" component={BarChart} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/onboarding" component={Onboarding} />
+      <Router root={App}>
+        <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={Signup} />
+        <Route path="/analytics" component={BarChart} />
+        <Route path="/settings" component={Settings} />
+        <Route path="/onboarding" component={Onboarding} />
       </Router>
     </AuthProvider>
   ),

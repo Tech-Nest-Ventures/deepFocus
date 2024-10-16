@@ -1,6 +1,6 @@
 {
   "name": "deepFocus",
-  "version": "1.2.0",
+  "version": "2.2.3",
   "description": "DeepFocus is a productivity tool that helps you stay focused and productive by tracking your time spent on your computer.",
   "main": "./out/main/main.js",
   "author": "Timeo Williams",

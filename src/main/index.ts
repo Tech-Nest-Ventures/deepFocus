@@ -14,12 +14,7 @@ import {
   getBaseURL
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
-import {
-  resetCounters,
-  checkForUpdates,
-  getIconPath,
-  updateIconBasedOnProgress,
-} from './utils'
+import { resetCounters, checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
 
 export interface TypedStore extends Store<StoreSchema> {
@@ -59,12 +54,10 @@ log.info('Set up Environment')
 function setupEnvironment(): void {
   if (app.isPackaged) {
     const envPath = path.join(process.resourcesPath, '.env')
-    if (fs.existsSync(envPath)) 
-      {
-        dotenv.config({ path: envPath })
-        console.error('Env file not found in production build')
-  
-      } 
+    if (fs.existsSync(envPath)) {
+      dotenv.config({ path: envPath })
+      console.error('Env file not found in production build')
+    }
   } else {
     console.log('app is not packaged')
     dotenv.config()
@@ -450,4 +443,3 @@ function getDeepWorkHours(): DeepWorkHours {
 function getSiteTrackers(): SiteTimeTracker[] {
   return currentSiteTimeTrackers
 }
-
