@@ -2,7 +2,6 @@ import { parse } from 'url'
 import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
 import { TypedStore } from './index'
 import { exec } from 'child_process'
-import { app, dialog, MessageBoxSyncOptions } from 'electron'
 import pkg from 'node-mac-permissions'
 const { getAuthStatus, askForAccessibilityAccess, askForScreenCaptureAccess } = pkg
 
@@ -158,12 +157,21 @@ export function isUnproductiveSite(url, store: TypedStore): boolean {
 }
 
 // Helper function to check if an app/site is "deep work"
-export function isDeepWork(item: string) {
+export function isDeepWork(item: string, store: TypedStore): boolean {
   const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
+  const unproductiveSites = store.get('unproductiveSites', [])
+  
+  // Normalize the input item by removing protocol, spaces, and converting to lowercase
   const formattedItem = item.replaceAll(' ', '').toLowerCase()
+  
+  // First check if the item is in the unproductive sites
+  if (unproductiveSites?.some((site) => formattedItem.includes(site))) {
+    return false; // If it's unproductive, return false
+  }
+
+  // Then check if it's considered a deep work site
   return deepWorkSites.some((site) => formattedItem.includes(site))
 }
-
 // Function to get the active window and its title
 export function getActiveWindowApp(): Promise<string | browser> {
   return new Promise<string | browser>((resolve, reject) => {

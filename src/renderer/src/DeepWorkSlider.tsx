@@ -29,7 +29,7 @@ const DeepWorkSlider = () => {
 
   return (
     <div class="my-6">
-      <h3 class="text-xl font-semibold mb-2">Select Deep Work Goal Hours</h3>
+      <h3 class="text-base font-normal mb-2">Select Deep Work Goal Hours</h3>
       <input
         type="range"
         min="1"

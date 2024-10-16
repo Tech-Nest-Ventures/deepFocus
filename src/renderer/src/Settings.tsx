@@ -10,7 +10,7 @@ const Settings = () => {
 
   return (
     <div class="p-4">
-      <h2 class="text-2xl font-bold mb-4">Settings</h2>
+      <h2 class="text-2xl font-light mb-4">Settings</h2>
 
       <div class="mb-6">
         <h3 class="text-xl font-semibold mb-2">Unproductive Websites</h3>

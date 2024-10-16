@@ -249,14 +249,14 @@ app.whenReady().then(async () => {
   await createWindow().then(async () => {
     try {
       // Wait for permissions before proceeding with other functions
-      await Promise.race([
-        checkAndRequestPermissions(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Permission request timeout')), 60000)
-        )
-      ])
+      // await Promise.race([
+      //   checkAndRequestPermissions(),
+      //   new Promise((_, reject) =>
+      //     setTimeout(() => reject(new Error('Permission request timeout')), 60000)
+      //   )
+      // ])
 
-      console.log('Permissions granted or handled. Proceeding...')
+      //console.log('Permissions granted or handled. Proceeding...')
       handleDailyReset()
       user = loadUserData()
       setupPeriodicSave()

@@ -46,7 +46,7 @@ const UnproductiveWebsites = (props: {}) => {
 
   return (
     <div>
-      <h1 class="mb-4 text-2xl font-bold mt-4">Unproductive Websites</h1>
+      <h1 class="mb-4 text-base mt-4 font-normal">Unproductive Websites</h1>
       <div class="flex items-center gap-2 mb-4">
         <TextField class="flex-grow">
           <TextFieldLabel class="sr-only">Unproductive Websites</TextFieldLabel>

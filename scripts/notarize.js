@@ -71,15 +71,15 @@ export default async function afterAllArtifactBuild(context) {
       console.log('Successfully signed the DMG.')
 
       // Notarize the signed PKG
-      console.log('Notarizing the signed DMG...')
-      await notarize({
-        appBundleId: 'com.electron.deepfocus',
-        appPath: dmgPath,
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_ID_PASSWORD,
-        teamId: process.env.APPLE_TEAM_ID
-      })
-      console.log('DMG Notarization complete.')
+      //console.log('Notarizing the signed DMG...')
+      // await notarize({
+      //   appBundleId: 'com.electron.deepfocus',
+      //   appPath: dmgPath,
+      //   appleId: process.env.APPLE_ID,
+      //   appleIdPassword: process.env.APPLE_ID_PASSWORD,
+      //   teamId: process.env.APPLE_TEAM_ID
+      // })
+      // console.log('DMG Notarization complete.')
 
       // Staple the notarization to the signed DMG (turning off for now)
       // console.log('Stapling the notarization...')
@@ -89,7 +89,7 @@ export default async function afterAllArtifactBuild(context) {
       // Verify the codesigning of the stapled PKG
       // console.log('Verifying the codesigning of the stapled DMG...')
       // execSync(`spctl -a -v --type install "${dmgPath}"`, { stdio: 'inherit' })
-      console.log('Codesigning verification succeeded.')
+      //console.log('Codesigning verification succeeded.')
     } catch (err) {
       console.error('DMG Notarization or Signing failed:', err)
     }

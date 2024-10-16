@@ -48,7 +48,7 @@ const UnproductiveApps = () => {
 
   return (
     <div class="p-4">
-      <h2 class="text-xl mb-4">Select Unproductive Apps</h2>
+      <h2 class="text-base mb-4 font-normal">Select Unproductive Apps</h2>
       <Button onClick={fetchApps} class="mb-4 p-2 bg-blue-500 text-white rounded">
         Fetch Apps
       </Button>
