@@ -8,7 +8,7 @@ const UnproductiveApps = () => {
     { name: string; path: string; icon: string }[]
   >([]) // Typing unproductiveApps
   const [currentPage, setCurrentPage] = createSignal(1) // Track the current page
-  const appsPerPage = 5 // Limit to 5 apps per page
+  const appsPerPage = 3 // Limit to 3 apps per page
 
   // Fetch stored unproductive apps from Electron store on mount
   onMount(() => {
@@ -112,7 +112,7 @@ const UnproductiveApps = () => {
       </div>
 
       <div class="mt-6">
-        <h3 class="text-sm">Unproductive Apps:</h3>
+        <h3 class="text-base mb-2">Unproductive Apps:</h3>
         <ul>
           <For each={unproductiveApps()}>
             {(app) => (

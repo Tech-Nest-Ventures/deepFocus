@@ -1,5 +1,5 @@
 import { splitProps, type ComponentProps } from 'solid-js'
-
+import '../../assets/main.css'
 import { cn } from '../../lib/utils'
 
 type IconProps = ComponentProps<'svg'>
@@ -606,7 +606,7 @@ export function IconX(props: IconProps) {
   )
 }
 
-export function IoSettingsSharp() {
+export function IoSettingsSharp(props) {
   return (
     <svg
       fill="currentColor"
@@ -616,6 +616,7 @@ export function IoSettingsSharp() {
       height="1em"
       width="1em"
       style="overflow: visible; color: currentcolor;"
+      class="logo"
     >
       <path d="M256 176a80 80 0 1 0 80 80 80.24 80.24 0 0 0-80-80Zm172.72 80a165.53 165.53 0 0 1-1.64 22.34l48.69 38.12a11.59 11.59 0 0 1 2.63 14.78l-46.06 79.52a11.64 11.64 0 0 1-14.14 4.93l-57.25-23a176.56 176.56 0 0 1-38.82 22.67l-8.56 60.78a11.93 11.93 0 0 1-11.51 9.86h-92.12a12 12 0 0 1-11.51-9.53l-8.56-60.78A169.3 169.3 0 0 1 151.05 393L93.8 416a11.64 11.64 0 0 1-14.14-4.92L33.6 331.57a11.59 11.59 0 0 1 2.63-14.78l48.69-38.12A174.58 174.58 0 0 1 83.28 256a165.53 165.53 0 0 1 1.64-22.34l-48.69-38.12a11.59 11.59 0 0 1-2.63-14.78l46.06-79.52a11.64 11.64 0 0 1 14.14-4.93l57.25 23a176.56 176.56 0 0 1 38.82-22.67l8.56-60.78A11.93 11.93 0 0 1 209.94 26h92.12a12 12 0 0 1 11.51 9.53l8.56 60.78A169.3 169.3 0 0 1 361 119l57.2-23a11.64 11.64 0 0 1 14.14 4.92l46.06 79.52a11.59 11.59 0 0 1-2.63 14.78l-48.69 38.12a174.58 174.58 0 0 1 1.64 22.66Z"></path>
     </svg>
@@ -632,6 +633,7 @@ export function SiSimpleanalytics() {
       height="1em"
       width="1em"
       style="overflow: visible; color: currentcolor;"
+      class="logo"
     >
       <path d="M1.019 13.019h3.849V24h-3.85zm8.943-6.68h3.85V24h-3.85zM19.132 0h3.85v24h-3.85z"></path>
     </svg>
@@ -641,6 +643,7 @@ export function SiSimpleanalytics() {
 export function VsHome() {
   return (
     <svg
+      class="logo"
       fill="currentColor"
       stroke-width="0"
       xmlns="http://www.w3.org/2000/svg"
@@ -668,6 +671,7 @@ export function IoLogOutOutline() {
       height="1em"
       width="1em"
       style="overflow: visible; color: currentcolor;"
+      class="logo"
     >
       <path
         fill="none"
@@ -707,6 +711,7 @@ export function VsRefresh() {
       height="1em"
       width="1em"
       style="overflow: visible; color: currentcolor;"
+      class="logo"
     >
       <path
         fill-rule="evenodd"
@@ -727,6 +732,7 @@ export function VsAdd() {
       height="1em"
       width="1em"
       style="overflow: visible; color: currentcolor;"
+      class="logo"
     >
       <path d="M14 7v1H8v6H7V8H1V7h6V1h1v6h6z"></path>
     </svg>
@@ -759,6 +765,39 @@ export function IoRemoveCircleOutline() {
         stroke-width="32"
         d="M336 256 176 256"
       ></path>
+    </svg>
+  )
+}
+
+export function AiOutlineEye() {
+  return (
+    <svg
+      fill="currentColor"
+      stroke-width="0"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1024 1024"
+      height="1em"
+      width="1em"
+      style="overflow: visible; color: currentcolor;"
+    >
+      <path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 0 0 0 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"></path>
+    </svg>
+  )
+}
+
+export function AiOutlineEyeInvisible() {
+  return (
+    <svg
+      fill="currentColor"
+      stroke-width="0"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1024 1024"
+      height="1em"
+      width="1em"
+      style="overflow: visible; color: currentcolor;"
+    >
+      <path d="M942.2 486.2Q889.47 375.11 816.7 305l-50.88 50.88C807.31 395.53 843.45 447.4 874.7 512 791.5 684.2 673.4 766 512 766q-72.67 0-133.87-22.38L323 798.75Q408 838 512 838q288.3 0 430.2-300.3a60.29 60.29 0 0 0 0-51.5zm-63.57-320.64L836 122.88a8 8 0 0 0-11.32 0L715.31 232.2Q624.86 186 512 186q-288.3 0-430.2 300.3a60.3 60.3 0 0 0 0 51.5q56.69 119.4 136.5 191.41L112.48 835a8 8 0 0 0 0 11.31L155.17 889a8 8 0 0 0 11.31 0l712.15-712.12a8 8 0 0 0 0-11.32zM149.3 512C232.6 339.8 350.7 258 512 258c54.54 0 104.13 9.36 149.12 28.39l-70.3 70.3a176 176 0 0 0-238.13 238.13l-83.42 83.42C223.1 637.49 183.3 582.28 149.3 512zm246.7 0a112.11 112.11 0 0 1 146.2-106.69L401.31 546.2A112 112 0 0 1 396 512z"></path>
+      <path d="M508 624c-3.46 0-6.87-.16-10.25-.47l-52.82 52.82a176.09 176.09 0 0 0 227.42-227.42l-52.82 52.82c.31 3.38.47 6.79.47 10.25a111.94 111.94 0 0 1-112 112z"></path>
     </svg>
   )
 }

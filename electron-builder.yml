@@ -1,6 +1,6 @@
 appId: com.electron.deepfocus
 productName: Deep Focus
-copyright: Copyright © 2024 Timeo Williams
+copyright: Copyright © 2024 Tech Nest Ventures LLC
 directories:
   output: dist
   buildResources: build
@@ -51,6 +51,5 @@ mac:
 
 npmRebuild: false
 
-# afterSign: scripts/signBinaries.js
+#afterSign: scripts/signBinaries.js
 #afterAllArtifactBuild: scripts/notarize.js
-afterSign: scripts/signBinaries.js
