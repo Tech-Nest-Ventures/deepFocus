@@ -29,18 +29,15 @@ asarUnpack:
   - "node_modules/node-mac-permissions/build/Release/permissions.node"
   - "node_modules/node-mac-permissions/build/node_gyp_bins/python3"
   - "Frameworks/Electron Framework.framework/Libraries/*.dylib"
-
 mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  #provisioningProfile: "/Users/timeo/Library/Developer/Xcode/UserData/Provisioning Profiles/052673ef-09f2-43fb-a609-24015238f5b0.provisionprofile"
   darkModeSupport: true
   gatekeeperAssess: false
   minimumSystemVersion: "10.13"
   hardenedRuntime: true
   notarize: false
-  identity: null 
-  # setting identity to null, because i just had an issue with signing.
+  identity: null
   target: 
     - dmg
   extendInfo:
@@ -56,5 +53,5 @@ appImage:
 
 npmRebuild: false
 
-afterSign: scripts/signBinaries.js
-afterAllArtifactBuild: scripts/notarize.js
+# afterSign: scripts/signBinaries.js
+# afterAllArtifactBuild: scripts/notarize.js

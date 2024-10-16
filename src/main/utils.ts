@@ -3,9 +3,9 @@ import { SiteTimeTracker, DeepWorkHours } from './types'
 import { autoUpdater, dialog, app, Notification } from 'electron'
 import log from 'electron-log/node.js'
 import path from 'path'
-import FormData from 'form-data'
-import fs from 'fs'
-import fetch from 'node-fetch'
+// import FormData from 'form-data'
+// import fs from 'fs'
+// import fetch from 'node-fetch'
 
 export function resetCounters(
   type: 'daily' | 'weekly',
@@ -129,28 +129,28 @@ export function updateIconBasedOnProgress(
   return iconPath
 }
 
-export async function uploadLogs() {
-  const logFilePath = log.transports.file.getFile().path
+// export async function uploadLogs() {
+//   const logFilePath = log.transports.file.getFile().path
 
-  const formData = new FormData()
-  const logStream = fs.createReadStream(logFilePath)
+//   const formData = new FormData()
+//   const logStream = fs.createReadStream(logFilePath)
 
-  formData.append('logFile', logStream)
+//   formData.append('logFile', logStream)
+//   log.info(`${process.env.VITE_SERVER_URL_PROD}/api/v1/upload-log`)
+//   try {
+//     const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/upload-log`, {
+//       method: 'POST',
+//       body: formData,
+//       headers: formData.getHeaders() // Properly format the headers
+//     })
 
-  try {
-    const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/upload-log`, {
-      method: 'POST',
-      body: formData,
-      headers: formData.getHeaders() // Properly format the headers
-    })
+//     if (!response.ok) {
+//       throw new Error(`Failed to upload logs, server responded with: ${response.status}`)
+//     }
 
-    if (!response.ok) {
-      throw new Error(`Failed to upload logs, server responded with: ${response.status}`)
-    }
-
-    const data = await response.json()
-    log.info('Log uploaded successfully:', data)
-  } catch (error) {
-    log.error('Failed to upload logs:', error)
-  }
-}
+//     const data = await response.json()
+//     log.info('Log uploaded successfully:', data)
+//   } catch (error) {
+//     log.error('Failed to upload logs:', error)
+//   }
+// }

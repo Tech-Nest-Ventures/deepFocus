@@ -10,7 +10,6 @@ import {
   updateSiteTimeTracker,
   isDeepWork,
   getBrowserURL,
-  checkAndRequestPermissions,
   getActiveWindowApp,
   getBaseURL
 } from './productivityUtils'
@@ -20,7 +19,6 @@ import {
   checkForUpdates,
   getIconPath,
   updateIconBasedOnProgress,
-  uploadLogs
 } from './utils'
 import log from 'electron-log/node.js'
 
@@ -61,8 +59,12 @@ log.info('Set up Environment')
 function setupEnvironment(): void {
   if (app.isPackaged) {
     const envPath = path.join(process.resourcesPath, '.env')
-    if (fs.existsSync(envPath)) dotenv.config({ path: envPath })
-    else console.error('Env file not found in production build')
+    if (fs.existsSync(envPath)) 
+      {
+        dotenv.config({ path: envPath })
+        console.error('Env file not found in production build')
+  
+      } 
   } else {
     console.log('app is not packaged')
     dotenv.config()
@@ -449,23 +451,3 @@ function getSiteTrackers(): SiteTimeTracker[] {
   return currentSiteTimeTrackers
 }
 
-// Catch uncaught exceptions in the Node process
-process.on('uncaughtException', (error) => {
-  log.error('Uncaught Exception:', error)
-  uploadLogs()
-})
-
-// Catch unhandled rejections in the Promise
-process.on('unhandledRejection', (reason, promise) => {
-  log.error('Unhandled Rejection at:', promise, 'reason:', reason)
-  uploadLogs()
-})
-
-// You can also trigger log uploads in other critical error-handling cases:
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    log.info('Application closed, uploading logs before quitting...')
-    uploadLogs()
-    app.quit()
-  }
-})

@@ -29,8 +29,7 @@ export default defineConfig({
           'dotenv',
           '@electron-toolkit/utils',
           'electron-store',
-          'node-mac-permissions',
-          'node-fetch'
+          'node-mac-permissions'
         ]
       }
     },

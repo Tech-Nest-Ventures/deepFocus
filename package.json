@@ -31,26 +31,6 @@
     "package": "electron-vite build --outDir=dist && electron-forge package",
     "make": "electron-vite build --outDir=dist && electron-forge make"
   },
-  "build": {
-    "appId": "com.electron.deepfocus",
-    "mac": {
-      "target": [
-        "dmg"
-      ],
-      "category": "public.app-category.productivity",
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "hardenedRuntime": true
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "Tech-Nest-Ventures",
-        "repo": "deepFocus",
-        "releaseType": "draft"
-      }
-    ]
-  },
   "dependencies": {
     "@corvu/utils": "^0.4.2",
     "@electron-toolkit/preload": "^3.0.1",
@@ -62,8 +42,8 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
-    "electron-store": "^10.0.0",
     "electron-log": "5.2.0",
+    "electron-store": "^10.0.0",
     "electron-updater": "^6.3.9",
     "gsap": "^3.12.5",
     "node-addon-api": "^8.2.1",
