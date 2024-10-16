@@ -1,6 +1,7 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { TextField, TextFieldLabel, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
+import { IoRemoveCircleOutline, VsAdd } from './components/ui/icons'
 
 const UnproductiveWebsites = () => {
   const [site, setSite] = createSignal('')
@@ -57,10 +58,9 @@ const UnproductiveWebsites = () => {
 
   return (
     <div>
-      <h1 class="mb-4 text-base mt-4 font-normal">Unproductive Websites</h1>
+      <h1 class="mb-8 text-lg mt-4 font-normal">Change Unproductive Websites</h1>
       <div class="flex items-center gap-2 mb-4">
         <TextField class="flex-grow">
-          <TextFieldLabel class="sr-only">Unproductive Websites</TextFieldLabel>
           <TextFieldInput
             list="websites"
             type="text"
@@ -81,7 +81,7 @@ const UnproductiveWebsites = () => {
           </datalist>
         </TextField>
         <Button onClick={addSite} class="ml-2 p-2 bg-blue-500 text-white rounded">
-          Add
+          <VsAdd />
         </Button>
       </div>
 
@@ -91,12 +91,12 @@ const UnproductiveWebsites = () => {
             <li class="flex items-center mb-2">
               <img src={getFavicon(site)} alt={`${site} favicon`} class="w-4 h-4 mr-2" />
               {site}
-              <button
+              <Button
                 class="ml-4 bg-red-500 text-white px-2 py-1 rounded"
                 onClick={() => handleRemoveSite(site)}
               >
-                Remove
-              </button>
+                <IoRemoveCircleOutline />
+              </Button>
             </li>
           )}
         </For>

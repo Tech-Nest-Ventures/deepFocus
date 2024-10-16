@@ -158,7 +158,10 @@ function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
 
         // Send the active window info and URL to the renderer process
         if (mainWindow) {
-          const isProductive = URL.length ? isDeepWork(URL, store) : isDeepWork(appName, store)
+          const isProductive = URL.length
+            ? isDeepWork({ type: 'URL', value: URL }, store)
+            : isDeepWork({ type: 'appName', value: appName }, store)
+
           mainWindow.webContents.send('active-window-info', { appName, URL, isProductive })
         }
       } catch (error) {
@@ -245,20 +248,10 @@ app.whenReady().then(async () => {
 
   await createWindow().then(async () => {
     try {
-      // TODO: This logic may be necessary in the future if scripting fails.
-      // Wait for permissions before proceeding with other functions
-      // await Promise.race([
-      //   checkAndRequestPermissions(),
-      //   new Promise((_, reject) =>
-      //     setTimeout(() => reject(new Error('Permission request timeout')), 60000)
-      //   )
-      // ])
-
-      //console.log('Permissions granted or handled. Proceeding...')
+      setupIPCListeners()
       handleDailyReset()
       user = loadUserData()
       setupPeriodicSave()
-      setupIPCListeners()
     } catch (error) {
       console.error('Error during permission check or timeout:', error)
 

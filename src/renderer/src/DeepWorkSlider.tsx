@@ -23,7 +23,7 @@ const DeepWorkSlider = () => {
 
   const handleSliderChange = (e) => {
     const value = parseInt(e.target.value, 10)
-    setDeepWorkTarget(value) // Update the local state
+    setDeepWorkTarget(value)
     window.electron.ipcRenderer.send('update-deep-work-target', value)
   }
 
@@ -39,7 +39,7 @@ const DeepWorkSlider = () => {
         onInput={handleSliderChange}
       />
       <div class="mt-2">
-        <span>Selected Deep Work Goal: {deepWorkTarget()} hours</span>
+        <span>{deepWorkTarget()} hours</span>
       </div>
     </div>
   )

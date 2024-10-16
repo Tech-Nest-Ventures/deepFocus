@@ -1,5 +1,6 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { Button } from './components/ui/button'
+import { IoRemoveCircleOutline, VsAdd } from './components/ui/icons'
 
 const UnproductiveApps = () => {
   const [apps, setApps] = createSignal<{ name: string; path: string; icon: string }[]>([])
@@ -68,7 +69,7 @@ const UnproductiveApps = () => {
 
   return (
     <div class="p-4">
-      <h2 class="text-base mb-4 font-normal">Select Unproductive Apps</h2>
+      <h1 class="mb-8 text-lg mt-4 font-normal">Change Unproductive Apps</h1>
       <Button onClick={fetchApps} class="mb-4 p-2 bg-blue-500 text-white rounded">
         Fetch Apps
       </Button>
@@ -79,7 +80,7 @@ const UnproductiveApps = () => {
               <li class="flex items-center">
                 <img src={app?.icon} alt={`${app.name} icon`} class="w-4 h-4 mr-2" />
                 {app.name}
-                <button
+                <Button
                   class={`ml-auto p-1 rounded ${
                     unproductiveApps().some((unproductiveApp) => unproductiveApp.name === app.name)
                       ? 'bg-red-500 text-white'
@@ -87,10 +88,14 @@ const UnproductiveApps = () => {
                   }`}
                   onClick={() => toggleUnproductive(app)}
                 >
-                  {unproductiveApps().some((unproductiveApp) => unproductiveApp.name === app.name)
-                    ? 'X'
-                    : 'Add'}
-                </button>
+                  {unproductiveApps().some(
+                    (unproductiveApp) => unproductiveApp.name === app.name
+                  ) ? (
+                    <IoRemoveCircleOutline />
+                  ) : (
+                    <VsAdd />
+                  )}
+                </Button>
               </li>
             )}
           </For>
@@ -107,7 +112,7 @@ const UnproductiveApps = () => {
       </div>
 
       <div class="mt-6">
-        <h3 class="text-lg">Unproductive Apps:</h3>
+        <h3 class="text-sm">Unproductive Apps:</h3>
         <ul>
           <For each={unproductiveApps()}>
             {(app) => (

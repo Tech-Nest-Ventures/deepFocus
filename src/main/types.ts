@@ -174,3 +174,8 @@ export type browser =
   | 'Opera'
   | 'Safari'
   | 'Firefox'
+
+export interface WorkContext {
+  type: 'URL' | 'appName'
+  value: string
+}

@@ -1,10 +1,6 @@
-import { parse } from 'url'
-import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
+import { browser, MacOSResult, Result, SiteTimeTracker, WorkContext } from './types'
 import { TypedStore } from './index'
 import { exec } from 'child_process'
-
-//TODO: Needs to be updated with user's specific sites
-const unproductiveSites = ['instagram.com', 'facebook.com']
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {
@@ -17,26 +13,9 @@ export function capitalizeFirstLetter(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-function getDomainFromUrl(url: string): string {
-  const parsedUrl = parse(url)
-  isProductiveUrl(parsedUrl.hostname || '')
-  return parsedUrl.hostname || ''
-}
-
 export function getBaseURL(url: string): string {
   const urlObj = new URL(url)
   return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
-}
-
-function isProductiveUrl(url: string): boolean {
-  const domain = getDomainFromUrl(url)
-  console.log(
-    'domain is ',
-    domain,
-    'isProductive? ',
-    !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
-  )
-  return !unproductiveSites.some((site) => domain.includes(site.toLowerCase()))
 }
 
 export function formatUrl(input: string): string {
@@ -133,42 +112,25 @@ export function updateSiteTimeTracker(
   return tracker
 }
 
-export function addUnproductiveURL(url, store: TypedStore) {
-  const unproductiveSites = store.get('unproductiveSites', [])
-  if (unproductiveSites && !unproductiveSites.includes(url)) {
-    unproductiveSites.push(url)
-    store.set('unproductiveSites', unproductiveSites)
-  }
-}
-
-// Remove an unproductive URL from store
-export function removeUnproductiveURL(url, store: TypedStore) {
-  let unproductiveSites = store.get('unproductiveSites', [])
-  unproductiveSites = unproductiveSites?.filter((site) => site !== url)
-  store.set('unproductiveSites', unproductiveSites)
-}
-
-// Check if a site is unproductive
-export function isUnproductiveSite(url, store: TypedStore): boolean {
-  const unproductiveSites = store.get('unproductiveSites', [])
-  return unproductiveSites?.includes(url) || false
-}
-
 // Helper function to check if an app/site is "deep work"
-export function isDeepWork(item: string, store: TypedStore): boolean {
-  const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
-  const unproductiveSites = store.get('unproductiveSites', [])
-
-  // Normalize the input item by removing protocol, spaces, and converting to lowercase
-  const formattedItem = item.replaceAll(' ', '').toLowerCase()
-
-  // First check if the item is in the unproductive sites
-  if (unproductiveSites?.some((site) => formattedItem.includes(site))) {
-    return false // If it's unproductive, return false
+export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
+  const formattedItem = context.value?.replaceAll(' ', '')?.toLowerCase()
+  if (context.type === 'URL') {
+    // Handle the case for URL
+    const unproductiveSites = store.get('unproductiveSites', [])
+    if (unproductiveSites?.some((site) => formattedItem.includes(getBaseURL(site).toLowerCase()))) {
+      console.log('Unproductive site detected:', formattedItem)
+      return false
+    }
+  } else if (context.type === 'appName') {
+    // Handle the case for appName
+    const unproductiveApps = store.get('unproductiveApps', [])
+    if (unproductiveApps?.some((app) => formattedItem.includes(app?.name.toLowerCase()))) {
+      console.log('Unproductive app detected:', formattedItem)
+      return false
+    }
   }
-
-  // Then check if it's considered a deep work site
-  return deepWorkSites.some((site) => formattedItem.includes(site))
+  return true
 }
 // Function to get the active window and its title
 export function getActiveWindowApp(): Promise<string | browser> {

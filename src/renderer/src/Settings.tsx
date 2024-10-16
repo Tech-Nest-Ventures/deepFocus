@@ -10,34 +10,34 @@ const Settings = () => {
   const [showEditApps, setShowEditApps] = createSignal(false)
 
   return (
-    <div class="p-4">
-      <h2 class="text-2xl font-light mb-4">Settings</h2>
+    <div class="p-4 space-y-8 flex-col justify-between items-center">
+      <h2 class="mb-10 text-2xl font-light">Settings</h2>
 
-      <div class="mb-6">
+      <div class="mb-8">
         <h3 class="text-base font-normal mb-2">Unproductive Websites</h3>
         <Button class="mt-4" onClick={() => setShowEditWebsites(true)}>
-          Edit Unproductive Websites
+          Change
         </Button>
         {showEditWebsites() && (
-          <Modal title="Edit Unproductive Websites" onClose={() => setShowEditWebsites(false)}>
+          <Modal title="" onClose={() => setShowEditWebsites(false)}>
             <UnproductiveWebsites />
           </Modal>
         )}
       </div>
 
-      <div class="mb-6">
+      <div class="mb-8">
         <h3 class="text-base font-normal mb-2">Unproductive Apps</h3>
         <Button class="mt-4" onClick={() => setShowEditApps(true)}>
-          Edit Unproductive Apps
+          Change
         </Button>
         {showEditApps() && (
-          <Modal title="Edit Unproductive Apps" onClose={() => setShowEditApps(false)}>
+          <Modal title="" onClose={() => setShowEditApps(false)}>
             <UnproductiveApps />
           </Modal>
         )}
       </div>
 
-      <div class="mb-6">
+      <div>
         <DeepWorkSlider />
       </div>
     </div>

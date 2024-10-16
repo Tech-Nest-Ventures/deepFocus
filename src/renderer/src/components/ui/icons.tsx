@@ -716,3 +716,49 @@ export function VsRefresh() {
     </svg>
   )
 }
+
+export function VsAdd() {
+  return (
+    <svg
+      fill="currentColor"
+      stroke-width="0"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      height="1em"
+      width="1em"
+      style="overflow: visible; color: currentcolor;"
+    >
+      <path d="M14 7v1H8v6H7V8H1V7h6V1h1v6h6z"></path>
+    </svg>
+  )
+}
+
+export function IoRemoveCircleOutline() {
+  return (
+    <svg
+      fill="currentColor"
+      stroke-width="0"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      height="1em"
+      width="1em"
+      style="overflow: visible; color: currentcolor;"
+    >
+      <path
+        fill="none"
+        stroke="currentColor"
+        stroke-miterlimit="10"
+        stroke-width="32"
+        d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192Z"
+      ></path>
+      <path
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="32"
+        d="M336 256 176 256"
+      ></path>
+    </svg>
+  )
+}
