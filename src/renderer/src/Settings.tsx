@@ -3,7 +3,7 @@ import { Button } from './components/ui/button'
 import DeepWorkSlider from './DeepWorkSlider'
 import UnproductiveWebsites from './UnproductiveWebsites'
 import UnproductiveApps from './UnproductiveApps'
-import Modal from './components/modal' 
+import Modal from './components/modal'
 
 const Settings = () => {
   const [showEditWebsites, setShowEditWebsites] = createSignal(false)

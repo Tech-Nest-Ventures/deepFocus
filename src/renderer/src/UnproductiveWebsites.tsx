@@ -32,7 +32,7 @@ const UnproductiveWebsites = (props: {}) => {
   const addSite = () => {
     if (site().trim()) {
       const newSite = site().trim()
-      if(newSite.startsWith('http://') || newSite.startsWith('https://')) {
+      if (newSite.startsWith('http://') || newSite.startsWith('https://')) {
         const updatedSites = [...unproductiveSites(), newSite]
         setUnproductiveSites(updatedSites)
         setSite('')
