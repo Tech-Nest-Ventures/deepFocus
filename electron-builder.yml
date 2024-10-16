@@ -39,6 +39,8 @@ mac:
   minimumSystemVersion: "10.13"
   hardenedRuntime: true
   notarize: false
+  identity: null 
+  # setting identity to null, because i just had an issue with signing.
   target: 
     - dmg
   extendInfo:

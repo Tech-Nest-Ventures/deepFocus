@@ -29,8 +29,8 @@ export default defineConfig({
           'dotenv',
           '@electron-toolkit/utils',
           'electron-store',
-          '@deepfocus/get-windows',
-          'node-mac-permissions'
+          'node-mac-permissions',
+          'node-fetch'
         ]
       }
     },
