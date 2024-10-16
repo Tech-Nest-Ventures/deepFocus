@@ -70,7 +70,7 @@ function setupEnvironment(): void {
 }
 
 // Store user data in the electron-store and send to worker
-function handleUserData(user: User): void {
+function handleUserData(user: User): User {
   store.set('user', {
     username: user.username,
     firstName: user.firstName,
@@ -82,6 +82,7 @@ function handleUserData(user: User): void {
     type: MessageType.SET_USER_INFO,
     user
   })
+  return user
 }
 
 // Load user data if available on app start
@@ -101,9 +102,9 @@ function loadUserData() {
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
 function setupPeriodicSave() {
-  if (user) {
-    setInterval(
-      () => {
+  setInterval(
+    () => {
+      if (user) {
         const today = dayjs()
         log.info('Periodic save triggered for today: ', today.format('dddd, HH:mm'))
         store.set('siteTimeTrackers', currentSiteTimeTrackers)
@@ -111,12 +112,12 @@ function setupPeriodicSave() {
         currentDeepWork = deepWorkHours[today.format('dddd')] || 0
         iconPath = updateIconBasedOnProgress(iconPath, deepWorkTarget, currentDeepWork)
         handleDailyReset()
-      },
-      2 * 60 * 1000
-    )
-  } else {
-    log.info('User is not logged in. Not saving data.')
-  }
+      } else {
+        log.info('User is not logged in. Not saving data.')
+      }
+    },
+    2 * 60 * 1000
+  )
 }
 
 function isBrowser(appName: string): appName is browser {
@@ -190,7 +191,7 @@ function calculateDeepWorkHours(
 
   // Filter and sum the time spent on deep work apps/sites
   siteTrackers.forEach((tracker) => {
-    if (isDeepWork(tracker.title)) {
+    if (isDeepWork(tracker.title, store)) {
       totalDeepWorkTime += tracker.timeSpent
     }
   })
@@ -248,6 +249,7 @@ app.whenReady().then(async () => {
 
   await createWindow().then(async () => {
     try {
+      // TODO: This logic may be necessary in the future if scripting fails.
       // Wait for permissions before proceeding with other functions
       // await Promise.race([
       //   checkAndRequestPermissions(),
@@ -300,7 +302,7 @@ function handleUserLogout() {
 
 function setupIPCListeners() {
   ipcMain.on('send-user-data', (event, user: User) => {
-    handleUserData(user)
+    user = handleUserData(user)
     if (user && mainWindow) {
       console.log('setting up listeners & monitoring')
       currentSiteTimeTrackers = getSiteTrackers()

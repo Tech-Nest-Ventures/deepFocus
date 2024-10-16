@@ -160,13 +160,13 @@ export function isUnproductiveSite(url, store: TypedStore): boolean {
 export function isDeepWork(item: string, store: TypedStore): boolean {
   const deepWorkSites = ['code', 'notion', 'github', 'chatgpt', 'leetcode', 'electron']
   const unproductiveSites = store.get('unproductiveSites', [])
-  
+
   // Normalize the input item by removing protocol, spaces, and converting to lowercase
   const formattedItem = item.replaceAll(' ', '').toLowerCase()
-  
+
   // First check if the item is in the unproductive sites
   if (unproductiveSites?.some((site) => formattedItem.includes(site))) {
-    return false; // If it's unproductive, return false
+    return false // If it's unproductive, return false
   }
 
   // Then check if it's considered a deep work site
@@ -224,6 +224,7 @@ export function getBrowserURL(browser: browser): Promise<string> {
   })
 }
 
+// TODO: This logic may be necessary in the future if scripting fails.
 // Check for permissions and request if necessary
 export async function checkAndRequestPermissions() {
   // Accessibility

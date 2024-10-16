@@ -1,6 +1,7 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { TextField, TextFieldLabel, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
+import { constants } from 'buffer'
 
 const UnproductiveWebsites = (props: {}) => {
   const [site, setSite] = createSignal('')
@@ -30,11 +31,22 @@ const UnproductiveWebsites = (props: {}) => {
 
   const addSite = () => {
     if (site().trim()) {
-      const updatedSites = [...unproductiveSites(), site().trim()]
-      setUnproductiveSites(updatedSites)
-      setSite('')
-      console.log('Unproductive URLs updated:', updatedSites)
-      window.electron.ipcRenderer.send('add-unproductive-url', updatedSites)
+      const newSite = site().trim()
+      if(newSite.startsWith('http://') || newSite.startsWith('https://')) {
+        const updatedSites = [...unproductiveSites(), newSite]
+        setUnproductiveSites(updatedSites)
+        setSite('')
+        console.log('Unproductive URLs updated:', updatedSites)
+        window.electron.ipcRenderer.send('add-unproductive-url', updatedSites)
+      } else {
+        console.log('Invalid URL format:', newSite)
+        const updatedSite = `https://${newSite}`
+        const updatedSites = [...unproductiveSites(), updatedSite]
+        setUnproductiveSites(updatedSites)
+        setSite('')
+        console.log('Unproductive URLs updated:', updatedSites)
+        window.electron.ipcRenderer.send('add-unproductive-url', updatedSites)
+      }
     }
   }
 

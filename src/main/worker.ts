@@ -11,7 +11,6 @@ dayjs.extend(isoWeek)
 dayjs.extend(weekday)
 
 const API_BASE_URL = workerData.API_BASE_URL
-
 // Listen for messages from the main thread
 parentPort?.on('message', (message) => {
   console.log('Worker received message:', message)
