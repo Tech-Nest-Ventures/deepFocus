@@ -28,7 +28,7 @@ function Login() {
   const [authForm, { Form, Field }] = createForm<AuthForm>()
   const [_loginError, setLoginError] = createSignal<null | string>(null)
   const navigate = useNavigate()
-  const [loggedIn, setIsLoggedIn] = useAuth()
+  const [_loggedIn, setIsLoggedIn] = useAuth()
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {

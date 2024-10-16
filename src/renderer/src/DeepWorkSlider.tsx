@@ -7,7 +7,7 @@ const DeepWorkSlider = () => {
   onMount(() => {
     window.electron.ipcRenderer.send('fetch-deep-work-target')
 
-    const handleDeepWorkTargetResponse = (event, target) => {
+    const handleDeepWorkTargetResponse = (_event, target) => {
       setDeepWorkTarget(target) // Set the fetched target value
     }
 

@@ -2,7 +2,7 @@ import { createForm } from '@modular-forms/solid'
 import { createSignal } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
 import { email, object, string, pipe, minLength } from 'valibot'
-import { IconBrandGithub, IconLoader } from './components/ui/icons'
+import { IconLoader } from './components/ui/icons'
 import { Button } from './components/ui/button'
 import { Grid } from './components/ui/grid'
 import { TextField, TextFieldInput, TextFieldLabel } from './components/ui/text-field'
@@ -29,7 +29,7 @@ function Signup() {
   const [authForm, { Form, Field }] = createForm<AuthForm>()
   const [signUpError, setSignUpError] = createSignal<null | string>(null)
   const navigate = useNavigate()
-  const [loggedIn, setIsLoggedIn] = useAuth()
+  const [_loggedIn, setIsLoggedIn] = useAuth()
 
   const handleSubmit: SubmitHandler<AuthForm> = async (values) => {
     try {

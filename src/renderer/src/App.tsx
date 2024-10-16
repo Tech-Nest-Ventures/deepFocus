@@ -1,4 +1,4 @@
-import { lazy, Suspense, onMount, createSignal, ComponentProps, createEffect } from 'solid-js'
+import { lazy, onMount, createSignal, ComponentProps, createEffect } from 'solid-js'
 import { Router, Route, A, useLocation, useNavigate } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
@@ -21,7 +21,7 @@ const Settings = lazy(() => import('./Settings'))
 
 const App = (props: ComponentProps<typeof Router>) => {
   const [isLoggedIn, setIsLoggedIn] = useAuth()
-  const [isNewUser, setIsNewUser] = createSignal(true)
+  const [_isNewUser, setIsNewUser] = createSignal(true)
   const location = useLocation()
   const navigate = useNavigate()
   console.log('location: ', location.pathname)

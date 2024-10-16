@@ -606,7 +606,7 @@ export function IconX(props: IconProps) {
   )
 }
 
-export function IoSettingsSharp(props) {
+export function IoSettingsSharp() {
   return (
     <svg
       fill="currentColor"
@@ -622,7 +622,7 @@ export function IoSettingsSharp(props) {
   )
 }
 
-export function SiSimpleanalytics(props) {
+export function SiSimpleanalytics() {
   return (
     <svg
       fill="currentColor"
@@ -638,7 +638,7 @@ export function SiSimpleanalytics(props) {
   )
 }
 
-export function VsHome(props) {
+export function VsHome() {
   return (
     <svg
       fill="currentColor"
@@ -658,7 +658,7 @@ export function VsHome(props) {
   )
 }
 
-export function IoLogOutOutline(props) {
+export function IoLogOutOutline() {
   return (
     <svg
       fill="currentColor"
@@ -697,7 +697,7 @@ export function IoLogOutOutline(props) {
   )
 }
 
-export function VsRefresh(props) {
+export function VsRefresh() {
   return (
     <svg
       fill="currentColor"

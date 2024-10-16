@@ -3,7 +3,6 @@ import { gsap } from 'gsap'
 import logo from './assets/deepWork.svg'
 
 const SandTimer = () => {
-  let logoRef
   let particleContainerRef
 
   // Function to create and drop particles
@@ -43,12 +42,7 @@ const SandTimer = () => {
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', 'align-items': 'center' }}>
       <div style={{ position: 'relative', width: '150px', height: '150px' }}>
-        <img
-          ref={(el) => (logoRef = el)}
-          src={logo}
-          alt="Deep Focus Logo"
-          style={{ width: '100%', height: '100%' }}
-        />
+        <img src={logo} alt="Deep Focus Logo" style={{ width: '100%', height: '100%' }} />
 
         {/* Particle container */}
         <div

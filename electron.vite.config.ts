@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import { bytecodePlugin, defineConfig, externalizeDepsPlugin } from 'electron-vite'
 // Use byteCodePlugin for future hashing
 import solid from 'vite-plugin-solid'
 import dotenv from 'dotenv'
@@ -8,7 +8,7 @@ dotenv.config()
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
     build: {
       outDir: 'out/main',
       rollupOptions: {
@@ -40,7 +40,7 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
     build: {
       outDir: 'out/preload',
       rollupOptions: {

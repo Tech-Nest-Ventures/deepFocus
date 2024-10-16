@@ -10,7 +10,8 @@ export default async function afterAllArtifactBuild(context) {
   const { artifactPaths } = context
 
   console.log('invoking afterAllArtifactBuild...')
-
+  console.log('is there .app', context)
+  /*
   // Find the .pkg file from artifactPaths
   const pkgPath = artifactPaths.find((p) => p.endsWith('.pkg'))
   console.log('PKG Path is:', pkgPath)
@@ -53,45 +54,45 @@ export default async function afterAllArtifactBuild(context) {
       console.error('PKG Notarization or Signing failed:', err)
     }
   }
+    */
 
-  // Sign the DMG
-  // Find the .pkg file from artifactPaths
-  const dmgPath = artifactPaths.find((p) => p.endsWith('.dmg'))
-  console.log('DMG Path is:', dmgPath)
+  // Sign the app
+  const appPath = '/Users/timeo/deepFocus/deepWork/dist/mac-arm64/Deep Focus.app'
+  console.log('app Path is:', appPath)
 
-  if (!dmgPath || !fs.existsSync(dmgPath)) {
-    console.error('DMG file does not exist:', dmgPath)
+  if (!appPath || !fs.existsSync(appPath)) {
+    console.error('APP file does not exist:', appPath)
   } else {
     try {
-      // Sign the DMG
-      execSync(
-        `codesign --entitlements build/entitlements.mac.plist --force --deep --options runtime --sign "Developer ID Application: Timeo Williams (3Y4F3KTSJA)" "${dmgPath}"`,
-        { stdio: 'inherit' }
-      )
-      console.log('Successfully signed the DMG.')
+      // Sign the APP
+      // execSync(
+      //   `codesign --entitlements build/entitlements.mac.plist --force  --timestamp --deep --options runtime --sign "Developer ID Application: Timeo Williams (3Y4F3KTSJA)" "${appPath}"`,
+      //   { stdio: 'inherit' }
+      // )
+      // console.log('Successfully signed the APP.')
 
-      // Notarize the signed PKG
-      //console.log('Notarizing the signed DMG...')
-      // await notarize({
-      //   appBundleId: 'com.electron.deepfocus',
-      //   appPath: dmgPath,
-      //   appleId: process.env.APPLE_ID,
-      //   appleIdPassword: process.env.APPLE_ID_PASSWORD,
-      //   teamId: process.env.APPLE_TEAM_ID
-      // })
-      // console.log('DMG Notarization complete.')
+      // Notarize the signed app
+      console.log('Notarizing the signed APP...')
+      await notarize({
+        appBundleId: 'com.electron.deepfocus',
+        appPath: appPath,
+        appleId: process.env.APPLE_ID,
+        appleIdPassword: process.env.APPLE_ID_PASSWORD,
+        teamId: process.env.APPLE_TEAM_ID
+      })
+      // console.log('APP Notarization complete.')
 
-      // Staple the notarization to the signed DMG (turning off for now)
+      // Staple the notarization to the signed APP (turning off for now)
       // console.log('Stapling the notarization...')
-      // execSync(`xcrun stapler staple "${dmgPath}"`, { stdio: 'inherit' })
-      // console.log('Successfully stapled the notarization to the DMG.')
+      // execSync(`xcrun stapler staple "${appPath}"`, { stdio: 'inherit' })
+      // console.log('Successfully stapled the notarization to the APP.')
 
       // Verify the codesigning of the stapled PKG
-      // console.log('Verifying the codesigning of the stapled DMG...')
-      // execSync(`spctl -a -v --type install "${dmgPath}"`, { stdio: 'inherit' })
+      // console.log('Verifying the codesigning of the stapled APP...')
+      // execSync(`spctl -a -v --type install "${appPath}"`, { stdio: 'inherit' })
       //console.log('Codesigning verification succeeded.')
     } catch (err) {
-      console.error('DMG Notarization or Signing failed:', err)
+      console.error('APP Notarization or Signing failed:', err)
     }
   }
 }

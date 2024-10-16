@@ -2,8 +2,6 @@ import { parse } from 'url'
 import { browser, MacOSResult, Result, SiteTimeTracker } from './types'
 import { TypedStore } from './index'
 import { exec } from 'child_process'
-import pkg from 'node-mac-permissions'
-const { getAuthStatus, askForAccessibilityAccess, askForScreenCaptureAccess } = pkg
 
 //TODO: Needs to be updated with user's specific sites
 const unproductiveSites = ['instagram.com', 'facebook.com']
@@ -118,7 +116,7 @@ export function updateSiteTimeTracker(
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     console.log('Updating existing tracker')
-    tracker.timeSpent += 15
+    tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
   } else {
     console.log('Creating new tracker')
@@ -174,7 +172,7 @@ export function isDeepWork(item: string, store: TypedStore): boolean {
 }
 // Function to get the active window and its title
 export function getActiveWindowApp(): Promise<string | browser> {
-  return new Promise<string | browser>((resolve, reject) => {
+  return new Promise<string | browser>((resolve, _reject) => {
     const script = `osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`
     exec(script, (err, stdout, stderr) => {
       if (err) {
@@ -207,7 +205,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
 }
 // Function to get the URL for a specific browser
 export function getBrowserURL(browser: browser): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve, _reject) => {
     let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
     if (browser === 'Safari') {
       script = `osascript -e 'tell application "${browser}" to get URL of front document'`
@@ -222,26 +220,4 @@ export function getBrowserURL(browser: browser): Promise<string> {
       }
     })
   })
-}
-
-// TODO: This logic may be necessary in the future if scripting fails.
-// Check for permissions and request if necessary
-export async function checkAndRequestPermissions() {
-  // Accessibility
-  let accessStatus = getAuthStatus('accessibility')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Accessibility Access...')
-    await askForAccessibilityAccess()
-  } else {
-    console.log('Accessibility access already granted.')
-  }
-
-  // Screen Recording
-  accessStatus = getAuthStatus('screen')
-  if (accessStatus !== 'authorized') {
-    console.log('Requesting Screen Capture Access...')
-    await askForScreenCaptureAccess()
-  } else {
-    console.log('Screen capture access already granted.')
-  }
 }

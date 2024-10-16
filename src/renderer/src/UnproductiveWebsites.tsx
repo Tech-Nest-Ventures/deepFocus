@@ -1,9 +1,8 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { TextField, TextFieldLabel, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
-import { constants } from 'buffer'
 
-const UnproductiveWebsites = (props: {}) => {
+const UnproductiveWebsites = () => {
   const [site, setSite] = createSignal('')
   const [unproductiveSites, setUnproductiveSites] = createSignal<string[]>([])
 
@@ -19,7 +18,7 @@ const UnproductiveWebsites = (props: {}) => {
 
   onMount(() => {
     window.electron.ipcRenderer.send('fetch-unproductive-urls') // Request URLs from main process
-    window.electron.ipcRenderer.on('unproductive-urls-response', (event, urls) => {
+    window.electron.ipcRenderer.on('unproductive-urls-response', (_event, urls) => {
       setUnproductiveSites(urls || [])
       console.log('Unproductive URLs received from main process:', urls)
     })

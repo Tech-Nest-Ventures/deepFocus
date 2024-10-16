@@ -3,29 +3,28 @@ import { Button } from './components/ui/button'
 
 const UnproductiveApps = () => {
   const [apps, setApps] = createSignal<{ name: string; path: string; icon: string }[]>([])
-  const [unproductiveApps, setUnproductiveApps] = createSignal([]) // List of apps marked as unproductive
+  const [unproductiveApps, setUnproductiveApps] = createSignal<
+    { name: string; path: string; icon: string }[]
+  >([]) // Typing unproductiveApps
   const [currentPage, setCurrentPage] = createSignal(1) // Track the current page
   const appsPerPage = 5 // Limit to 5 apps per page
 
   // Fetch stored unproductive apps from Electron store on mount
   onMount(() => {
-    // Fetch the app icons
     window.electron.ipcRenderer.send('fetch-app-icons')
-    window.electron.ipcRenderer.on('app-icons-response', (event, appData) => {
+    window.electron.ipcRenderer.on('app-icons-response', (_event, appData) => {
       const sortedApps = appData.sort((a, b) => a.name.localeCompare(b.name))
       setApps(sortedApps)
     })
 
-    // Fetch the unproductive apps from Electron store
     window.electron.ipcRenderer.send('fetch-unproductive-apps')
     window.electron.ipcRenderer.on(
       'unproductive-apps-response',
-      (event, storedUnproductiveApps) => {
+      (_event, storedUnproductiveApps) => {
         setUnproductiveApps(storedUnproductiveApps || [])
       }
     )
 
-    // Clean up IPC listeners when component unmounts
     onCleanup(() => {
       window.electron.ipcRenderer.removeAllListeners('app-icons-response')
       window.electron.ipcRenderer.removeAllListeners('unproductive-apps-response')
@@ -34,8 +33,8 @@ const UnproductiveApps = () => {
 
   const toggleUnproductive = (app) => {
     const getUpdatedUnproductiveApps = (prevApps) => {
-      return prevApps.includes(app)
-        ? prevApps.filter((unproductiveApp) => unproductiveApp !== app)
+      return prevApps.some((unproductiveApp) => unproductiveApp.name === app.name) // Compare by name or another unique property
+        ? prevApps.filter((unproductiveApp) => unproductiveApp.name !== app.name)
         : [...prevApps, app]
     }
     const updatedUnproductiveApps = getUpdatedUnproductiveApps(unproductiveApps())
@@ -48,7 +47,6 @@ const UnproductiveApps = () => {
     window.electron.ipcRenderer.send('fetch-app-icons')
   }
 
-  // Pagination logic: Reactively calculate startIdx and endIdx
   const paginatedApps = () => {
     const startIdx = (currentPage() - 1) * appsPerPage
     const endIdx = startIdx + appsPerPage
@@ -83,11 +81,15 @@ const UnproductiveApps = () => {
                 {app.name}
                 <button
                   class={`ml-auto p-1 rounded ${
-                    unproductiveApps().includes(app) ? 'bg-red-500 text-white' : 'bg-blue-500'
+                    unproductiveApps().some((unproductiveApp) => unproductiveApp.name === app.name)
+                      ? 'bg-red-500 text-white'
+                      : 'bg-blue-500'
                   }`}
                   onClick={() => toggleUnproductive(app)}
                 >
-                  {unproductiveApps().includes(app) ? 'X' : 'Add'}
+                  {unproductiveApps().some((unproductiveApp) => unproductiveApp.name === app.name)
+                    ? 'X'
+                    : 'Add'}
                 </button>
               </li>
             )}
@@ -111,7 +113,7 @@ const UnproductiveApps = () => {
             {(app) => (
               <li class="flex items-center">
                 <img src={app?.icon} alt={`${app.name} icon`} class="w-4 h-4 mr-2" />
-                {app.name}
+                {app?.name}
               </li>
             )}
           </For>

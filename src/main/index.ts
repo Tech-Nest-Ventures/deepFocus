@@ -8,10 +8,10 @@ import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, browser } from './types'
 import {
   updateSiteTimeTracker,
-  isDeepWork,
   getBrowserURL,
   getActiveWindowApp,
-  getBaseURL
+  getBaseURL,
+  isDeepWork
 } from './productivityUtils'
 import { getInstalledApps } from './childProcess'
 import { resetCounters, checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
@@ -158,12 +158,13 @@ function startActivityMonitoring(mainWindow: Electron.BrowserWindow) {
 
         // Send the active window info and URL to the renderer process
         if (mainWindow) {
-          mainWindow.webContents.send('active-window-info', { appName, URL })
+          const isProductive = URL.length ? isDeepWork(URL, store) : isDeepWork(appName, store)
+          mainWindow.webContents.send('active-window-info', { appName, URL, isProductive })
         }
       } catch (error) {
         console.error('Error getting active window or URL:', error)
       }
-    }, 15000) // Run the monitoring function every 15 seconds
+    }, 5000) // Run the monitoring function every 15 seconds
     log.info('Activity monitoring started.', today.format('dddd, HH:mm'))
   }
 }
@@ -296,7 +297,7 @@ function handleUserLogout() {
 }
 
 function setupIPCListeners() {
-  ipcMain.on('send-user-data', (event, user: User) => {
+  ipcMain.on('send-user-data', (_event, user: User) => {
     user = handleUserData(user)
     if (user && mainWindow) {
       console.log('setting up listeners & monitoring')
@@ -321,7 +322,7 @@ function setupIPCListeners() {
   // Add or update Unproductive URLs and persist them
   ipcMain.on('add-unproductive-url', (event, urls) => {
     store.set('unproductiveUrls', urls)
-    console.log('Unproductive URLs updated:', urls, event.processId)
+    console.log('Unproductive URLs updated:', urls)
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
 
@@ -335,7 +336,7 @@ function setupIPCListeners() {
   // Remove specific unproductive URL and persist
   ipcMain.on('remove-unproductive-url', (event, urls) => {
     store.set('unproductiveUrls', urls)
-    console.log('Unproductive URLs updated:', urls, event.processId)
+    console.log('Unproductive URLs updated:', urls)
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
   // Fetch the user's deep work target daily
@@ -344,7 +345,7 @@ function setupIPCListeners() {
     event.reply('deep-work-target-response', deepWorkTarget)
   })
   // Update the user's deep work target daily
-  ipcMain.on('update-deep-work-target', (event, newTarget: number) => {
+  ipcMain.on('update-deep-work-target', (_event, newTarget: number) => {
     store.set('deepWorkTarget', newTarget)
     console.log(`Updated Deep Work Target: ${newTarget}`)
   })

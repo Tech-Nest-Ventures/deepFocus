@@ -5,3 +5,9 @@ export default interface User {
   country: string
   language: string
 }
+
+export type WindowInfo = {
+  appName: string
+  URL: string
+  isProductive: boolean
+}

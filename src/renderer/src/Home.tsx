@@ -4,17 +4,18 @@ import User from './types'
 import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
+import { WindowInfo } from './types'
 
 const Home = () => {
-  const [loggedIn, setIsLoggedIn] = useAuth()
+  const [loggedIn, _setIsLoggedIn] = useAuth()
   const user = localStorage.getItem('user')
     ? (JSON.parse(localStorage.getItem('user') as string) as User)
     : undefined
 
   const [progress, setProgress] = createSignal(0)
-  const [deepWorkDone, setDeepWorkDone] = createSignal(0)
+  const [_deepWorkDone, setDeepWorkDone] = createSignal(0)
   const [deepWorkTarget, setDeepWorkTarget] = createSignal(8) // Default to 8 until fetched
-  const [activeWindowInfo, setActiveWindowInfo] = createSignal(null) // New state to track active window info
+  const [activeWindowInfo, setActiveWindowInfo] = createSignal<null | WindowInfo>(null) // New state to track active window info
 
   onMount(() => {
     if (user && loggedIn()) {
@@ -46,12 +47,15 @@ const Home = () => {
     console.log('Updated loggedIn:', loggedIn())
   })
 
-  const handleActiveWindowInfo = (event, windowInfo) => {
+  // Handle the active window info with isProductive
+  const handleActiveWindowInfo = (_event, windowInfo: WindowInfo) => {
     console.log('Active window info:', windowInfo)
-    if (windowInfo.URL !== '') {
-      setActiveWindowInfo(windowInfo.URL)
-    } else if (windowInfo.appName !== '') {
-      setActiveWindowInfo(windowInfo.appName)
+    if (windowInfo) {
+      setActiveWindowInfo({
+        appName: windowInfo.appName || 'Unknown App',
+        URL: windowInfo.URL || 'Unknown URL',
+        isProductive: windowInfo.isProductive
+      })
     }
   }
 
@@ -59,8 +63,7 @@ const Home = () => {
     window?.electron?.ipcRenderer.send('fetch-deep-work-data')
   }
 
-  // Handle deep work data response
-  const handleDeepWorkData = (event, data) => {
+  const handleDeepWorkData = (_event, data) => {
     const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
     const dataIndex = todayIndex - 1
     console.log(todayIndex)
@@ -80,8 +83,7 @@ const Home = () => {
     window?.electron?.ipcRenderer.send('fetch-deep-work-target')
   }
 
-  // Handle the deep work target response
-  const handleDeepWorkTarget = (event, target) => {
+  const handleDeepWorkTarget = (_event, target) => {
     setDeepWorkTarget(target) // Update the target in the signal
     console.log('Fetched deep work target: ', target)
   }
@@ -98,20 +100,28 @@ const Home = () => {
           <h1 class="mb-10 text-2xl font-light">Welcome back {user?.firstName}!</h1>
           <div class="space-y-8">
             <CircularProgress progress={progress()} />
-            {/* <p class="italic">Tip: Take a break every 50 minutes to improve efficiency!</p> */}
           </div>
           {activeWindowInfo() ? (
             <div class="mt-8">
               <h2>
-                <span>Active Window:</span>
-                <span class="text-blue-500 ml-2">{activeWindowInfo()}</span>
+                <span>Active Task: </span>
+                <span
+                  class={activeWindowInfo()?.isProductive ? 'text-green-500' : 'text-red-500 ml-2'}
+                >
+                  {activeWindowInfo()?.URL !== 'Unknown URL'
+                    ? activeWindowInfo()?.URL
+                    : activeWindowInfo()?.appName}
+                </span>
+                {!activeWindowInfo()?.isProductive && (
+                  <span class="ml-2 italic text-gray-500">(Unproductive)</span>
+                )}
               </h2>
             </div>
           ) : (
             <div class="mt-8">
               <h2>
-                <span>Active Window:</span>
-                <span class="text-red-500 ml-2">No active window detected</span>
+                <span>Active Task:</span>
+                <span class="text-red-500 ml-2">No active task detected</span>
               </h2>
             </div>
           )}

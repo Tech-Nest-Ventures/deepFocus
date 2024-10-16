@@ -33,7 +33,7 @@ const BarChart = () => {
     window?.electron?.ipcRenderer.send('fetch-deep-work-data')
   }
 
-  const handleDataResponse = (event, data) => {
+  const handleDataResponse = (_event, data) => {
     if (data && data.length) {
       console.log('Retrieved Data! ', data)
       setChartData((prevData) => ({
