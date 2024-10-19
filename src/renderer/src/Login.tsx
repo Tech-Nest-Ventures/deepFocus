@@ -70,6 +70,7 @@ function Login() {
 
   return (
     <div class="grid gap-6 mt-20">
+      <h2 class="text-2xl font-light">Login</h2>
       <Form onSubmit={handleSubmit}>
         <Grid class="gap-4">
           <Field name="email">
@@ -94,6 +95,12 @@ function Login() {
           </Button>
         </Grid>
       </Form>
+      <p class="text-gray-500 text-sm">
+        Don't have an account?{' '}
+        <a href="/signup" class="text-blue-500">
+          Sign Up
+        </a>
+      </p>
     </div>
   )
 }

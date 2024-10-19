@@ -1,6 +1,16 @@
-import { browser, MacOSResult, Result, SiteTimeTracker, WorkContext } from './types'
+import {
+  browser,
+  MacOSResult,
+  Result,
+  SiteTimeTracker,
+  WorkContext,
+  App,
+  DeepWorkHours
+} from './types'
 import { TypedStore } from './index'
 import { exec } from 'child_process'
+import dayjs from 'dayjs'
+import log from 'electron-log/node.js'
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {
@@ -16,6 +26,10 @@ export function capitalizeFirstLetter(text: string): string {
 export function getBaseURL(url: string): string {
   const urlObj = new URL(url)
   return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
+}
+export function getTrimmedURL(url: string): string {
+  const urlObj = new URL(url)
+  return `${urlObj.hostname}`
 }
 
 export function formatUrl(input: string): string {
@@ -49,7 +63,7 @@ export function formatUrl(input: string): string {
   }
 }
 
-function isValidURL(url: string): boolean {
+export function isValidURL(url: string): boolean {
   try {
     new URL(url) // URL constructor will throw an error if it's not a valid URL
     return true
@@ -94,11 +108,10 @@ export function updateSiteTimeTracker(
   // Find an existing tracker or create a new one
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
-    console.log('Updating existing tracker')
+    console.log('Updating existing tracker', tracker.title, tracker.timeSpent)
     tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
   } else {
-    console.log('Creating new tracker')
     tracker = {
       url: trackerKey,
       title: trackerTitle,
@@ -108,7 +121,6 @@ export function updateSiteTimeTracker(
     timeTrackers.push(tracker)
   }
 
-  console.log('tracker is ', tracker)
   return tracker
 }
 
@@ -117,15 +129,23 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
   const formattedItem = context.value?.replaceAll(' ', '')?.toLowerCase()
   if (context.type === 'URL') {
     // Handle the case for URL
-    const unproductiveSites = store.get('unproductiveSites', [])
-    if (unproductiveSites?.some((site) => formattedItem.includes(getBaseURL(site).toLowerCase()))) {
-      console.log('Unproductive site detected:', formattedItem)
+    const unproductiveURLs = store.get('unproductiveUrls', [])
+    if (
+      unproductiveURLs?.some((site) => formattedItem.includes(getTrimmedURL(site).toLowerCase()))
+    ) {
       return false
     }
   } else if (context.type === 'appName') {
-    // Handle the case for appName
-    const unproductiveApps = store.get('unproductiveApps', [])
-    if (unproductiveApps?.some((app) => formattedItem.includes(app?.name.toLowerCase()))) {
+    const unproductiveApps: unknown = store.get('unproductiveApps', [])
+
+    // Validate the retrieved data is an array of App objects
+    const validUnproductiveApps: App[] =
+      Array.isArray(unproductiveApps) &&
+      unproductiveApps.every((item) => typeof item === 'object' && 'name' in item)
+        ? (unproductiveApps as App[])
+        : []
+
+    if (validUnproductiveApps.some((app) => formattedItem.includes(app.name.toLowerCase()))) {
       console.log('Unproductive app detected:', formattedItem)
       return false
     }
@@ -148,7 +168,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
           const checkVSCodeScript = `osascript -e 'tell application "System Events" to get bundle identifier of first application process whose frontmost is true'`
           exec(checkVSCodeScript, (err, stdout, stderr) => {
             if (err) {
-              console.error(`Error checking bundle identifier: ${stderr}`)
+              console.error(`Error checking bundle identifier of App ${appName}: ${stderr}`)
               resolve('') // Return empty string on error
             } else {
               const bundleIdentifier = stdout.trim()
@@ -182,4 +202,44 @@ export function getBrowserURL(browser: browser): Promise<string> {
       }
     })
   })
+}
+
+export function calculateDeepWorkHours(
+  siteTrackers: SiteTimeTracker[],
+  deepWorkHours: DeepWorkHours,
+  store: TypedStore
+): DeepWorkHours {
+  const today = dayjs().format('dddd')
+  let totalDeepWorkTime = 0
+
+  // Filter and sum the time spent on deep work apps/sites
+  siteTrackers.forEach((tracker) => {
+    if (tracker.title.includes('https://') || tracker.title.includes('http://')) {
+      if (isDeepWork({ type: 'URL', value: tracker.url }, store)) {
+        totalDeepWorkTime += tracker.timeSpent
+      }
+    } else {
+      if (isDeepWork({ type: 'appName', value: tracker.title }, store)) {
+        totalDeepWorkTime += tracker.timeSpent
+      }
+    }
+  })
+  const timeSpentInHours = Number((totalDeepWorkTime / (60 * 60)).toFixed(2)) // Convert from sec to hours
+  deepWorkHours[today] = timeSpentInHours
+  // log.info(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
+  store.set('deepWorkHours', deepWorkHours)
+  return deepWorkHours
+}
+
+export function isBrowser(appName: string): appName is browser {
+  return [
+    'Google Chrome',
+    'Arc',
+    'Brave Browser',
+    'Microsoft Edge',
+    'Vivaldi',
+    'Opera',
+    'Safari',
+    'Firefox'
+  ].includes(appName)
 }

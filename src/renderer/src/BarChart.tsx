@@ -27,8 +27,6 @@ const BarChart = () => {
     ]
   })
 
-  let refreshIntervalId
-
   const fetchDeepWorkData = () => {
     window?.electron?.ipcRenderer.send('fetch-deep-work-data')
   }
@@ -51,11 +49,13 @@ const BarChart = () => {
 
     window?.electron.ipcRenderer.on('deep-work-data-response', handleDataResponse)
 
-    refreshIntervalId = setInterval(() => fetchDeepWorkData(), 14400000) // Refresh every 4 hours
+    // Listen for deep work reset and refresh the data
+    window?.electron.ipcRenderer.on('deep-work-reset', fetchDeepWorkData)
 
     onCleanup(() => {
       window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDataResponse)
-      clearInterval(refreshIntervalId)
+      window?.electron.ipcRenderer.removeListener('deep-work-reset', fetchDeepWorkData)
+      window?.electron.ipcRenderer.removeAllListeners('fetch-deep-work-data')
     })
   })
 

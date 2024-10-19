@@ -179,3 +179,9 @@ export interface WorkContext {
   type: 'URL' | 'appName'
   value: string
 }
+
+export interface App {
+  name: string
+  path: string
+  icon: string
+}

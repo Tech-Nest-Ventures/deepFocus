@@ -11,3 +11,11 @@ export type WindowInfo = {
   URL: string
   isProductive: boolean
 }
+
+export interface SiteTimeTracker {
+  url: string
+  title: string
+  timeSpent: number
+  lastActiveTimestamp: number
+  iconUrl?: string
+}

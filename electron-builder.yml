@@ -21,7 +21,7 @@ extraResources:
   - from: './resources/icon.png'
     to: 'resources/icon.png'
 
-compression: 'maximum' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
+compression: 'store' # Change to 'maximum' to enable compression in PROD. store can reduce build time significantly. 
 
 asar: true
 # This section handles which files are not to be packed into the asar archive and need signing
@@ -39,15 +39,10 @@ mac:
   # target: 
   #   - dmg
   extendInfo:
-    NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
     NSAppleEventsUsageDescription: Please allow access to script browser applications to detect the current URL when triggering instant lookup.
-    NSScreenCaptureUsageDescription: Application needs access to capture the screen for productivity monitoring.
-    NSAccessibilityUsageDescription: Application requires access to accessibility features to track and monitor window titles.
   category: 'public.app-category.productivity'
 
-# appImage:
-#   artifactName: '${name}-${version}.${ext}'
+
 
 npmRebuild: false
 

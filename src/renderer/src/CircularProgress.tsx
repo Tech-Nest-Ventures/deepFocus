@@ -29,7 +29,7 @@ const CircularProgress = (props) => {
       </svg>
 
       <div class="ml-4">
-        <p>Progress: {Math.min(Math.round(props.progress * 100), 100)}%</p>
+        <p class="font-light">Progress: {Math.min(Math.round(props.progress * 100), 100)}%</p>
       </div>
     </div>
   )

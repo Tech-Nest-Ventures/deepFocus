@@ -1,7 +1,8 @@
 import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest'
 import { generateLargeFakeData } from '../scripts/generateFakeData'
 import { DeepWorkHours, StoreSchema } from '../src/main/types'
-import { resetCounters } from '../src/main/utils'
+import { resetCounters } from '../src/main/utils/utils'
+import { ipcMain } from 'electron'
 
 vi.mock('electron-store', () => {
   const storeData = new Map()
@@ -23,7 +24,30 @@ vi.mock('electron-store', () => {
   }
 })
 
-describe('Test Day Reset Logic', () => {
+vi.mock('electron', () => {
+  return {
+    ipcMain: {
+      on: vi.fn(),
+      emit: vi.fn(),
+      removeAllListeners: vi.fn()
+    },
+    ipcRenderer: {
+      on: vi.fn(),
+      send: vi.fn(),
+      removeAllListeners: vi.fn()
+    },
+    BrowserWindow: vi.fn().mockImplementation(() => ({
+      webContents: {
+        send: vi.fn()
+      },
+      on: vi.fn(),
+      show: vi.fn(),
+      hide: vi.fn()
+    }))
+  }
+})
+
+describe('Test Day Reset Logic with IPC', () => {
   let clock: ReturnType<typeof vi.useFakeTimers>
   let store: any
 
@@ -39,9 +63,10 @@ describe('Test Day Reset Logic', () => {
   afterEach(() => {
     // Restore original timers
     clock.useRealTimers()
+    ipcMain.removeAllListeners()
   })
 
-  it('should populate a full day of data and reset on the next day', () => {
+  it('should populate a full day of data, reset on the next day, and notify the frontend', () => {
     // Generate large fake data for the test date
     const { trackers, deepWork } = generateLargeFakeData('2024-10-07', 8)
 
@@ -49,7 +74,7 @@ describe('Test Day Reset Logic', () => {
     store.set('siteTimeTrackers', trackers)
     store.set('deepWorkHours', deepWork)
 
-    // Check if the data is stored correctly
+    // Verify the initial data is stored correctly
     const savedTrackers = store.get('siteTimeTrackers', [])
     expect(savedTrackers).toHaveLength(50)
 
@@ -66,10 +91,13 @@ describe('Test Day Reset Logic', () => {
     expect(savedDeepWork['Monday']).toBe(8)
 
     // Advance time by one day
-    vi.advanceTimersByTime(24 * 60 * 60 * 1000)
+    vi.advanceTimersByTime(24 * 60 * 60 * 1000) // Move to the next day
 
-    // Simulate the daily reset logic
+    // Simulate the app's daily reset logic
     resetCounters('daily', store, trackers, deepWork)
+
+    // Simulate sending a notification to the frontend about the reset
+    ipcMain.emit('deep-work-reset')
 
     // Verify that the data has been reset
     const resetTrackers = store.get('siteTimeTrackers', [])
@@ -77,5 +105,8 @@ describe('Test Day Reset Logic', () => {
 
     const resetDeepWork = store.get('deepWorkHours') as DeepWorkHours
     expect(resetDeepWork['Tuesday']).toBe(0)
+
+    // Verify that the frontend is notified via IPC
+    expect(ipcMain.emit).toHaveBeenCalledWith('deep-work-reset')
   })
 })

@@ -10,6 +10,9 @@ playwright-report
 build_assets/Certificates.p12
 build_assets/CertificatesDist.p12
 build_assets/DeveloperIDInstaller.p12
+resources/.env
 
 Mac OS X Provisioning Profile Signing.cer
 electron-builder.yml
+Deep Focus/Deep Focus.xcodeproj/xcuserdata/
+Deep Focus/build/

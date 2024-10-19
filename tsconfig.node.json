@@ -5,6 +5,7 @@
     "composite": true,
     "target": "ESNext",
     "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
     "types": ["electron-vite/node"],
     "baseUrl": ".",
     "paths": {

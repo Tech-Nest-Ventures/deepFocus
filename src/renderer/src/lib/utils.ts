@@ -11,7 +11,7 @@ export const sendUserToBackend = (user: User) => {
   console.log('Sending user data to backend:', user)
   const sanitizedUser = JSON.parse(JSON.stringify(user))
   console.log('window is ', window)
-  window?.electron.ipcRenderer.send('send-user-data', sanitizedUser)
+  window?.electron.ipcRenderer.send('login-user', sanitizedUser)
 }
 
 export const stopActivityMonitoring = () => {

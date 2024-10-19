@@ -14,10 +14,8 @@ const DeepWorkSlider = () => {
     window.electron.ipcRenderer.on('deep-work-target-response', handleDeepWorkTargetResponse)
 
     onCleanup(() => {
-      window.electron.ipcRenderer.removeListener(
-        'deep-work-target-response',
-        handleDeepWorkTargetResponse
-      )
+      window.electron.ipcRenderer.removeAllListeners('deep-work-target-response')
+      window.electron.ipcRenderer.removeAllListeners('fetch-deep-work-target')
     })
   })
 

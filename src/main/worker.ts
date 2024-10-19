@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek.js'
 import weekday from 'dayjs/plugin/weekday.js'
 import { SiteTimeTracker, DeepWorkHours, MessageType } from './types'
+import log from 'electron-log/node.js'
 
 let currentUsername: string = ''
 
@@ -13,7 +14,7 @@ dayjs.extend(weekday)
 const API_BASE_URL = workerData.API_BASE_URL
 // Listen for messages from the main thread
 parentPort?.on('message', (message) => {
-  console.log('Worker received message:', message)
+  log.info('Worker received message:', message)
 
   if (message.type === MessageType.SET_USER_INFO) {
     const { user } = message
@@ -26,7 +27,7 @@ parentPort?.on('message', (message) => {
       currentSiteTimeTrackers,
       deepWorkHours
     }: { currentSiteTimeTrackers: SiteTimeTracker[]; deepWorkHours: DeepWorkHours } = message.data
-    console.log('Persisting daily data...')
+    log.info('Persisting daily data...')
     persistDailyData(currentSiteTimeTrackers, deepWorkHours)
   }
 })
@@ -35,14 +36,23 @@ function requestData() {
   parentPort?.postMessage({ type: MessageType.GET_DATA })
 }
 
-// Schedule daily reset at midnight
+// Schedule daily reset at 7PM
 schedule.scheduleJob('0 0 19 * *', () => {
   if (currentUsername) {
     console.log('Performing daily reset...')
     requestData()
-    parentPort?.postMessage({ type: MessageType.RESET_DAILY })
   } else {
     console.error('No username available for daily reset.')
+  }
+})
+
+// Schedule daily reset at 3:30 PM
+schedule.scheduleJob('0 30 15 * *', () => {
+  if (currentUsername) {
+    console.log('Performing daily reset at 3:30 PM...')
+    requestData()
+  } else {
+    console.error('No username available for daily reset at 3:30 PM.')
   }
 })
 

@@ -89,7 +89,13 @@ function Signup() {
   }
 
   return (
-    <div class="grid gap-6 mt-20">
+    <div class="flex justify-center items-center h-screen flex-col space-y-4">
+      <h2 class="text-2xl font-light">Create an account</h2>
+      <p class="text-gray-500 text-sm w-[60%]">
+        {' '}
+        We store all your data locally on your computer with the exception of login credentials
+        (encrypted).
+      </p>
       {signUpError && <p class="text-red-500">{signUpError()}</p>}
       <Form onSubmit={handleSubmit}>
         <Grid class="gap-4">
@@ -213,6 +219,12 @@ function Signup() {
           </Button>
         </Grid>
       </Form>
+      <p class="text-gray-500 text-sm">
+        Already have an account?{' '}
+        <a href="/login" class="text-blue-500">
+          Login
+        </a>
+      </p>
     </div>
   )
 }

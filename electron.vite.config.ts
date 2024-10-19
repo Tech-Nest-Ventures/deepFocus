@@ -1,14 +1,21 @@
 import { resolve } from 'path'
-import { bytecodePlugin, defineConfig, externalizeDepsPlugin } from 'electron-vite'
-// Use byteCodePlugin for future hashing
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import solid from 'vite-plugin-solid'
 import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
+
+// Define __dirname in an ES module environment
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+console.log('dirname:', __dirname)
 
 dotenv.config()
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    plugins: [externalizeDepsPlugin()],
     build: {
       outDir: 'out/main',
       rollupOptions: {
@@ -21,16 +28,7 @@ export default defineConfig({
           format: 'es',
           entryFileNames: '[name].js'
         },
-        // Externalize unnecessary dependencies from the worker
-        external: [
-          'electron',
-          'path',
-          'fs',
-          'dotenv',
-          '@electron-toolkit/utils',
-          'electron-store',
-          'node-mac-permissions'
-        ]
+        external: ['electron', 'path', 'fs', 'dotenv', '@electron-toolkit/utils', 'electron-store']
       }
     },
     define: {
@@ -40,13 +38,14 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+    plugins: [externalizeDepsPlugin()],
     build: {
       outDir: 'out/preload',
       rollupOptions: {
         external: ['electron'],
         output: {
-          format: 'es'
+          format: 'es',
+          entryFileNames: '[name].js'
         }
       }
     }
@@ -57,9 +56,28 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [solid()],
+    plugins: [
+      solid(),
+      viteStaticCopy({
+        targets: [
+          {
+            src: resolve(__dirname, 'src/renderer/loader.html'), // Ensure correct path
+            dest: '' // Copy directly to the out/renderer directory
+          }
+        ]
+      })
+    ],
     build: {
       outDir: 'out/renderer'
+      // rollupOptions: {
+      //   input: {
+      //     loader: resolve(__dirname, 'src/renderer/loader.html'),
+      //     // index: resolve(__dirname, 'src/renderer/index.html')
+      //   },
+      //   output: {
+      //     entryFileNames: '[name].html'
+      //   }
+      // }
     },
     define: {
       'process.env.API_BASE_URL': JSON.stringify(

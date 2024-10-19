@@ -1,0 +1,620 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C072DF5F2CC1CFEF003F25DD /* latest-mac.yml in Resources */ = {isa = PBXBuildFile; fileRef = C072DF552CC1CFEF003F25DD /* latest-mac.yml */; };
+		C072DF602CC1CFEF003F25DD /* builder-debug.yml in Resources */ = {isa = PBXBuildFile; fileRef = C072DF572CC1CFEF003F25DD /* builder-debug.yml */; };
+		C072DF612CC1CFEF003F25DD /* deepFocus-1.2.0.dmg.blockmap in Resources */ = {isa = PBXBuildFile; fileRef = C072DF592CC1CFEF003F25DD /* deepFocus-1.2.0.dmg.blockmap */; };
+		C072DF622CC1CFEF003F25DD /* builder-effective-config.yaml in Resources */ = {isa = PBXBuildFile; fileRef = C072DF562CC1CFEF003F25DD /* builder-effective-config.yaml */; };
+		C072DF632CC1CFEF003F25DD /* Deep Focus.app in Resources */ = {isa = PBXBuildFile; fileRef = C072DF5A2CC1CFEF003F25DD /* Deep Focus.app */; };
+		C072DF642CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip.blockmap in Resources */ = {isa = PBXBuildFile; fileRef = C072DF542CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip.blockmap */; };
+		C072DF652CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip in Resources */ = {isa = PBXBuildFile; fileRef = C072DF5D2CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip */; };
+		C072DF662CC1CFEF003F25DD /* deepFocus-1.2.0.dmg in Resources */ = {isa = PBXBuildFile; fileRef = C072DF5C2CC1CFEF003F25DD /* deepFocus-1.2.0.dmg */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C0839F542CC1BEE3005671E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C0839F3A2CC1BEDF005671E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C0839F412CC1BEDF005671E4;
+			remoteInfo = "Deep Focus";
+		};
+		C0839F5E2CC1BEE3005671E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C0839F3A2CC1BEDF005671E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C0839F412CC1BEDF005671E4;
+			remoteInfo = "Deep Focus";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		C072DF542CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip.blockmap */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Deep Focus-1.2.0-arm64-mac.zip.blockmap"; sourceTree = "<group>"; };
+		C072DF552CC1CFEF003F25DD /* latest-mac.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "latest-mac.yml"; sourceTree = "<group>"; };
+		C072DF562CC1CFEF003F25DD /* builder-effective-config.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "builder-effective-config.yaml"; sourceTree = "<group>"; };
+		C072DF572CC1CFEF003F25DD /* builder-debug.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "builder-debug.yml"; sourceTree = "<group>"; };
+		C072DF592CC1CFEF003F25DD /* deepFocus-1.2.0.dmg.blockmap */ = {isa = PBXFileReference; lastKnownFileType = file; path = "deepFocus-1.2.0.dmg.blockmap"; sourceTree = "<group>"; };
+		C072DF5A2CC1CFEF003F25DD /* Deep Focus.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Deep Focus.app"; path = "../../../Library/Autosave Information/Deep Focus.app"; sourceTree = "<group>"; };
+		C072DF5C2CC1CFEF003F25DD /* deepFocus-1.2.0.dmg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "deepFocus-1.2.0.dmg"; sourceTree = "<group>"; };
+		C072DF5D2CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = "Deep Focus-1.2.0-arm64-mac.zip"; sourceTree = "<group>"; };
+		C0839F422CC1BEDF005671E4 /* Deep Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Deep Focus.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0839F532CC1BEE3005671E4 /* Deep FocusTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Deep FocusTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0839F5D2CC1BEE3005671E4 /* Deep FocusUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Deep FocusUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		C0839F442CC1BEDF005671E4 /* Deep Focus */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Deep Focus";
+			sourceTree = "<group>";
+		};
+		C0839F562CC1BEE3005671E4 /* Deep FocusTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Deep FocusTests";
+			sourceTree = "<group>";
+		};
+		C0839F602CC1BEE3005671E4 /* Deep FocusUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Deep FocusUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C0839F3F2CC1BEDF005671E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F502CC1BEE3005671E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F5A2CC1BEE3005671E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C072DF582CC1CFEF003F25DD /* mac */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = mac;
+			sourceTree = "<group>";
+		};
+		C072DF5B2CC1CFEF003F25DD /* mac-arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				C072DF5A2CC1CFEF003F25DD /* Deep Focus.app */,
+			);
+			path = "mac-arm64";
+			sourceTree = "<group>";
+		};
+		C072DF5E2CC1CFEF003F25DD /* dist */ = {
+			isa = PBXGroup;
+			children = (
+				C072DF542CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip.blockmap */,
+				C072DF552CC1CFEF003F25DD /* latest-mac.yml */,
+				C072DF562CC1CFEF003F25DD /* builder-effective-config.yaml */,
+				C072DF572CC1CFEF003F25DD /* builder-debug.yml */,
+				C072DF582CC1CFEF003F25DD /* mac */,
+				C072DF592CC1CFEF003F25DD /* deepFocus-1.2.0.dmg.blockmap */,
+				C072DF5B2CC1CFEF003F25DD /* mac-arm64 */,
+				C072DF5C2CC1CFEF003F25DD /* deepFocus-1.2.0.dmg */,
+				C072DF5D2CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip */,
+			);
+			name = dist;
+			path = ../dist;
+			sourceTree = "<group>";
+		};
+		C0839F392CC1BEDF005671E4 = {
+			isa = PBXGroup;
+			children = (
+				C072DF5E2CC1CFEF003F25DD /* dist */,
+				C0839F442CC1BEDF005671E4 /* Deep Focus */,
+				C0839F562CC1BEE3005671E4 /* Deep FocusTests */,
+				C0839F602CC1BEE3005671E4 /* Deep FocusUITests */,
+				C0839F432CC1BEDF005671E4 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C0839F432CC1BEDF005671E4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C0839F422CC1BEDF005671E4 /* Deep Focus.app */,
+				C0839F532CC1BEE3005671E4 /* Deep FocusTests.xctest */,
+				C0839F5D2CC1BEE3005671E4 /* Deep FocusUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C0839F412CC1BEDF005671E4 /* Deep Focus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0839F672CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep Focus" */;
+			buildPhases = (
+				C0839F3E2CC1BEDF005671E4 /* Sources */,
+				C0839F3F2CC1BEDF005671E4 /* Frameworks */,
+				C0839F402CC1BEDF005671E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C0839F442CC1BEDF005671E4 /* Deep Focus */,
+			);
+			name = "Deep Focus";
+			packageProductDependencies = (
+			);
+			productName = "Deep Focus";
+			productReference = C0839F422CC1BEDF005671E4 /* Deep Focus.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C0839F522CC1BEE3005671E4 /* Deep FocusTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0839F6A2CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep FocusTests" */;
+			buildPhases = (
+				C0839F4F2CC1BEE3005671E4 /* Sources */,
+				C0839F502CC1BEE3005671E4 /* Frameworks */,
+				C0839F512CC1BEE3005671E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C0839F552CC1BEE3005671E4 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C0839F562CC1BEE3005671E4 /* Deep FocusTests */,
+			);
+			name = "Deep FocusTests";
+			packageProductDependencies = (
+			);
+			productName = "Deep FocusTests";
+			productReference = C0839F532CC1BEE3005671E4 /* Deep FocusTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		C0839F5C2CC1BEE3005671E4 /* Deep FocusUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0839F6D2CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep FocusUITests" */;
+			buildPhases = (
+				C0839F592CC1BEE3005671E4 /* Sources */,
+				C0839F5A2CC1BEE3005671E4 /* Frameworks */,
+				C0839F5B2CC1BEE3005671E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C0839F5F2CC1BEE3005671E4 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C0839F602CC1BEE3005671E4 /* Deep FocusUITests */,
+			);
+			name = "Deep FocusUITests";
+			packageProductDependencies = (
+			);
+			productName = "Deep FocusUITests";
+			productReference = C0839F5D2CC1BEE3005671E4 /* Deep FocusUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C0839F3A2CC1BEDF005671E4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					C0839F412CC1BEDF005671E4 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					C0839F522CC1BEE3005671E4 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = C0839F412CC1BEDF005671E4;
+					};
+					C0839F5C2CC1BEE3005671E4 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = C0839F412CC1BEDF005671E4;
+					};
+				};
+			};
+			buildConfigurationList = C0839F3D2CC1BEDF005671E4 /* Build configuration list for PBXProject "Deep Focus" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C0839F392CC1BEDF005671E4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C0839F432CC1BEDF005671E4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C0839F412CC1BEDF005671E4 /* Deep Focus */,
+				C0839F522CC1BEE3005671E4 /* Deep FocusTests */,
+				C0839F5C2CC1BEE3005671E4 /* Deep FocusUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C0839F402CC1BEDF005671E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C072DF5F2CC1CFEF003F25DD /* latest-mac.yml in Resources */,
+				C072DF602CC1CFEF003F25DD /* builder-debug.yml in Resources */,
+				C072DF612CC1CFEF003F25DD /* deepFocus-1.2.0.dmg.blockmap in Resources */,
+				C072DF622CC1CFEF003F25DD /* builder-effective-config.yaml in Resources */,
+				C072DF632CC1CFEF003F25DD /* Deep Focus.app in Resources */,
+				C072DF642CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip.blockmap in Resources */,
+				C072DF652CC1CFEF003F25DD /* Deep Focus-1.2.0-arm64-mac.zip in Resources */,
+				C072DF662CC1CFEF003F25DD /* deepFocus-1.2.0.dmg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F512CC1BEE3005671E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F5B2CC1BEE3005671E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C0839F3E2CC1BEDF005671E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F4F2CC1BEE3005671E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C0839F592CC1BEE3005671E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C0839F552CC1BEE3005671E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C0839F412CC1BEDF005671E4 /* Deep Focus */;
+			targetProxy = C0839F542CC1BEE3005671E4 /* PBXContainerItemProxy */;
+		};
+		C0839F5F2CC1BEE3005671E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C0839F412CC1BEDF005671E4 /* Deep Focus */;
+			targetProxy = C0839F5E2CC1BEE3005671E4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		C0839F652CC1BEE3005671E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C0839F662CC1BEE3005671E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		C0839F682CC1BEE3005671E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Deep Focus/Deep_Focus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Deep Focus/Preview Content\"";
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Deep Focus";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-Focus";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C0839F692CC1BEE3005671E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Deep Focus/Deep_Focus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Deep Focus/Preview Content\"";
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Deep Focus";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-Focus";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C0839F6B2CC1BEE3005671E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-FocusTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Deep Focus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Deep Focus";
+			};
+			name = Debug;
+		};
+		C0839F6C2CC1BEE3005671E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-FocusTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Deep Focus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Deep Focus";
+			};
+			name = Release;
+		};
+		C0839F6E2CC1BEE3005671E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-FocusUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Deep Focus";
+			};
+			name = Debug;
+		};
+		C0839F6F2CC1BEE3005671E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3Y4F3KTSJA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "-3Y4F3KTSJA.Deep-FocusUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Deep Focus";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C0839F3D2CC1BEDF005671E4 /* Build configuration list for PBXProject "Deep Focus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0839F652CC1BEE3005671E4 /* Debug */,
+				C0839F662CC1BEE3005671E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C0839F672CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep Focus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0839F682CC1BEE3005671E4 /* Debug */,
+				C0839F692CC1BEE3005671E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C0839F6A2CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep FocusTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0839F6B2CC1BEE3005671E4 /* Debug */,
+				C0839F6C2CC1BEE3005671E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C0839F6D2CC1BEE3005671E4 /* Build configuration list for PBXNativeTarget "Deep FocusUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0839F6E2CC1BEE3005671E4 /* Debug */,
+				C0839F6F2CC1BEE3005671E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C0839F3A2CC1BEDF005671E4 /* Project object */;
+}

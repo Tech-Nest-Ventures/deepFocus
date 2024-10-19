@@ -68,11 +68,10 @@ const Home = () => {
     const dataIndex = todayIndex - 1
     console.log(todayIndex)
     if (data && data.length) {
-      console.log('dataIndex is ', dataIndex, 'data is ', data)
       const workDone = data[dataIndex]
       setDeepWorkDone(workDone)
       console.log('workDone', workDone)
-      setProgress(workDone / deepWorkTarget()) // Use fetched deepWorkTarget
+      setProgress(workDone / deepWorkTarget())
     } else {
       console.log('No data found for deep work hours.')
     }
@@ -97,14 +96,16 @@ const Home = () => {
         </div>
       ) : (
         <div class="space-y-8">
-          <h1 class="mb-10 text-2xl font-light">Welcome back {user?.firstName}!</h1>
+          <h1 class="mb-10 text-2xl font-thin">
+            {user?.firstName.toLowerCase()}'s daily deep work
+          </h1>
           <div class="space-y-8">
             <CircularProgress progress={progress()} />
           </div>
           {activeWindowInfo() ? (
             <div class="mt-8">
               <h2>
-                <span>Active Task: </span>
+                <span class="font-light">Active Task: </span>
                 <span
                   class={activeWindowInfo()?.isProductive ? 'text-green-500' : 'text-red-500 ml-2'}
                 >

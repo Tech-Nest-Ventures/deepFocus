@@ -606,7 +606,7 @@ export function IconX(props: IconProps) {
   )
 }
 
-export function IoSettingsSharp(props) {
+export function IoSettingsSharp() {
   return (
     <svg
       fill="currentColor"

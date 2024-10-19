@@ -1,4 +1,4 @@
-import { lazy, onMount, createSignal, ComponentProps, createEffect } from 'solid-js'
+import { lazy, onMount, createSignal, ComponentProps, createEffect, onCleanup } from 'solid-js'
 import { Router, Route, A, useLocation, useNavigate } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
@@ -10,12 +10,12 @@ import { IoSettingsSharp, SiSimpleanalytics, VsHome, IoLogOutOutline } from './c
 import { Button } from './components/ui/button'
 import Home from './Home'
 import Modal from './components/modal'
-import { B } from 'node_modules/@kobalte/core/dist/button-root-da654b3e'
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
 const Signup = lazy(() => import('./Signup'))
-const BarChart = lazy(() => import('./BarChart'))
+
+const Analytics = lazy(() => import('./Analytics'))
 
 const Onboarding = lazy(() => import('./Onboarding'))
 
@@ -27,6 +27,28 @@ const App = (props: ComponentProps<typeof Router>) => {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const refreshDeepWorkData = () => {
+    console.log('Fetching latest deep work data...')
+    window?.electron.ipcRenderer.send('fetch-deep-work-data')
+  }
+
+  const updateDeepWorkTarget = () => {
+    console.log('Updating deep work target...')
+    window?.electron.ipcRenderer.send('fetch-deep-work-target')
+  }
+
+  // Set up IPC listeners at the top level
+  onMount(() => {
+    console.log('Setting up IPC listeners in App.tsx...')
+    window?.electron.ipcRenderer.on('refresh-deep-work-data', refreshDeepWorkData)
+    window?.electron.ipcRenderer.on('update-deep-work-target', updateDeepWorkTarget)
+
+    onCleanup(() => {
+      window?.electron.ipcRenderer.removeListener('refresh-deep-work-data', refreshDeepWorkData)
+      window?.electron.ipcRenderer.removeListener('update-deep-work-target', updateDeepWorkTarget)
+    })
+  })
+
   onMount(() => {
     const token = localStorage.getItem('token') as string
     const user = localStorage.getItem('user')
@@ -37,14 +59,6 @@ const App = (props: ComponentProps<typeof Router>) => {
     }
     navigate('/')
   })
-
-  const handleLogout = () => {
-    localStorage.clear()
-    setIsLoggedIn(false)
-    setIsNewUser(false)
-    stopActivityMonitoring()
-    navigate('/')
-  }
 
   createEffect(() => {
     console.log('Updated loggedIn:', isLoggedIn())
@@ -61,6 +75,15 @@ const App = (props: ComponentProps<typeof Router>) => {
     // Function to handle modal close (cancel)
     const handleCloseModal = () => {
       setShowLogoutModal(false)
+    }
+
+    const handleLogout = () => {
+      localStorage.clear()
+      setIsLoggedIn(false)
+      setIsNewUser(false)
+      stopActivityMonitoring()
+      handleCloseModal()
+      navigate('/')
     }
 
     return (
@@ -111,11 +134,11 @@ const App = (props: ComponentProps<typeof Router>) => {
             <div class="p-4 text-center">
               <h2 class="text-lg font-medium mb-4">Are you sure you want to logout?</h2>
               <div class="flex justify-center space-x-4">
-                <Button onClick={handleLogout} class="bg-red-500 text-white px-4 py-2 rounded">
-                  Yes, Logout
-                </Button>
                 <Button onClick={handleCloseModal} class="bg-gray-500 text-white px-4 py-2 rounded">
                   Cancel
+                </Button>
+                <Button onClick={handleLogout} class="bg-red-500 text-white px-4 py-2 rounded">
+                  Yes, Logout
                 </Button>
               </div>
             </div>
@@ -142,7 +165,7 @@ render(
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
-        <Route path="/analytics" component={BarChart} />
+        <Route path="/analytics" component={Analytics} />
         <Route path="/settings" component={Settings} />
         <Route path="/onboarding" component={Onboarding} />
       </Router>

@@ -1,8 +1,9 @@
 import dayjs from 'dayjs'
-import { SiteTimeTracker, DeepWorkHours } from './types'
+import { SiteTimeTracker, DeepWorkHours } from '../types'
 import { autoUpdater, dialog, app, Notification } from 'electron'
 import log from 'electron-log/node.js'
 import path from 'path'
+import { TypedStore } from '..'
 // import FormData from 'form-data'
 // import fs from 'fs'
 // import fetch from 'node-fetch'
@@ -14,12 +15,14 @@ export function resetCounters(
   deepWorkHours: DeepWorkHours
 ) {
   const now = dayjs()
+  log.info('Invoked resetCoutners', now.format('dddd, HH:mm'))
+
   if (type === 'daily') {
     siteTrackers.forEach((tracker) => {
       tracker.timeSpent = 0
       tracker.lastActiveTimestamp = 0
     })
-    store.set('lastResetDate', dayjs().format('YYYY-MM-DD'))
+    store.set('lastResetDate', now.toISOString())
     deepWorkHours[now.format('dddd')] = 0
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', siteTrackers)
@@ -39,9 +42,16 @@ export function resetCounters(
 }
 
 export function checkForUpdates() {
+  let isCheckingForUpdates = false
+  if (isCheckingForUpdates) {
+    log.info('Update check already in progress')
+    return
+  }
+
   autoUpdater.checkForUpdates()
 
   autoUpdater.on('update-available', () => {
+    log.info('Update available.')
     dialog.showMessageBox({
       type: 'info',
       title: 'DeepFocus',
@@ -51,12 +61,15 @@ export function checkForUpdates() {
   })
 
   autoUpdater.on('update-not-available', () => {
+    log.info('No update available.')
+
     dialog.showMessageBox({
       type: 'info',
       title: 'DeepFocus',
       message: 'No updates available',
       detail: 'You are currently running the latest version of DeepFocus.'
     })
+    isCheckingForUpdates = false
   })
 
   autoUpdater.on('error', (error) => {
@@ -67,6 +80,7 @@ export function checkForUpdates() {
       message: 'Error',
       detail: 'An error occurred while checking for updates.'
     })
+    isCheckingForUpdates = false
   })
 
   autoUpdater.on('update-downloaded', async () => {
@@ -82,12 +96,13 @@ export function checkForUpdates() {
     if (response === 0) {
       setImmediate(() => autoUpdater.quitAndInstall())
     }
+    isCheckingForUpdates = false
   })
 }
-export function getIconPath(iconName) {
+export function getIconPath(iconName: string, resourcesPath: string) {
   if (app.isPackaged) {
     // In production, resolve the path from the asar-unpacked resources
-    return path.join(process.resourcesPath, 'resources', iconName)
+    return path.join(resourcesPath, iconName)
   } else {
     // In development mode, resolve the path from your local development folder
     return path.join(__dirname, '../../resources', iconName)
@@ -97,7 +112,8 @@ export function getIconPath(iconName) {
 export function updateIconBasedOnProgress(
   iconPath: string,
   deepWorkTarget: number,
-  currentDeepWork: number
+  currentDeepWork: number,
+  resourcesPath: string
 ): string {
   console.log('deepWorkTarget', deepWorkTarget, 'currentDeepWork', currentDeepWork)
   let newIconPath = iconPath
@@ -105,16 +121,16 @@ export function updateIconBasedOnProgress(
 
   if (currentDeepWork >= deepWorkTarget) {
     message = `🎉 You've reached your target of ${deepWorkTarget} hours of deep work.`
-    iconPath = getIconPath('icon_green.png')
+    iconPath = getIconPath('icon_green.png', resourcesPath)
   } else if (currentDeepWork > 0 && currentDeepWork < Math.floor(deepWorkTarget / 2)) {
     message = `🚧 You're halfway there. Keep up the good work.`
-    iconPath = getIconPath('icon_yellow.png')
+    iconPath = getIconPath('icon_yellow.png', resourcesPath)
   } else if (currentDeepWork > 0 && currentDeepWork > Math.floor(deepWorkTarget / 2)) {
     message = `💡 You're close to the target. Keep it up.`
-    iconPath = getIconPath('icon_blue.png')
+    iconPath = getIconPath('icon_blue.png', resourcesPath)
   } else {
     message = ` 🏁 Let's get started on your deep work!`
-    iconPath = getIconPath('icon_red.png')
+    iconPath = getIconPath('icon_red.png', resourcesPath)
   }
   const isIconPathChanged = iconPath !== newIconPath
   if (isIconPathChanged) {
@@ -127,6 +143,44 @@ export function updateIconBasedOnProgress(
     }).show()
   }
   return iconPath
+}
+
+export function handleDailyReset(store: TypedStore) {
+  const now = dayjs()
+  const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+  const deepWorkHours = store.get('deepWorkHours', {
+    Monday: 0,
+    Tuesday: 0,
+    Wednesday: 0,
+    Thursday: 0,
+    Friday: 0,
+    Saturday: 0,
+    Sunday: 0
+  }) as DeepWorkHours
+  log.info('lastResetDate is ', store.get('lastResetDate'))
+  const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
+
+  // Perform daily reset if the last reset was not today
+  if (!lastResetDate.isSame(now, 'day')) {
+    log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
+    resetCounters('daily', store, currentSiteTimeTrackers, deepWorkHours)
+
+    store.set('lastResetDate', now.toISOString())
+    log.info(`Daily reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
+  }
+}
+
+// Function to handle checking for missed daily resets on app focus
+export function checkDailyResetOnFocus(store: TypedStore) {
+  const now = dayjs()
+  const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
+
+  if (!lastResetDate.isSame(now, 'day')) {
+    log.info('Missed daily reset detected on app focus. Performing daily reset now.')
+    handleDailyReset(store)
+  } else {
+    log.info('No missed daily reset detected on app focus.')
+  }
 }
 
 // export async function uploadLogs() {

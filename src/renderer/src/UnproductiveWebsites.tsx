@@ -1,5 +1,5 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
-import { TextField, TextFieldLabel, TextFieldInput } from './components/ui/text-field'
+import { TextField, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
 import { IoRemoveCircleOutline, VsAdd } from './components/ui/icons'
 
@@ -26,6 +26,7 @@ const UnproductiveWebsites = () => {
 
     onCleanup(() => {
       window.electron.ipcRenderer.removeAllListeners('unproductive-urls-response')
+      window.electron.ipcRenderer.removeAllListeners('fetch-unproductive-urls')
     })
   })
 
