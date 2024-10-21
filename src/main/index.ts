@@ -29,7 +29,6 @@ import {
 import { getInstalledApps } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils/utils'
 import log from 'electron-log/node.js'
-import { start } from 'repl'
 
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
@@ -181,23 +180,25 @@ async function storeData() {
 }
 
 export async function resetCounters(type: 'daily' | 'weekly') {
-  const now = dayjs()
-  log.info('Invoked resetCoutners', now.format('dddd, HH:mm'))
+  const now = dayjs();
+  log.info('Invoked resetCounters', now.format('dddd, HH:mm'));
+
+  stopActivityMonitoring();
 
   if (type === 'daily') {
     currentSiteTimeTrackers?.forEach((tracker) => {
-      tracker.timeSpent = 0
-      tracker.lastActiveTimestamp = 0
-    })
-    const lastResetDate = now.toISOString()
-    store?.set('lastResetDate', lastResetDate)
+      tracker.timeSpent = 0;
+      tracker.lastActiveTimestamp = 0;
+    });
+    const lastResetDate = now.toISOString();
+    store?.set('lastResetDate', lastResetDate);
 
-    deepWorkHours[now.format('dddd')] = 0
-    store.set('deepWorkHours', deepWorkHours)
-    store.set('siteTimeTrackers', currentSiteTimeTrackers)
-    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
+    deepWorkHours[now.format('dddd')] = 0;
+    store.set('deepWorkHours', deepWorkHours);
+    store.set('siteTimeTrackers', currentSiteTimeTrackers);
+    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours);
   } else if (type === 'weekly') {
-    currentSiteTimeTrackers = []
+    currentSiteTimeTrackers = [];
     store.set('deepWorkHours', {
       Monday: 0,
       Tuesday: 0,
@@ -206,9 +207,13 @@ export async function resetCounters(type: 'daily' | 'weekly') {
       Friday: 0,
       Saturday: 0,
       Sunday: 0
-    })
-    store.set('siteTimeTrackers', [])
+    });
+    store.set('siteTimeTrackers', []);
   }
+
+  startActivityMonitoring();
+
+  log.info(`${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`);
 }
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
@@ -275,11 +280,12 @@ export function startActivityMonitoring() {
       } catch (error) {
         console.error('Error getting active window or URL:', error)
       }
-    }, 5000) // Run the monitoring function every 15 seconds
+    }, 5000) // Run the monitoring function every 5 seconds
     log.info('Activity monitoring started.', today.format('dddd, HH:mm'))
   }
 }
 
+// Handles both periodicSave & activity monitoring
 function stopActivityMonitoring() {
   if (monitoringInterval) {
     clearInterval(monitoringInterval) // Clear the interval
@@ -290,7 +296,6 @@ function stopActivityMonitoring() {
   }
 }
 
-// Create the browser window
 async function createWindow(): Promise<BrowserWindow> {
   mainWindow = new BrowserWindow({
     width: 600,
@@ -343,7 +348,6 @@ async function createWindow(): Promise<BrowserWindow> {
   return mainWindow
 }
 
-// Main app ready event
 app.whenReady().then(async () => {
   log.info('app is ready. Retrieving currentSiteTimeTrackers and deepWorkHours from store')
   currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
@@ -376,15 +380,14 @@ app.whenReady().then(async () => {
 })
 
 app.on('ready', () => {
-  log.info('Checking for updates & performing daily resets')
+  log.info('Checking for updates in app software')
   checkForUpdates()
-  handleDailyReset()
 })
 
 // Listen for focus events on the main window (when the user focuses the app's main window)
 app.on('browser-window-focus', () => {
   log.info('App window focused. Checking for missed daily resets.')
-  checkDailyResetOnFocus()
+  handleDailyReset()
 
   if (mainWindow) {
     mainWindow.webContents.send('refresh-deep-work-data') // Refresh deep work data
@@ -394,9 +397,9 @@ app.on('browser-window-focus', () => {
 })
 
 export function handleUserLogout() {
-  const today = dayjs()
-  log.info('Handling user logout', today.format('dddd, HH:mm'))
+  log.info('Handling user logout')
   store.delete('user')
+  store.set('lastResetDate', dayjs().toISOString())
   user = null
   stopActivityMonitoring()
   new Notification({
@@ -446,20 +449,15 @@ export function getSiteTrackers(): SiteTimeTracker[] {
 
 schedule.scheduleJob('0 0 0 * * *', () => {
   log.info('Scheduled daily reset at midnight')
-  stopActivityMonitoring()
   resetCounters('daily')
-  ipcMain.emit('reset-deep-work-data')
   log.info('new reset date is ', store.get('lastResetDate'))
-  startActivityMonitoring()
 })
 
 // Schedule a weekly reset for 11:55 PM on Sunday
 schedule.scheduleJob('55 23 * * 0', () => {
   log.info('Scheduled weekly reset at 11:55 PM on Sunday')
-  stopActivityMonitoring()
   resetCounters('weekly')
   log.info('Weekly counters have been reset')
-  startActivityMonitoring()
 })
 
 // Log unhandled promise rejections
@@ -574,16 +572,8 @@ function setupIPCListeners() {
     event.reply('deep-work-data-response', chartData)
   })
 
-  ipcMain.on('reset-deep-work-data', () => {
-    log.info('Resetting deep work data')
-    stopActivityMonitoring()
-    handleDailyReset()
-    startActivityMonitoring()
-
-    // Notify frontend about the reset
-    mainWindow?.webContents.send('deep-work-reset')
-  })
   // Fetch the App icons of the Users installed apps (MacOS)
+  // TODO: Logic can be improved to get more icons
   ipcMain.on('fetch-app-icons', async (event) => {
     try {
       const apps = await getInstalledApps()
@@ -596,20 +586,8 @@ function setupIPCListeners() {
   })
 }
 
-export function handleDailyReset(type?: MessageType.RESET_DAILY) {
+export function handleDailyReset() {
   const now = dayjs()
-
-  if (type === MessageType.RESET_DAILY) {
-    resetCounters('daily')
-    log.info(`Daily reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
-
-    // Check if today is Sunday for weekly reset
-    if (now.day() === 0) {
-      resetCounters('weekly')
-      log.info(`Weekly reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
-    }
-    return
-  }
 
   log.info('lastResetDate is ', store.get('lastResetDate'))
   const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
@@ -630,20 +608,5 @@ export function handleDailyReset(type?: MessageType.RESET_DAILY) {
       resetCounters('weekly')
       log.info(`Weekly reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
     }
-  }
-}
-
-// Function to handle checking for missed daily resets on app focus
-export function checkDailyResetOnFocus() {
-  const now = dayjs()
-  const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-
-  if (!lastResetDate.isSame(now, 'day')) {
-    log.info('Missed daily reset detected on app focus. Performing daily reset now.')
-    stopActivityMonitoring()
-    resetCounters('daily')
-    startActivityMonitoring()
-  } else {
-    log.info('No missed daily reset detected on app focus.')
   }
 }

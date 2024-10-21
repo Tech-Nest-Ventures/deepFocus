@@ -10,6 +10,7 @@ import {
 import { TypedStore } from './index'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
+import log from 'electron-log/node.js'
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {
@@ -107,7 +108,7 @@ export function updateSiteTimeTracker(
   // Find an existing tracker or create a new one
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
-    console.log('Updating existing tracker', tracker.title, tracker.timeSpent)
+    log.info('Updating existing tracker', tracker.title, tracker.timeSpent)
     tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
   } else {
@@ -137,7 +138,6 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
   } else if (context.type === 'appName') {
     const unproductiveApps: unknown = store.get('unproductiveApps', [])
 
-    // Validate the retrieved data is an array of App objects
     const validUnproductiveApps: App[] =
       Array.isArray(unproductiveApps) &&
       unproductiveApps.every((item) => typeof item === 'object' && 'name' in item)
@@ -158,7 +158,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
     exec(script, (err, stdout, stderr) => {
       if (err) {
         console.error(`Error getting active application: ${stderr}`)
-        resolve('') // Return empty string on error
+        resolve('') 
       } else {
         let appName = stdout.trim()
 
@@ -168,11 +168,11 @@ export function getActiveWindowApp(): Promise<string | browser> {
           exec(checkVSCodeScript, (err, stdout, stderr) => {
             if (err) {
               console.error(`Error checking bundle identifier of App ${appName}: ${stderr}`)
-              resolve('') // Return empty string on error
+              resolve('') 
             } else {
               const bundleIdentifier = stdout.trim()
               if (bundleIdentifier === 'com.microsoft.VSCode') {
-                appName = 'Visual Studio Code' // Special case for VSCode
+                appName = 'Visual Studio Code' 
               }
               resolve(appName)
             }
