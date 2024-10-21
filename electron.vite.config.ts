@@ -4,7 +4,7 @@ import solid from 'vite-plugin-solid'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import {viteStaticCopy} from 'vite-plugin-static-copy'
 
 // Define __dirname in an ES module environment
 const __filename = fileURLToPath(import.meta.url)
@@ -28,7 +28,14 @@ export default defineConfig({
           format: 'es',
           entryFileNames: '[name].js'
         },
-        external: ['electron', 'path', 'fs', 'dotenv', '@electron-toolkit/utils', 'electron-store']
+        external: [
+          'electron',
+          'path',
+          'fs',
+          'dotenv',
+          '@electron-toolkit/utils',
+          'electron-store'
+        ]
       }
     },
     define: {
@@ -61,23 +68,14 @@ export default defineConfig({
       viteStaticCopy({
         targets: [
           {
-            src: resolve(__dirname, 'src/renderer/loader.html'), // Ensure correct path
-            dest: '' // Copy directly to the out/renderer directory
+            src: resolve(__dirname, 'src/renderer/loader.html'), 
+            dest: '' 
           }
         ]
       })
     ],
     build: {
-      outDir: 'out/renderer'
-      // rollupOptions: {
-      //   input: {
-      //     loader: resolve(__dirname, 'src/renderer/loader.html'),
-      //     // index: resolve(__dirname, 'src/renderer/index.html')
-      //   },
-      //   output: {
-      //     entryFileNames: '[name].html'
-      //   }
-      // }
+      outDir: 'out/renderer',
     },
     define: {
       'process.env.API_BASE_URL': JSON.stringify(
