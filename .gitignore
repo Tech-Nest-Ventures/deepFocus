@@ -16,3 +16,4 @@ Mac OS X Provisioning Profile Signing.cer
 electron-builder.yml
 Deep Focus/Deep Focus.xcodeproj/xcuserdata/
 Deep Focus/build/
+Deep Focus/Deep Focus/*

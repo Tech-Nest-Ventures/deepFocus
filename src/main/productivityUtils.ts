@@ -10,7 +10,6 @@ import {
 import { TypedStore } from './index'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
-import log from 'electron-log/node.js'
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {

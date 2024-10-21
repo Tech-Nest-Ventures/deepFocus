@@ -34,6 +34,8 @@ async function copyRequiredFiles() {
     packageJson.main = 'main/main.js' // Update this to point to the actual built main file
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 })
     console.log('Updated main entry point in package.json')
+    await fs.copy('node_modules', 'out/node_modules')
+    console.log('Copied node_modules to out/')
   } catch (err) {
     console.error('Error copying files:', err)
     throw err
@@ -48,7 +50,7 @@ const packageApp = async () => {
       dir: 'out', // Use the 'out' folder as the source directory
       out: 'dist', // Output directory for the packaged app
       overwrite: true,
-      asar: true, // Enable asar archiving for the packaged app
+      asar: false, // Enable asar archiving for the packaged app
       appBundleId: 'com.electron.deepfocus', // Bundle identifier
       appCopyright: 'Copyright © 2024 Tech Nest Ventures LLC', // Copyright notice
       appCategoryType: 'public.app-category.productivity', // Mac App Store category
@@ -57,7 +59,6 @@ const packageApp = async () => {
       arch: 'arm64', // Architecture
       name: 'Deep Focus', // Product name
       ignore: [
-        /^\/node_modules\/(?!electron)/, // Include only necessary dependencies
         /^\/dist/, // Exclude the output directory itself
         /^\/test/ // Exclude test directories
       ],

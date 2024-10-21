@@ -1,7 +1,7 @@
 import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest'
 import { generateLargeFakeData } from '../scripts/generateFakeData'
 import { DeepWorkHours, StoreSchema } from '../src/main/types'
-import { resetCounters } from '../src/main/utils/utils'
+import { resetCounters } from '../src/main/index'
 import { ipcMain } from 'electron'
 
 vi.mock('electron-store', () => {
@@ -94,7 +94,7 @@ describe('Test Day Reset Logic with IPC', () => {
     vi.advanceTimersByTime(24 * 60 * 60 * 1000) // Move to the next day
 
     // Simulate the app's daily reset logic
-    resetCounters('daily', store, trackers, deepWork)
+    resetCounters('daily')
 
     // Simulate sending a notification to the frontend about the reset
     ipcMain.emit('deep-work-reset')

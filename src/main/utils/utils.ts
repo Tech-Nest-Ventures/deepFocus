@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { SiteTimeTracker, DeepWorkHours } from '../types'
+import { DeepWorkHours, MessageType } from '../types'
 import { autoUpdater, dialog, app, Notification } from 'electron'
 import log from 'electron-log/node.js'
 import path from 'path'
@@ -7,39 +7,6 @@ import { TypedStore } from '..'
 // import FormData from 'form-data'
 // import fs from 'fs'
 // import fetch from 'node-fetch'
-
-export function resetCounters(
-  type: 'daily' | 'weekly',
-  store: any,
-  siteTrackers: SiteTimeTracker[],
-  deepWorkHours: DeepWorkHours
-) {
-  const now = dayjs()
-  log.info('Invoked resetCoutners', now.format('dddd, HH:mm'))
-
-  if (type === 'daily') {
-    siteTrackers.forEach((tracker) => {
-      tracker.timeSpent = 0
-      tracker.lastActiveTimestamp = 0
-    })
-    store.set('lastResetDate', now.toISOString())
-    deepWorkHours[now.format('dddd')] = 0
-    store.set('deepWorkHours', deepWorkHours)
-    store.set('siteTimeTrackers', siteTrackers)
-  } else if (type === 'weekly') {
-    siteTrackers = []
-    store.set('deepWorkHours', {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
-    })
-    store.set('siteTimeTrackers', [])
-  }
-}
 
 export function checkForUpdates() {
   let isCheckingForUpdates = false
@@ -143,44 +110,6 @@ export function updateIconBasedOnProgress(
     }).show()
   }
   return iconPath
-}
-
-export function handleDailyReset(store: TypedStore) {
-  const now = dayjs()
-  const currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-  const deepWorkHours = store.get('deepWorkHours', {
-    Monday: 0,
-    Tuesday: 0,
-    Wednesday: 0,
-    Thursday: 0,
-    Friday: 0,
-    Saturday: 0,
-    Sunday: 0
-  }) as DeepWorkHours
-  log.info('lastResetDate is ', store.get('lastResetDate'))
-  const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-
-  // Perform daily reset if the last reset was not today
-  if (!lastResetDate.isSame(now, 'day')) {
-    log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
-    resetCounters('daily', store, currentSiteTimeTrackers, deepWorkHours)
-
-    store.set('lastResetDate', now.toISOString())
-    log.info(`Daily reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
-  }
-}
-
-// Function to handle checking for missed daily resets on app focus
-export function checkDailyResetOnFocus(store: TypedStore) {
-  const now = dayjs()
-  const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-
-  if (!lastResetDate.isSame(now, 'day')) {
-    log.info('Missed daily reset detected on app focus. Performing daily reset now.')
-    handleDailyReset(store)
-  } else {
-    log.info('No missed daily reset detected on app focus.')
-  }
 }
 
 // export async function uploadLogs() {
