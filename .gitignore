@@ -1,0 +1,11 @@
+dist
+.DS_Store
+*.log*
+node_modules
+.env
+deepfocus.js
+test-results
+playwright-report
+
+.vite/*
+out
