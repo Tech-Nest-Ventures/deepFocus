@@ -1,91 +1,94 @@
-// import fs from 'fs'
-// import path from 'path'
-// import plist from 'simple-plist'
+import appPath from 'app-path'
+import fs from 'fs'
+import path from 'path'
 
-// interface MacosAppInfo {
-//   CFBundleIdentifier: string
-//   CFBundleName: string
-//   CFBundleExecutable: string
-//   CFBundleIconFile: string
-// }
+interface AppInfo {
+  name: string
+  path: string
+  icon: string
+}
 
-// // Helper to read the Info.plist file
-// async function readPlistFile(filePath: string) {
-//   return new Promise<MacosAppInfo>((resolve, reject) => {
-//     plist.readFile<MacosAppInfo>(filePath, (error, data) => {
-//       if (error || !data) {
-//         reject(error)
-//       } else {
-//         resolve(data)
-//       }
-//     })
-//   })
-// }
+// Helper function to find the .icns file within an app bundle
+function findIcnsFile(appFullPath: string): string | null {
+  const resourcesPath = path.join(appFullPath, 'Contents', 'Resources')
+  if (!fs.existsSync(resourcesPath)) return null
 
-// // Helper to read and convert .icns file to base64 PNG
-// async function readIcnsAsImageUri(file: string) {
-//   try {
-//     const buf = await fs.promises.readFile(file)
-//     if (!buf) return ''
+  // Try to find a file that ends with .icns in the Resources directory
+  const files = fs.readdirSync(resourcesPath)
+  const icnsFile = files.find(file => file.endsWith('.icns'))
+  return icnsFile ? path.join(resourcesPath, icnsFile) : null
+}
 
-//     const totalSize = buf.readInt32BE(4) - 8
-//     const icons: { type: string; size: number; data: Buffer }[] = []
-//     let start = 0
-//     const buffer = buf.subarray(8)
+// Function to fetch the icon as a base64 string
+async function getAppIcon(appFullPath: string): Promise<string> {
+  const icnsFilePath = findIcnsFile(appFullPath)
+  if (!icnsFilePath) {
+    console.warn(`No .icns file found for app at ${appFullPath}`)
+    return getFallbackIconBase64()
+  }
 
-//     while (start < totalSize) {
-//       const type = buffer.subarray(start, start + 4).toString()
-//       const size = buffer.readInt32BE(start + 4)
-//       const data = buffer.subarray(start + 8, start + size)
-//       icons.push({ type, size, data })
-//       start += size
-//     }
+  try {
+    const iconBuffer = await fs.promises.readFile(icnsFilePath)
+    return 'data:image/icns;base64,' + iconBuffer.toString('base64')
+  } catch (error) {
+    console.warn(`Failed to read icon file at ${icnsFilePath}: ${error.message}`)
+    return getFallbackIconBase64()
+  }
+}
 
-//     icons.sort((a, b) => b.size - a.size)
-//     const imageData = icons[0]?.data
-//     if (imageData?.subarray(1, 4).toString() === 'PNG') {
-//       return 'data:image/png;base64,' + imageData.toString('base64')
-//     }
-//     return '' // No valid image data
-//   } catch (error) {
-//     console.error(`Error reading .icns file: ${error}`)
-//     return '' // Return an empty string or fallback icon
-//   }
-// }
+// Function to return a base64-encoded fallback icon
+function getFallbackIconBase64(): string {
+  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABIVJREFUWIXNVztvJEUQ/qqnex67M2ffYowgJrqQE+h+AhIJKSHB/Y/7D0hkCIkACZDQkR0BOiEkogsvICFw5jut117Ps98EM9Me27uLMRioYNU7U931VdVX1TXAfyz0D+nsEv+XD1dKvR9F0WMi+oCI3gLwJoDoFsbX3vtXAF46577inP+wU/v58+fcWvu59975OxDn3NPj4+P51mhYaz+7C8NXQHw/jXxYNE3zKMuyX8dnylisqhpNpyC1gfceB3s5Ts7rrREkIiyKGZbrCkSEWESYJQmKNEGeJUHPGPOhEOLHKQAyxnwRRdGno/Gzurlhmm8mszgOIKy133DOPwHg+QV4ejQqr6oajAjLdRUOSGOBPEtgrIPUGtpYON8TnBFB8AiJEOARQ9VKdEqHqLxxb46ykwEAEb03OB8AMCJ6ZzRWdxJFlsJ5DyJCkaWIeV8Eq3JzCpSxaKXGwV6OWRKDRxHKtgMG'
+}
 
-// // Updated getInstalledApps function
-// export async function getInstalledApps(): Promise<{ name: string; path: string; icon: string }[]> {
-//   const dir = '/Applications'
-//   const appPaths = await fs.promises.readdir(dir)
+// Main function to get installed apps with name, path, and icon
+export async function getInstalledApps(): Promise<AppInfo[]> {
+  const appsToFetch = [
+    'Safari',
+    'Visual Studio Code',
+    'Docker',
+    'Google Chrome',
+    'Firefox',
+    'Microsoft Word',
+    'Microsoft Excel',
+    'Microsoft PowerPoint',
+    'Spotify',
+    'Slack',
+    'Discord',
+    'Zoom.us',
+    'Mail',
+    'Messages',
+    'Calendar',
+    'Photos',
+    'Reminders',
+    'Notes',
+    'Preview',
+    'TextEdit',
+    'App Store',
+    'System Preferences',
+    'Terminal',
+    'Finder',
+    'Xcode'
+  ]
 
-//   const appPromises = appPaths.map(async (appPath) => {
-//     const fullAppPath = path.join(dir, appPath)
-//     const plistPath = path.join(fullAppPath, 'Contents/Info.plist')
+  const appPromises = appsToFetch.map(async (appName) => {
+    try {
+      console.log('appName', appName)
+      const appFullPath = await appPath(appName)
+      console.log('appFullPath', appFullPath)
+      const icon = await getAppIcon(appFullPath)
 
-//     if (fs.existsSync(plistPath)) {
-//       const info = await readPlistFile(plistPath)
-//       const iconPath = path.join(fullAppPath, 'Contents/Resources', info.CFBundleIconFile)
+      return {
+        name: appName,
+        path: appFullPath,
+        icon
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch app info for ${appName}: ${error.message}`)
+      return null // Skip if app path or icon can't be retrieved
+    }
+  })
 
-//       let icon: string | null = null
-//       if (fs.existsSync(iconPath)) {
-//         icon = await readIcnsAsImageUri(iconPath)
-//       } else {
-//         console.warn(`Icon not found for ${info.CFBundleName}, using fallback`)
-//         // Provide a default/fallback icon if iconPath doesn't exist
-//         icon =
-//           'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABIVJREFUWIXNVztvJEUQ/qqnex67M2ffYowgJrqQE+h+AhIJKSHB/Y/7D0hkCIkACZDQkR0BOiEkogsvICFw5jut117Ps98EM9Me27uLMRioYNU7U931VdVX1TXAfyz0D+nsEv+XD1dKvR9F0WMi+oCI3gLwJoDoFsbX3vtXAF46577inP+wU/v58+fcWvu59975OxDn3NPj4+P51mhYaz+7C8NXQHw/jXxYNE3zKMuyX8dnylisqhpNpyC1gfceB3s5Ts7rrREkIiyKGZbrCkSEWESYJQmKNEGeJUHPGPOhEOLHKQAyxnwRRdGno/Gzurlhmm8mszgOIKy133DOPwHg+QV4ejQqr6oajAjLdRUOSGOBPEtgrIPUGtpYON8TnBFB8AiJEOARQ9VKdEqHqLxxb46ykwEAEb03OB8AMCJ6ZzRWdxJFlsJ5DyJCkaWIeV8Eq3JzCpSxaKXGwV6OWRKDRxHKtgMGkI2UQZeIDgEwAI4PSIiIslFBGxeUiywFZ4RVWeNgL0fEGLJEIBEcEbE+pN5BahO8XpU19ucZiixF1XY9QG2nAPZGuyEFAOJRwbkeQBYLxDzCqqxDuBfFHFJrlI2Ecf2hnEVIY477eV9hznuc1S0WxRxpLAAA3l/rRzT+EADhvQ8xer0uN4b578rhXjGNQgJAs02KI/mMdViuK6zKekwlOqXhnEfZSqzKGquyRtlKOOfRKQOgT/uqrLFcVzC2j+a28t0IYAx3pzSc90hjAan7/MacY1XVaKWCsQ7GOrRSYVXVgahSa6SxgPM+7NuQgu0ARlGmz3EiePCu6npvr4F2HrVUA3CDRPT00sZe070xAOf78EXEAuGUMVv19fDOOBsqxG3x/EYA/g3ZCYBN6pyzPr8x51v1xfCOswh2iB6j3ePETgAXpDJI4/7wPE3A2PVDGSPMk76VpDGH1GYAtXuM2AlgJFIrNRIhAphF3jcYxgiMEdJYYJHPAz8SIdBKHda75P/diMqmg3Mey3WF12c9KO/7/nBWtVieV1ieVzirWnRKh2b1+qzEcl3BOY+qlZfOvCpTAKFeaCBOqzSUsdifZ4FM471QzBIcFDkOihzFLIHzHqdV3+0YEfbnGZSxl67lTRIo7ZxbM8b2Mck9AJRthyJLsSj6i8Y6h6qVwbNL3gxGFsUcyliUbRcmnikZvfftVQDee78EsA8AWRJPlXHetMhigWKW4n4+g9QGytjQqBgxxDwKN1/dSbRXPJ+nF2c6516NEefDwiulXmZZ9i4AFFmCRioc7l+QZhTBoz8trWKWopill57Nk0sz4W+j3TEC7vT09Mssyz7GUOsEoGwlaimhtA1D6UjGTcKIcLCXh6FU8AizJEaeJrg3AVRV1dcA3HQvAYibpnl612N513U/P3jwIN70UcSePHmyKMvyuzs0/suzZ8/e3tYAafj8yl68ePHRycnJt13X/W6MKW9r0DkntdbHZVn+dHR09Pjhw4ezwfj1D5PJfxrIKYY5kV/ddEPxQ54NAAVAD2t/qeds2TwCYZP1bcRPgPhNX8p/AEIA9v67Ae68AAAAAElFTkSuQmCC'
-//       }
-
-//       return {
-//         name: info.CFBundleName,
-//         path: fullAppPath,
-//         icon
-//       }
-//     } else {
-//       return null // Skip non-app directories
-//     }
-//   })
-
-//   const apps = await Promise.all(appPromises)
-//   return apps.filter(Boolean) as { name: string; path: string; icon: string }[]
-// }
+  const apps = await Promise.all(appPromises)
+  return apps.filter(Boolean) as AppInfo[]
+}

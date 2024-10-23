@@ -4,15 +4,17 @@
   "version": "1.0.0",
   "main": ".vite/build/main.js",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "start": "DEBUG=electron* electron-forge start",
+    "package": "DEBUG=electron* electron-forge package",
+    "make": "DEBUG=electron* electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.5.0",
     "@electron-forge/maker-deb": "^7.5.0",
+    "@electron-forge/maker-dmg": "^7.5.0",
+    "@electron-forge/maker-pkg": "^7.5.0",
     "@electron-forge/maker-rpm": "^7.5.0",
     "@electron-forge/maker-squirrel": "^7.5.0",
     "@electron-forge/maker-zip": "^7.5.0",
@@ -47,6 +49,7 @@
     "@kobalte/core": "^0.13.7",
     "@modular-forms/solid": "^0.24.1",
     "@solidjs/router": "^0.14.10",
+    "app-path": "^4.0.0",
     "autoprefixer": "^10.4.20",
     "chart.js": "^4.4.5",
     "class-variance-authority": "^0.7.0",

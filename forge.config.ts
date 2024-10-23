@@ -6,6 +6,8 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { MakerDMG } from '@electron-forge/maker-dmg';
+import { MakerPKG } from '@electron-forge/maker-pkg';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -14,7 +16,15 @@ const config: ForgeConfig = {
     icon: './resources/icon.icns',
     osxSign: {
       identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
+      type: 'distribution',
+      provisioningProfile: '/Users/timeo/deepFocus/deepWork/distribution.provisionprofile',
     },
+    // osxNotarize: {
+    //   appleId: 'timwillie73@gmail.com',
+    //   appleIdPassword: 'mjaz-xgdj-wqgj-bqiy',
+    //   teamId: '3Y4F3KTSJA',
+    // },
+    appBundleId: 'com.electron.deepfocus',
     extraResource: [
       'resources/.env',
       'resources/icon.icns',
@@ -30,19 +40,34 @@ const config: ForgeConfig = {
     new MakerSquirrel({}),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
-    new MakerDeb({})
+    new MakerDeb({}),
+    new MakerDMG({
+      appPath: './out/Deep Focus-darwin-arm64/Deep Focus.app', 
+      name: 'Deep Focus',
+      icon: './resources/icon.icns',
+      format: 'ULFO',
+      overwrite: true,
+      contents: (opts) => [
+        { x: 130, y: 220, type: 'file', path: opts.appPath },
+        { x: 410, y: 220, type: 'link', path: '/Applications' },
+      ],
+    }),
+    new MakerPKG({
+      name: 'Deep Focus',
+      identity: 'Developer ID Installer: Timeo Williams (3Y4F3KTSJA)',
+    }),
   ],
   plugins: [
     new VitePlugin({
       build: [
         {
-          entry: 'src/main.ts', // Main process entry point
-          config: 'vite.main.config.ts', // Path to Vite config for main process
+          entry: 'src/main.ts', 
+          config: 'vite.main.config.ts', 
           target: 'main',
         },
         {
-          entry: 'src/preload.ts', // Preload script entry point
-          config: 'vite.preload.config.ts', // Path to Vite config for preload script
+          entry: 'src/preload.ts', 
+          config: 'vite.preload.config.ts', 
           target: 'preload',
         },
         {

@@ -26,7 +26,7 @@ import {
   isBrowser,
   isValidURL
 } from './productivityUtils'
-// import { getInstalledApps } from './childProcess'
+import { getInstalledApps } from './childProcess.js'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
 
@@ -89,8 +89,6 @@ function setupEnvironment() {
     throw error
   }
 }
-
-
 
 export function updateAppMenu() {
   createAppMenu()
@@ -171,19 +169,20 @@ export function loadUserData() {
 }
 
 async function storeData() {
-  const today = dayjs()
+  const today = dayjs().format('dddd') as keyof typeof deepWorkHours;
   log.info(
-    'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): ',
-    today.format('dddd, HH:mm')
+    'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
   store.set('deepWorkHours', deepWorkHours)
-  currentDeepWork = deepWorkHours[today.format('dddd')] || 0
+
+  currentDeepWork = deepWorkHours[today] || 0
+  deepWorkHours[today] = 0;
 }
 
 export async function resetCounters(type: 'daily' | 'weekly') {
   const now = dayjs();
-  log.info('Invoked resetCounters', now.format('dddd, HH:mm'));
+  log.info('Invoked resetCounters');
 
   stopActivityMonitoring();
 
@@ -194,8 +193,8 @@ export async function resetCounters(type: 'daily' | 'weekly') {
     });
     const lastResetDate = now.toISOString();
     store?.set('lastResetDate', lastResetDate);
-
-    deepWorkHours[now.format('dddd')] = 0;
+    const today = now.format('dddd') as keyof typeof deepWorkHours;
+    deepWorkHours[today] = 0;
     store.set('deepWorkHours', deepWorkHours);
     store.set('siteTimeTrackers', currentSiteTimeTrackers);
     log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours);
@@ -516,34 +515,36 @@ function setupIPCListeners() {
 
   // Fetch the user's site time trackers
   ipcMain.on('fetch-site-trackers', async (event) => {
+    log.info('Received event for fetch-site-trackers')
+
     const trackers = store.get('siteTimeTrackers', [])
-    // const apps = [] // Fetch the list of installed apps with their icons
+    const apps = [] // Fetch the list of installed apps with their icons
 
-    // const formattedTrackers = trackers.map((tracker) => {
-    //   let iconUrl = ''
+    const formattedTrackers = trackers.map((tracker) => {
+      let iconUrl = ''
 
-    //   // Determine if the tracker is a website or an app
-    //   if (isValidURL(tracker.url)) {
-    //     // If it's a valid URL (website), use the Google favicon service
-    //     iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${tracker.url}`
-    //   } else {
-    //     // If it's not a valid URL (assume it's an app), find its icon from the list of installed apps
-    //     const matchingApp = apps.find((app) => app.name === tracker.title)
-    //     iconUrl = matchingApp ? matchingApp.icon : ''
-    //   }
-    //   return {
-    //     ...tracker,
-    //     iconUrl
-    //   }
-    // })
+      // Determine if the tracker is a website or an app
+      if (isValidURL(tracker.url)) {
+        // If it's a valid URL (website), use the Google favicon service
+        iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${tracker.url}`
+      } else {
+        // If it's not a valid URL (assume it's an app), find its icon from the list of installed apps
+        const matchingApp = apps.find((app) => app.name === tracker.title)
+        iconUrl = matchingApp ? matchingApp.icon : ''
+      }
+      return {
+        ...tracker,
+        iconUrl
+      }
+    })
 
-    // // Sort the trackers by time spent (descending) and limit to top 5
-    // const sortedTrackers = formattedTrackers
-    //   .sort((a, b) => b.timeSpent - a.timeSpent)
-    //   .filter((tracker) => tracker.timeSpent > 60)
-    //   .slice(0, 5)
+    // Sort the trackers by time spent (descending) and limit to top 5
+    const sortedTrackers = formattedTrackers
+      .sort((a, b) => b.timeSpent - a.timeSpent)
+      .filter((tracker) => tracker.timeSpent > 60)
+      .slice(0, 5)
 
-    event.reply('site-trackers-response', trackers)
+    event.reply('site-trackers-response', sortedTrackers)
   })
 
   // Fetch the user's deep work target daily
@@ -582,9 +583,11 @@ function setupIPCListeners() {
   // TODO: Logic can be improved to get more icons
   ipcMain.on('fetch-app-icons', async (event) => {
     try {
-      // const apps = await getInstalledApps()
+      log.info('Received event for fetch-deep-work-data')
+
+      const apps = await getInstalledApps()
       // console.log('Apps are ', apps)
-      event.reply('app-icons-response', 'hello')
+      event.reply('app-icons-response', apps)
     } catch (error) {
       console.error('Error fetching app icons:', error)
       event.reply('app-icons-response', [])
