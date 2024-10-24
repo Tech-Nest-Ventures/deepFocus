@@ -5,6 +5,7 @@ import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
 import { WindowInfo } from './types'
+import { IpcRendererEvent } from 'electron'
 
 const Home = () => {
   const [loggedIn] = useAuth()
@@ -44,7 +45,7 @@ const Home = () => {
   })
 
   // Handle deep work data response from IPC
-  const handleDeepWorkData = (_event, data) => {
+  const handleDeepWorkData = (_event: IpcRendererEvent, data: number[]) => {
     const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
     const dataIndex = todayIndex - 1
     if (data && data.length > dataIndex) {
@@ -57,13 +58,13 @@ const Home = () => {
   }
 
   // Handle deep work target response from IPC
-  const handleDeepWorkTarget = (_event, target) => {
+  const handleDeepWorkTarget = (_event: IpcRendererEvent, target: number) => {
     setDeepWorkTarget(target)
     console.log('Deep work target updated:', target)
   }
 
   // Handle active window information response from IPC
-  const handleActiveWindowInfo = (_event, windowInfo: WindowInfo) => {
+  const handleActiveWindowInfo = (_event: IpcRendererEvent, windowInfo: WindowInfo) => {
     setActiveWindowInfo({
       appName: windowInfo.appName || 'Unknown App',
       URL: windowInfo.URL || 'Unknown URL',
