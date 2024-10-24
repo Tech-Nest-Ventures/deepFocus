@@ -394,11 +394,26 @@ app.on('ready', () => {
   checkForUpdates()
 })
 
-// Listen for focus events on the main window (when the user focuses the app's main window)
 app.on('browser-window-focus', () => {
   log.info('App window focused.')
-})
+  const updatedDeepWorkHours = getDeepWorkHours()
 
+  // Convert the object into an array format for the front-end chart
+  const chartData = [
+    updatedDeepWorkHours?.Monday || 0,
+    updatedDeepWorkHours?.Tuesday || 0,
+    updatedDeepWorkHours?.Wednesday || 0,
+    updatedDeepWorkHours?.Thursday || 0,
+    updatedDeepWorkHours?.Friday || 0,
+    updatedDeepWorkHours?.Saturday || 0,
+    updatedDeepWorkHours?.Sunday || 0
+  ]
+
+  // Send the chartData to the renderer process
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('deep-work-data-response', chartData)
+  }
+})
 export function handleUserLogout() {
   log.info('Handling user logout')
   store.delete('user')

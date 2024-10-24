@@ -19,11 +19,6 @@ const config: ForgeConfig = {
       type: 'distribution',
       provisioningProfile: '/Users/timeo/deepFocus/deepWork/distribution.provisionprofile',
     },
-    // osxNotarize: {
-    //   appleId: 'timwillie73@gmail.com',
-    //   appleIdPassword: 'mjaz-xgdj-wqgj-bqiy',
-    //   teamId: '3Y4F3KTSJA',
-    // },
     appBundleId: 'com.electron.deepfocus',
     extraResource: [
       'resources/.env',
