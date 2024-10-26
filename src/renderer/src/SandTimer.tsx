@@ -56,7 +56,7 @@ const SandTimer = () => {
             height: '100%',
             overflow: 'hidden' // Ensure particles don't overflow
           }}
-        ></div>
+        />
       </div>
 
       <style>{`

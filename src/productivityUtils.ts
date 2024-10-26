@@ -158,7 +158,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
     exec(script, (err, stdout, stderr) => {
       if (err) {
         console.error(`Error getting active application: ${stderr}`)
-        resolve('') 
+        resolve('')
       } else {
         let appName = stdout.trim()
 
@@ -168,11 +168,11 @@ export function getActiveWindowApp(): Promise<string | browser> {
           exec(checkVSCodeScript, (err, stdout, stderr) => {
             if (err) {
               console.error(`Error checking bundle identifier of App ${appName}: ${stderr}`)
-              resolve('') 
+              resolve('')
             } else {
               const bundleIdentifier = stdout.trim()
               if (bundleIdentifier === 'com.microsoft.VSCode') {
-                appName = 'Visual Studio Code' 
+                appName = 'Visual Studio Code'
               }
               resolve(appName)
             }

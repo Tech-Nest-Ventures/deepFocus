@@ -1,5 +1,5 @@
 import { createForm } from '@modular-forms/solid'
-import { createSignal } from 'solid-js'
+import { createSignal, For } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
 import { IconLoader, AiOutlineEye, AiOutlineEyeInvisible } from './components/ui/icons'
 import { Button } from './components/ui/button'
@@ -176,16 +176,16 @@ function Signup() {
                     <option value="" disabled>
                       Select Country
                     </option>
-                    {countryOptions.map((country) => (
-                      <option value={country.code}>{country.name}</option>
-                    ))}
+                    <For each={countryOptions}>
+                      {(country) => <option value={country.code}>{country.name}</option>}
+                    </For>
                   </select>
                   {selectedCountry() && (
                     <span
                       class={`fi fi-${selectedCountry()} ml-4`}
                       style={{ 'font-size': '24px' }}
                       aria-label={`Flag of ${selectedCountry()}`}
-                    ></span>
+                    />
                   )}
                 </div>
               </div>
@@ -204,9 +204,16 @@ function Signup() {
                   <option value="" disabled>
                     Select Language
                   </option>
-                  {countryOptions
-                    .find((country) => country.code === selectedCountry())
-                    ?.languages.map((language) => <option value={language}>{language}</option>)}
+                  {
+                    <For
+                      each={
+                        countryOptions.find((country) => country.code === selectedCountry())
+                          ?.languages
+                      }
+                    >
+                      {(language) => <option value={language}>{language}</option>}
+                    </For>
+                  }
                 </select>
               </div>
             )}

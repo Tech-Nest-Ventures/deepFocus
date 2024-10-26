@@ -26,7 +26,7 @@ import {
   isBrowser,
   isValidURL
 } from './productivityUtils'
-import { getInstalledApps } from './childProcess.js'
+import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
 
@@ -68,7 +68,9 @@ function setupEnvironment() {
     log.info('Setting up environment...')
 
     // Initialize resourcesPath within this function
-    const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(__dirname, 'resources');
+    const resourcesPath = app.isPackaged
+      ? path.join(process.resourcesPath)
+      : path.join(__dirname, 'resources')
     log.info('app.isPackaged:', app.isPackaged)
     log.info('resourcesPath:', resourcesPath)
 
@@ -169,7 +171,7 @@ export function loadUserData() {
 }
 
 async function storeData() {
-  const today = dayjs().format('dddd') as keyof typeof deepWorkHours;
+  const today = dayjs().format('dddd') as keyof typeof deepWorkHours
   log.info(
     'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
@@ -177,29 +179,29 @@ async function storeData() {
   store.set('deepWorkHours', deepWorkHours)
 
   currentDeepWork = deepWorkHours[today] || 0
-  deepWorkHours[today] = 0;
+  deepWorkHours[today] = 0
 }
 
 export async function resetCounters(type: 'daily' | 'weekly') {
-  const now = dayjs();
-  log.info('Invoked resetCounters');
+  const now = dayjs()
+  log.info('Invoked resetCounters')
 
-  stopActivityMonitoring();
+  stopActivityMonitoring()
 
   if (type === 'daily') {
     currentSiteTimeTrackers?.forEach((tracker) => {
-      tracker.timeSpent = 0;
-      tracker.lastActiveTimestamp = 0;
-    });
-    const lastResetDate = now.toISOString();
-    store?.set('lastResetDate', lastResetDate);
-    const today = now.format('dddd') as keyof typeof deepWorkHours;
-    deepWorkHours[today] = 0;
-    store.set('deepWorkHours', deepWorkHours);
-    store.set('siteTimeTrackers', currentSiteTimeTrackers);
-    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours);
+      tracker.timeSpent = 0
+      tracker.lastActiveTimestamp = 0
+    })
+    const lastResetDate = now.toISOString()
+    store?.set('lastResetDate', lastResetDate)
+    const today = now.format('dddd') as keyof typeof deepWorkHours
+    deepWorkHours[today] = 0
+    store.set('deepWorkHours', deepWorkHours)
+    store.set('siteTimeTrackers', currentSiteTimeTrackers)
+    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
   } else if (type === 'weekly') {
-    currentSiteTimeTrackers = [];
+    currentSiteTimeTrackers = []
     store.set('deepWorkHours', {
       Monday: 0,
       Tuesday: 0,
@@ -208,13 +210,15 @@ export async function resetCounters(type: 'daily' | 'weekly') {
       Friday: 0,
       Saturday: 0,
       Sunday: 0
-    });
-    store.set('siteTimeTrackers', []);
+    })
+    store.set('siteTimeTrackers', [])
   }
 
-  startActivityMonitoring();
+  startActivityMonitoring()
 
-  log.info(`${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`);
+  log.info(
+    `${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`
+  )
 }
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
@@ -315,7 +319,6 @@ async function createWindow(): Promise<BrowserWindow> {
   // log.info('Loading loader.html', path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`))
   //  mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`));
 
-
   mainWindow.on('ready-to-show', async () => {
     mainWindow?.show()
   })
@@ -339,9 +342,9 @@ async function createWindow(): Promise<BrowserWindow> {
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`))
   }
 
   mainWindow.on('closed', async () => {
@@ -564,7 +567,7 @@ function setupIPCListeners() {
 
   // Fetch the user's deep work target daily
   ipcMain.on('fetch-deep-work-target', (event) => {
-    let deepWorkTarget = store.get('deepWorkTarget', 8) as number
+    const deepWorkTarget = store.get('deepWorkTarget', 8) as number
     event.reply('deep-work-target-response', deepWorkTarget)
   })
   // Update the user's deep work target daily
@@ -600,7 +603,7 @@ function setupIPCListeners() {
     try {
       log.info('Received event for fetch-deep-work-data')
 
-      const apps = await getInstalledApps()
+      const apps = await getApplicationIcons()
       // console.log('Apps are ', apps)
       event.reply('app-icons-response', apps)
     } catch (error) {
@@ -634,4 +637,3 @@ export function handleDailyReset() {
     }
   }
 }
-

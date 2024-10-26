@@ -36,12 +36,12 @@ async function copyRequiredFiles() {
     packageJson.main = 'main/main.js' // Update this to point to the actual built main file
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 })
     console.log('Updated main entry point in package.json')
-    const nodeModulesPath = 'out/node_modules';
+    const nodeModulesPath = 'out/node_modules'
     if (!fs.existsSync(nodeModulesPath) || (await fs.readdir(nodeModulesPath)).length === 0) {
-      await fs.copy('node_modules', nodeModulesPath);
-      console.log('Copied node_modules to out/');
+      await fs.copy('node_modules', nodeModulesPath)
+      console.log('Copied node_modules to out/')
     } else {
-      console.log('node_modules already exists in out/ and is not empty.');
+      console.log('node_modules already exists in out/ and is not empty.')
     }
   } catch (err) {
     console.error('Error copying files:', err)
@@ -50,30 +50,29 @@ async function copyRequiredFiles() {
 }
 
 const signApp = async () => {
-const opts = {
-  app: 'dist/Deep Focus-darwin-arm64/Deep Focus.app',
-  platform: "darwin", // Use "darwin" for non-Mac App Store distribution
-  identity: "Developer ID Application: Timeo Williams (3Y4F3KTSJA)", 
-  hardenedRuntime: true,
-  entitlements: join(__dirname, '../out/build/entitlements.mac.plist'),
-  'entitlements-inherit': join(__dirname, '../out/build/entitlements.mac.plist'),
-  'gatekeeper-assess': true,
-  verbose: true
-};
-console.log('signing opts:', opts)
+  const opts = {
+    app: 'dist/Deep Focus-darwin-arm64/Deep Focus.app',
+    platform: 'darwin', // Use "darwin" for non-Mac App Store distribution
+    identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
+    hardenedRuntime: true,
+    entitlements: join(__dirname, '../out/build/entitlements.mac.plist'),
+    'entitlements-inherit': join(__dirname, '../out/build/entitlements.mac.plist'),
+    'gatekeeper-assess': true,
+    verbose: true
+  }
+  console.log('signing opts:', opts)
 
-await signAsync(opts)
-  .then(function () {
-    console.log('Application signed successfully');
-  })
-  .catch(function (err) {
-    console.error('Error signing application:', err);
-  });
-
+  await signAsync(opts)
+    .then(function () {
+      console.log('Application signed successfully')
+    })
+    .catch(function (err) {
+      console.error('Error signing application:', err)
+    })
 
   // Notarize the app
 
-  // try {     
+  // try {
   //   console.log('Notarizing the app...');
   //   await notarize({
   //     appBundleId: 'com.electron.deepfocus',
@@ -100,7 +99,7 @@ await signAsync(opts)
 const packageApp = async () => {
   // Copy required files before packaging
   await copyRequiredFiles()
-  console.log('Finished copying required files. Starting packaging...');
+  console.log('Finished copying required files. Starting packaging...')
 
   try {
     await packager({
@@ -147,7 +146,7 @@ const packageApp = async () => {
     console.error('Error during packaging:', err)
   }
 }
- (async() => {
-  await  packageApp()
+;(async () => {
+  await packageApp()
   await signApp()
 })()

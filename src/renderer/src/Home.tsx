@@ -1,10 +1,9 @@
 import { onMount, createSignal, createEffect, onCleanup } from 'solid-js'
 import { useAuth } from './lib/AuthContext'
-import User from './types'
+import User, { WindowInfo } from './types'
 import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
-import { WindowInfo } from './types'
 import { IpcRendererEvent } from 'electron'
 
 const Home = () => {
@@ -31,7 +30,10 @@ const Home = () => {
       // Clean up IPC listeners on unmount
       onCleanup(() => {
         window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDeepWorkData)
-        window?.electron.ipcRenderer.removeListener('deep-work-target-response', handleDeepWorkTarget)
+        window?.electron.ipcRenderer.removeListener(
+          'deep-work-target-response',
+          handleDeepWorkTarget
+        )
         window?.electron.ipcRenderer.removeListener('active-window-info', handleActiveWindowInfo)
       })
     } else {

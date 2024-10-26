@@ -33,7 +33,7 @@ function Login() {
   const handleSubmit: SubmitHandler<any> = async (values) => {
     try {
       console.log('Values are ', values)
-   
+
       console.log('Login values are ', values)
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',

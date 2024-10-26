@@ -16,18 +16,6 @@ module.exports = {
     '@electron-toolkit/eslint-config-ts/recommended',
     '@electron-toolkit/eslint-config-prettier'
   ],
-  rules: {
-    '@typescript-eslint/explicit-function-return-type': [
-      'error',
-      {
-        allowExpressions: true,
-        allowTypedFunctionExpressions: true,
-        allowMethods: true
-      }
-    ],
-    'no-unused-vars': ['warn', { varsIgnorePattern: '^_' }],
-    // Other general rules can be added here
-  },
   overrides: [
     {
       // For Solid.js-specific settings

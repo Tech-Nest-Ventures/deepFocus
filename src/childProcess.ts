@@ -1,94 +1,81 @@
-import appPath from 'app-path'
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 
-interface AppInfo {
-  name: string
-  path: string
-  icon: string
+// Interface to represent application icon information
+interface AppIcon {
+  appName: string
+  iconPath: string
 }
 
-// Helper function to find the .icns file within an app bundle
-function findIcnsFile(appFullPath: string): string | null {
-  const resourcesPath = path.join(appFullPath, 'Contents', 'Resources')
-  if (!fs.existsSync(resourcesPath)) return null
-
-  // Try to find a file that ends with .icns in the Resources directory
-  const files = fs.readdirSync(resourcesPath)
-  const icnsFile = files.find(file => file.endsWith('.icns'))
-  return icnsFile ? path.join(resourcesPath, icnsFile) : null
-}
-
-// Function to fetch the icon as a base64 string
-async function getAppIcon(appFullPath: string): Promise<string> {
-  const icnsFilePath = findIcnsFile(appFullPath)
-  if (!icnsFilePath) {
-    console.warn(`No .icns file found for app at ${appFullPath}`)
-    return getFallbackIconBase64()
-  }
-
-  try {
-    const iconBuffer = await fs.promises.readFile(icnsFilePath)
-    return 'data:image/icns;base64,' + iconBuffer.toString('base64')
-  } catch (error) {
-    console.warn(`Failed to read icon file at ${icnsFilePath}: ${error.message}`)
-    return getFallbackIconBase64()
-  }
-}
-
-// Function to return a base64-encoded fallback icon
-function getFallbackIconBase64(): string {
-  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABIVJREFUWIXNVztvJEUQ/qqnex67M2ffYowgJrqQE+h+AhIJKSHB/Y/7D0hkCIkACZDQkR0BOiEkogsvICFw5jut117Ps98EM9Me27uLMRioYNU7U931VdVX1TXAfyz0D+nsEv+XD1dKvR9F0WMi+oCI3gLwJoDoFsbX3vtXAF46577inP+wU/v58+fcWvu59975OxDn3NPj4+P51mhYaz+7C8NXQHw/jXxYNE3zKMuyX8dnylisqhpNpyC1gfceB3s5Ts7rrREkIiyKGZbrCkSEWESYJQmKNEGeJUHPGPOhEOLHKQAyxnwRRdGno/Gzurlhmm8mszgOIKy133DOPwHg+QV4ejQqr6oajAjLdRUOSGOBPEtgrIPUGtpYON8TnBFB8AiJEOARQ9VKdEqHqLxxb46ykwEAEb03OB8AMCJ6ZzRWdxJFlsJ5DyJCkaWIeV8Eq3JzCpSxaKXGwV6OWRKDRxHKtgMG'
-}
-
-// Main function to get installed apps with name, path, and icon
-export async function getInstalledApps(): Promise<AppInfo[]> {
-  const appsToFetch = [
-    'Safari',
-    'Visual Studio Code',
-    'Docker',
-    'Google Chrome',
-    'Firefox',
-    'Microsoft Word',
-    'Microsoft Excel',
-    'Microsoft PowerPoint',
-    'Spotify',
-    'Slack',
-    'Discord',
-    'Zoom.us',
-    'Mail',
-    'Messages',
-    'Calendar',
-    'Photos',
-    'Reminders',
-    'Notes',
-    'Preview',
-    'TextEdit',
-    'App Store',
-    'System Preferences',
-    'Terminal',
-    'Finder',
-    'Xcode'
+export function getApplicationIcons(): AppIcon[] {
+  const appFolders = [
+    path.join(os.homedir(), 'Applications'), // User-specific Applications
+    '/Applications' // System-wide Applications
   ]
 
-  const appPromises = appsToFetch.map(async (appName) => {
-    try {
-      console.log('appName', appName)
-      const appFullPath = await appPath(appName)
-      console.log('appFullPath', appFullPath)
-      const icon = await getAppIcon(appFullPath)
+  const appIcons: AppIcon[] = []
 
-      return {
-        name: appName,
-        path: appFullPath,
-        icon
+  appFolders.forEach((appsFolder) => {
+    if (!fs.existsSync(appsFolder)) return
+
+    const apps = fs.readdirSync(appsFolder)
+    console.log('Apps in', appsFolder, ':', apps)
+
+    apps.forEach((appName) => {
+      const appPath = path.join(appsFolder, appName)
+      const resourcesPath = path.join(appPath, 'Contents', 'Resources')
+
+      // Check if it's a valid .app bundle and if the Resources folder exists
+      if (appName.endsWith('.app') && fs.existsSync(resourcesPath)) {
+        // Get all files in the Resources folder
+        const resourceFiles = fs.readdirSync(resourcesPath)
+        // Find the .icns file
+        const icnsFile = resourceFiles.find((file) => file.endsWith('.icns'))
+
+        if (icnsFile) {
+          appIcons.push({
+            appName: appName.replace('.app', ''),
+            iconPath: path.join(resourcesPath, icnsFile)
+          })
+        }
+      } else if (fs.lstatSync(appPath).isDirectory()) {
+        // Search subfolders like Utilities
+        const subfolderIcons = getApplicationIconsInSubfolder(appPath)
+        appIcons.push(...subfolderIcons)
       }
-    } catch (error) {
-      console.warn(`Failed to fetch app info for ${appName}: ${error.message}`)
-      return null // Skip if app path or icon can't be retrieved
+    })
+  })
+
+  return appIcons
+}
+
+// Helper function to search for app icons in subfolders (like Utilities)
+function getApplicationIconsInSubfolder(folderPath: string): AppIcon[] {
+  const appIcons: AppIcon[] = []
+  const apps = fs.readdirSync(folderPath)
+
+  apps.forEach((appName) => {
+    const appPath = path.join(folderPath, appName)
+    const resourcesPath = path.join(appPath, 'Contents', 'Resources')
+
+    // Check if it's a valid .app bundle and if the Resources folder exists
+    if (appName.endsWith('.app') && fs.existsSync(resourcesPath)) {
+      const resourceFiles = fs.readdirSync(resourcesPath)
+      const icnsFile = resourceFiles.find((file) => file.endsWith('.icns'))
+
+      if (icnsFile) {
+        appIcons.push({
+          appName: appName.replace('.app', ''),
+          iconPath: path.join(resourcesPath, icnsFile)
+        })
+      }
     }
   })
 
-  const apps = await Promise.all(appPromises)
-  return apps.filter(Boolean) as AppInfo[]
+  return appIcons
 }
+
+// // Example usage
+const icons = getApplicationIcons()
+console.log('Application Icons:', icons)

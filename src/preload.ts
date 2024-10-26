@@ -3,7 +3,6 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-
 export interface ElectronAPI {
   ipcRenderer: {
     send: (channel: string, ...args: any[]) => void
