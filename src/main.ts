@@ -6,7 +6,8 @@ import {
   BrowserWindow,
   Notification,
   Menu,
-  MenuItemConstructorOptions
+  MenuItemConstructorOptions,
+  nativeImage
 } from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
@@ -15,7 +16,7 @@ import fs from 'fs'
 import schedule from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, AppIcon, TrackerType } from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -26,7 +27,7 @@ import {
   isBrowser,
   isValidURL
 } from './productivityUtils'
-import { getInstalledApps } from './childProcess.js'
+import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
 
@@ -68,7 +69,9 @@ function setupEnvironment() {
     log.info('Setting up environment...')
 
     // Initialize resourcesPath within this function
-    const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(__dirname, 'resources');
+    const resourcesPath = app.isPackaged
+      ? path.join(process.resourcesPath)
+      : path.join(__dirname, 'resources')
     log.info('app.isPackaged:', app.isPackaged)
     log.info('resourcesPath:', resourcesPath)
 
@@ -169,7 +172,7 @@ export function loadUserData() {
 }
 
 async function storeData() {
-  const today = dayjs().format('dddd') as keyof typeof deepWorkHours;
+  const today = dayjs().format('dddd') as keyof typeof deepWorkHours
   log.info(
     'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
@@ -177,29 +180,29 @@ async function storeData() {
   store.set('deepWorkHours', deepWorkHours)
 
   currentDeepWork = deepWorkHours[today] || 0
-  deepWorkHours[today] = 0;
+  deepWorkHours[today] = 0
 }
 
 export async function resetCounters(type: 'daily' | 'weekly') {
-  const now = dayjs();
-  log.info('Invoked resetCounters');
+  const now = dayjs()
+  log.info('Invoked resetCounters')
 
-  stopActivityMonitoring();
+  stopActivityMonitoring()
 
   if (type === 'daily') {
     currentSiteTimeTrackers?.forEach((tracker) => {
-      tracker.timeSpent = 0;
-      tracker.lastActiveTimestamp = 0;
-    });
-    const lastResetDate = now.toISOString();
-    store?.set('lastResetDate', lastResetDate);
-    const today = now.format('dddd') as keyof typeof deepWorkHours;
-    deepWorkHours[today] = 0;
-    store.set('deepWorkHours', deepWorkHours);
-    store.set('siteTimeTrackers', currentSiteTimeTrackers);
-    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours);
+      tracker.timeSpent = 0
+      tracker.lastActiveTimestamp = 0
+    })
+    const lastResetDate = now.toISOString()
+    store?.set('lastResetDate', lastResetDate)
+    const today = now.format('dddd') as keyof typeof deepWorkHours
+    deepWorkHours[today] = 0
+    store.set('deepWorkHours', deepWorkHours)
+    store.set('siteTimeTrackers', currentSiteTimeTrackers)
+    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
   } else if (type === 'weekly') {
-    currentSiteTimeTrackers = [];
+    currentSiteTimeTrackers = []
     store.set('deepWorkHours', {
       Monday: 0,
       Tuesday: 0,
@@ -208,13 +211,15 @@ export async function resetCounters(type: 'daily' | 'weekly') {
       Friday: 0,
       Saturday: 0,
       Sunday: 0
-    });
-    store.set('siteTimeTrackers', []);
+    })
+    store.set('siteTimeTrackers', [])
   }
 
-  startActivityMonitoring();
+  startActivityMonitoring()
 
-  log.info(`${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`);
+  log.info(
+    `${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`
+  )
 }
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
@@ -269,7 +274,6 @@ export function startActivityMonitoring() {
         }
 
         updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
-
         // Send the active window info and URL to the renderer process
         if (mainWindow) {
           const isProductive = URL.length
@@ -299,10 +303,9 @@ function stopActivityMonitoring() {
 
 async function createWindow(): Promise<BrowserWindow> {
   mainWindow = new BrowserWindow({
-    width: 600,
-    height: 670,
+    width: 400,
+    height: 700,
     show: false,
-    autoHideMenuBar: false,
     icon: join(resourcesPath, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -311,9 +314,6 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   })
   app.dock.setIcon(getIconPath('icon.png', resourcesPath))
-
-  // log.info('Loading loader.html', path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`))
-  //  mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`));
 
 
   mainWindow.on('ready-to-show', async () => {
@@ -325,23 +325,12 @@ async function createWindow(): Promise<BrowserWindow> {
     return { action: 'deny' }
   })
 
-  // setTimeout(() => {
-  //   if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
-  //     mainWindow?.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  //   } else {
-  //        mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-
-  //   }
-  //   mainWindow?.once('ready-to-show', () => {
-  //     mainWindow?.show()
-  //   })
-  // }, 5000)
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`))
   }
 
   mainWindow.on('closed', async () => {
@@ -394,11 +383,26 @@ app.on('ready', () => {
   checkForUpdates()
 })
 
-// Listen for focus events on the main window (when the user focuses the app's main window)
 app.on('browser-window-focus', () => {
   log.info('App window focused.')
-})
+  const updatedDeepWorkHours = getDeepWorkHours()
 
+  // Convert the object into an array format for the front-end chart
+  const chartData = [
+    updatedDeepWorkHours?.Monday || 0,
+    updatedDeepWorkHours?.Tuesday || 0,
+    updatedDeepWorkHours?.Wednesday || 0,
+    updatedDeepWorkHours?.Thursday || 0,
+    updatedDeepWorkHours?.Friday || 0,
+    updatedDeepWorkHours?.Saturday || 0,
+    updatedDeepWorkHours?.Sunday || 0
+  ]
+
+  // Send the chartData to the renderer process
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('deep-work-data-response', chartData)
+  }
+})
 export function handleUserLogout() {
   log.info('Handling user logout')
   store.delete('user')
@@ -513,12 +517,28 @@ function setupIPCListeners() {
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
 
+  ipcMain.handle('get-icon', async (_event, iconPath) => {
+    try {
+      const image = nativeImage.createFromPath(iconPath);
+  
+      if (image.isEmpty()) {
+        console.warn(`Icon at path "${iconPath}" could not be loaded.`);
+        return null; // Indicate that the icon could not be loaded
+      }
+  
+      return image.toDataURL();
+    } catch (error) {
+      console.error(`Failed to load icon from path "${iconPath}":`, error);
+      return null; // Handle error by returning a default fallback
+    }
+  });
+
   // Fetch the user's site time trackers
   ipcMain.on('fetch-site-trackers', async (event) => {
     log.info('Received event for fetch-site-trackers')
 
     const trackers = store.get('siteTimeTrackers', [])
-    const apps = [] // Fetch the list of installed apps with their icons
+    const apps: AppIcon[] = await getApplicationIcons()
 
     const formattedTrackers = trackers.map((tracker) => {
       let iconUrl = ''
@@ -529,8 +549,8 @@ function setupIPCListeners() {
         iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${tracker.url}`
       } else {
         // If it's not a valid URL (assume it's an app), find its icon from the list of installed apps
-        const matchingApp = apps.find((app) => app.name === tracker.title)
-        iconUrl = matchingApp ? matchingApp.icon : ''
+        const matchingApp = apps.find((app) => app.appName === tracker.title)
+        iconUrl = matchingApp ? matchingApp.iconPath : ''
       }
       return {
         ...tracker,
@@ -549,7 +569,7 @@ function setupIPCListeners() {
 
   // Fetch the user's deep work target daily
   ipcMain.on('fetch-deep-work-target', (event) => {
-    let deepWorkTarget = store.get('deepWorkTarget', 8) as number
+    const deepWorkTarget = store.get('deepWorkTarget', 8) as number
     event.reply('deep-work-target-response', deepWorkTarget)
   })
   // Update the user's deep work target daily
@@ -585,7 +605,7 @@ function setupIPCListeners() {
     try {
       log.info('Received event for fetch-deep-work-data')
 
-      const apps = await getInstalledApps()
+      const apps = await getApplicationIcons()
       // console.log('Apps are ', apps)
       event.reply('app-icons-response', apps)
     } catch (error) {
@@ -619,4 +639,3 @@ export function handleDailyReset() {
     }
   }
 }
-

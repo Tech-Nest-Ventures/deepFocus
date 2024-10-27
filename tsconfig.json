@@ -3,6 +3,8 @@
 //   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }]
 // }
 
+
+
 {
   "compilerOptions": {
     "target": "ESNext",
@@ -15,7 +17,10 @@
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "preserve", // Add this line to enable JSX support
+    "jsxImportSource": "solid-js" // Add this line to use Solid.js as the JSX handler
   }
 }
+
 

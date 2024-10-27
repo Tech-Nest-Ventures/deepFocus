@@ -3,10 +3,9 @@
   "include": [
     "src/renderer/src/env.d.ts",
     "src/renderer/src/**/*",
+    "src/renderer/src/**/*.ts",
     "src/renderer/src/**/*.tsx",
-    "src/preload/*.d.ts",
-    "src/renderer/src/**/*.ts",  
-    "src/renderer/src/**/*.tsx"  
+    "src/preload/*.d.ts"
   ],
   "compilerOptions": {
     "composite": true,
@@ -24,6 +23,8 @@
     "baseUrl": ".",
     "paths": {
       "@renderer/*": ["src/renderer/src/*"]
-    }
+    },
+    "skipLibCheck": true, // Skip type checking of all declaration files (optional, but can help avoid certain issues)
+    "resolveJsonModule": true // Allow importing JSON files (optional)
   }
 }

@@ -1,27 +1,45 @@
 import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { Button } from './components/ui/button'
 import { IoRemoveCircleOutline, VsAdd } from './components/ui/icons'
+import { AppIcon } from './types'
 
 const UnproductiveApps = () => {
-  const [apps, setApps] = createSignal<{ name: string; path: string; icon: string }[]>([])
-  const [unproductiveApps, setUnproductiveApps] = createSignal<
-    { name: string; path: string; icon: string }[]
-  >([]) // Typing unproductiveApps
-  const [currentPage, setCurrentPage] = createSignal(1) // Track the current page
-  const appsPerPage = 3 // Limit to 3 apps per page
+  const [apps, setApps] = createSignal<AppIcon[]>([])
+  const [unproductiveApps, setUnproductiveApps] = createSignal<AppIcon[]>([])
+  const [currentPage, setCurrentPage] = createSignal(1)
+  const appsPerPage = 5
 
-  // Fetch stored unproductive apps from Electron store on mount
+  // Function to fetch the icon data URL
+  const fetchAppIcon = async (iconPath: string) => {
+    try {
+      const iconDataUrl = await window.electron.ipcRenderer.invoke('get-icon', iconPath);
+      return iconDataUrl || 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'; // Provide a default icon if none is found
+    } catch (error) {
+      console.error('Error fetching app icon:', error);
+      return 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'; // Return default icon on error
+    }
+  };
+
   onMount(() => {
     window.electron.ipcRenderer.send('fetch-app-icons')
-    window.electron.ipcRenderer.on('app-icons-response', (_event, appData) => {
-      const sortedApps = appData.sort((a, b) => a.name.localeCompare(b.name))
-      setApps(sortedApps)
+    window.electron.ipcRenderer.on('app-icons-response', async (_event, appData: AppIcon[]) => {
+      const sortedApps = appData.sort((a, b) => a.appName.localeCompare(b.appName))
+
+      const appsWithIcons = await Promise.all(
+        sortedApps.map(async (app) => ({
+          ...app,
+          iconPath: await fetchAppIcon(app.iconPath) // Fetch icon and update iconPath with base64 data URL
+        }))
+      )
+
+      console.log('Apps with icons:', appsWithIcons)
+      setApps(appsWithIcons)
     })
 
     window.electron.ipcRenderer.send('fetch-unproductive-apps')
     window.electron.ipcRenderer.on(
       'unproductive-apps-response',
-      (_event, storedUnproductiveApps) => {
+      (_event, storedUnproductiveApps: AppIcon[]) => {
         setUnproductiveApps(storedUnproductiveApps || [])
       }
     )
@@ -32,16 +50,16 @@ const UnproductiveApps = () => {
     })
   })
 
-  const toggleUnproductive = (app) => {
-    const getUpdatedUnproductiveApps = (prevApps) => {
-      return prevApps.some((unproductiveApp) => unproductiveApp.name === app.name) // Compare by name or another unique property
-        ? prevApps.filter((unproductiveApp) => unproductiveApp.name !== app.name)
+  const toggleUnproductive = (app: AppIcon) => {
+    const getUpdatedUnproductiveApps = (prevApps: AppIcon[]): AppIcon[] => {
+      return prevApps.some((unproductiveApp) => unproductiveApp.appName === app.appName)
+        ? prevApps.filter((unproductiveApp) => unproductiveApp.appName !== app.appName)
         : [...prevApps, app]
     }
+
     const updatedUnproductiveApps = getUpdatedUnproductiveApps(unproductiveApps())
     setUnproductiveApps(updatedUnproductiveApps)
     window.electron.ipcRenderer.send('update-unproductive-apps', updatedUnproductiveApps)
-    return updatedUnproductiveApps
   }
 
   const fetchApps = () => {
@@ -51,7 +69,6 @@ const UnproductiveApps = () => {
   const paginatedApps = () => {
     const startIdx = (currentPage() - 1) * appsPerPage
     const endIdx = startIdx + appsPerPage
-    console.log('startIdx', startIdx, 'endIdx', endIdx)
     return apps().slice(startIdx, endIdx)
   }
 
@@ -78,18 +95,18 @@ const UnproductiveApps = () => {
           <For each={paginatedApps()}>
             {(app) => (
               <li class="flex items-center">
-                <img src={app?.icon} alt={`${app.name} icon`} class="w-4 h-4 mr-2" />
-                {app.name}
+                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-4 h-4 mr-2" />
+                {app.appName}
                 <Button
                   class={`ml-auto p-1 rounded ${
-                    unproductiveApps().some((unproductiveApp) => unproductiveApp.name === app.name)
+                    unproductiveApps().some((unproductiveApp) => unproductiveApp.appName === app.appName)
                       ? 'bg-red-500 text-white'
                       : 'bg-blue-500'
                   }`}
                   onClick={() => toggleUnproductive(app)}
                 >
                   {unproductiveApps().some(
-                    (unproductiveApp) => unproductiveApp.name === app.name
+                    (unproductiveApp) => unproductiveApp.appName === app.appName
                   ) ? (
                     <IoRemoveCircleOutline />
                   ) : (
@@ -117,8 +134,8 @@ const UnproductiveApps = () => {
           <For each={unproductiveApps()}>
             {(app) => (
               <li class="flex items-center">
-                <img src={app?.icon} alt={`${app.name} icon`} class="w-4 h-4 mr-2" />
-                {app?.name}
+                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-4 h-4 mr-2" />
+                {app.appName}
               </li>
             )}
           </For>

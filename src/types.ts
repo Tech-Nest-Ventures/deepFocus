@@ -40,6 +40,8 @@ export interface SiteTimeTracker {
   title: string
   timeSpent: number
   lastActiveTimestamp: number
+  iconUrl?: string
+  type: TrackerType 
 }
 
 export type DeepWorkHours = {
@@ -180,8 +182,15 @@ export interface WorkContext {
   value: string
 }
 
-export interface App {
-  name: string
-  path: string
-  icon: string
+
+
+export interface AppIcon {
+  appName: string
+  iconPath: string
+}
+
+
+export enum TrackerType {
+  Website = 'website',
+  App = 'app'
 }

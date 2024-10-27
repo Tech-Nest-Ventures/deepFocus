@@ -109,4 +109,4 @@ describe('Test Day Reset Logic with IPC', () => {
     // Verify that the frontend is notified via IPC
     expect(ipcMain.emit).toHaveBeenCalledWith('deep-work-reset')
   })
-})  
+})

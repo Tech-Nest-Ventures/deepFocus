@@ -10,6 +10,8 @@ import { IoSettingsSharp, SiSimpleanalytics, VsHome, IoLogOutOutline } from './c
 import { Button } from './components/ui/button'
 import Home from './Home'
 import Modal from './components/modal'
+import { Motion, Presence } from 'solid-motionone';
+
 
 // Lazy load the components
 const Login = lazy(() => import('./Login'))
@@ -149,11 +151,12 @@ const App = (props: ComponentProps<typeof Router>) => {
   }
 
   return (
+    
     <>
       <NavBar />
-      {props.children}
+          {props.children}
     </>
-  )
+  );
 }
 
 export default App
@@ -162,6 +165,7 @@ render(
   () => (
     <AuthProvider>
       <Router root={App}>
+
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />

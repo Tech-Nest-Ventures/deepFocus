@@ -1,10 +1,11 @@
 import { onMount, createSignal, createEffect, onCleanup } from 'solid-js'
 import { useAuth } from './lib/AuthContext'
-import User from './types'
+import User, { WindowInfo } from './types'
 import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
-import { WindowInfo } from './types'
+import { IpcRendererEvent } from 'electron'
+import {Motion} from 'solid-motionone';
 
 const Home = () => {
   const [loggedIn] = useAuth()
@@ -16,6 +17,8 @@ const Home = () => {
   const [deepWorkDone, setDeepWorkDone] = createSignal(0)
   const [deepWorkTarget, setDeepWorkTarget] = createSignal(8) // Default to 8 hours
   const [activeWindowInfo, setActiveWindowInfo] = createSignal<null | WindowInfo>(null)
+
+
 
   // Fetch initial data and set up IPC listeners on mount
   onMount(() => {
@@ -30,7 +33,10 @@ const Home = () => {
       // Clean up IPC listeners on unmount
       onCleanup(() => {
         window?.electron.ipcRenderer.removeListener('deep-work-data-response', handleDeepWorkData)
-        window?.electron.ipcRenderer.removeListener('deep-work-target-response', handleDeepWorkTarget)
+        window?.electron.ipcRenderer.removeListener(
+          'deep-work-target-response',
+          handleDeepWorkTarget
+        )
         window?.electron.ipcRenderer.removeListener('active-window-info', handleActiveWindowInfo)
       })
     } else {
@@ -44,7 +50,7 @@ const Home = () => {
   })
 
   // Handle deep work data response from IPC
-  const handleDeepWorkData = (_event, data) => {
+  const handleDeepWorkData = (_event: IpcRendererEvent, data: number[]) => {
     const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
     const dataIndex = todayIndex - 1
     if (data && data.length > dataIndex) {
@@ -57,13 +63,13 @@ const Home = () => {
   }
 
   // Handle deep work target response from IPC
-  const handleDeepWorkTarget = (_event, target) => {
+  const handleDeepWorkTarget = (_event: IpcRendererEvent, target: number) => {
     setDeepWorkTarget(target)
     console.log('Deep work target updated:', target)
   }
 
   // Handle active window information response from IPC
-  const handleActiveWindowInfo = (_event, windowInfo: WindowInfo) => {
+  const handleActiveWindowInfo = (_event: IpcRendererEvent, windowInfo: WindowInfo) => {
     setActiveWindowInfo({
       appName: windowInfo.appName || 'Unknown App',
       URL: windowInfo.URL || 'Unknown URL',
@@ -82,6 +88,12 @@ const Home = () => {
   }
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div class="flex justify-center items-center h-screen flex-col space-y-8">
       {!loggedIn() || !user ? (
         <div>
@@ -121,6 +133,7 @@ const Home = () => {
         </div>
       )}
     </div>
+    </Motion.div>
   )
 }
 

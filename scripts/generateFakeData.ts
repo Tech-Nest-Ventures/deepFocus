@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 
 export function generateLargeFakeData(
   day: string,
-  hoursActive: number = 8
+  hoursActive = 8
 ): { trackers: SiteTimeTracker[]; deepWork: DeepWorkHours } {
   const now = dayjs(day).unix() // Convert day to a timestamp
   const trackers: SiteTimeTracker[] = []

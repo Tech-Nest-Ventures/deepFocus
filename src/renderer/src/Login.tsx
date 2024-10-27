@@ -2,6 +2,7 @@ import type { SubmitHandler } from '@modular-forms/solid'
 import { createSignal } from 'solid-js'
 import { createForm } from '@modular-forms/solid'
 import { useNavigate } from '@solidjs/router'
+import { Motion } from 'solid-motionone'
 // import { email, object, string, pipe, minLength, safeParse } from 'valibot'
 
 import { sendUserToBackend } from './lib/utils'
@@ -33,7 +34,7 @@ function Login() {
   const handleSubmit: SubmitHandler<any> = async (values) => {
     try {
       console.log('Values are ', values)
-   
+
       console.log('Login values are ', values)
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
@@ -66,6 +67,12 @@ function Login() {
   }
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div class="grid gap-6 mt-20">
       <h2 class="text-2xl font-light">Login</h2>
       <Form onSubmit={handleSubmit}>
@@ -99,6 +106,7 @@ function Login() {
         </a>
       </p>
     </div>
+    </Motion.div>
   )
 }
 

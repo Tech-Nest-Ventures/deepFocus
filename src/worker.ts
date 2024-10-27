@@ -6,7 +6,7 @@ import weekday from 'dayjs/plugin/weekday.js'
 import log from 'electron-log/node.js'
 import schedule from 'node-schedule'
 
-let currentUsername= ''
+let currentUsername = ''
 
 dayjs.extend(isoWeek)
 dayjs.extend(weekday)
@@ -36,7 +36,6 @@ parentPort?.on('message', (message) => {
 function requestData() {
   parentPort?.postMessage({ type: MessageType.GET_DATA })
 }
-
 
 // Schedule weekly aggregation at the end of Sunday (midnight)
 schedule.scheduleJob('0 19 * * 0', () => {
