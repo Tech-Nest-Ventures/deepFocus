@@ -17,6 +17,8 @@ const Home = () => {
   const [deepWorkTarget, setDeepWorkTarget] = createSignal(8) // Default to 8 hours
   const [activeWindowInfo, setActiveWindowInfo] = createSignal<null | WindowInfo>(null)
 
+
+
   // Fetch initial data and set up IPC listeners on mount
   onMount(() => {
     if (user && loggedIn()) {

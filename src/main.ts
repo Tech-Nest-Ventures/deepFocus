@@ -6,7 +6,8 @@ import {
   BrowserWindow,
   Notification,
   Menu,
-  MenuItemConstructorOptions
+  MenuItemConstructorOptions,
+  nativeImage
 } from 'electron'
 import { Worker } from 'worker_threads'
 import path, { join } from 'path'
@@ -15,7 +16,7 @@ import fs from 'fs'
 import schedule from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User } from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, AppIcon, TrackerType } from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -273,7 +274,6 @@ export function startActivityMonitoring() {
         }
 
         updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
-
         // Send the active window info and URL to the renderer process
         if (mainWindow) {
           const isProductive = URL.length
@@ -531,12 +531,28 @@ function setupIPCListeners() {
     event.reply('unproductive-urls-response', urls) // Send updated URLs back
   })
 
+  ipcMain.handle('get-icon', async (_event, iconPath) => {
+    try {
+      const image = nativeImage.createFromPath(iconPath);
+  
+      if (image.isEmpty()) {
+        console.warn(`Icon at path "${iconPath}" could not be loaded.`);
+        return null; // Indicate that the icon could not be loaded
+      }
+  
+      return image.toDataURL();
+    } catch (error) {
+      console.error(`Failed to load icon from path "${iconPath}":`, error);
+      return null; // Handle error by returning a default fallback
+    }
+  });
+
   // Fetch the user's site time trackers
   ipcMain.on('fetch-site-trackers', async (event) => {
     log.info('Received event for fetch-site-trackers')
 
     const trackers = store.get('siteTimeTrackers', [])
-    const apps = [] // Fetch the list of installed apps with their icons
+    const apps: AppIcon[] = await getApplicationIcons()
 
     const formattedTrackers = trackers.map((tracker) => {
       let iconUrl = ''
@@ -547,8 +563,8 @@ function setupIPCListeners() {
         iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${tracker.url}`
       } else {
         // If it's not a valid URL (assume it's an app), find its icon from the list of installed apps
-        const matchingApp = apps.find((app) => app.name === tracker.title)
-        iconUrl = matchingApp ? matchingApp.icon : ''
+        const matchingApp = apps.find((app) => app.appName === tracker.title)
+        iconUrl = matchingApp ? matchingApp.iconPath : ''
       }
       return {
         ...tracker,

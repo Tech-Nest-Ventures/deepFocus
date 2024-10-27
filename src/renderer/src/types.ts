@@ -18,4 +18,15 @@ export interface SiteTimeTracker {
   timeSpent: number
   lastActiveTimestamp: number
   iconUrl?: string
+  type: TrackerType
+}
+
+export interface AppIcon {
+  appName: string
+  iconPath: string
+}
+
+export enum TrackerType {
+  Website = 'website',
+  App = 'app'
 }

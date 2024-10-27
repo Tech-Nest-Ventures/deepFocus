@@ -1,3 +1,4 @@
+import { IpcRendererEvent } from 'electron'
 import { createSignal, onMount, onCleanup } from 'solid-js'
 
 const DeepWorkSlider = () => {
@@ -7,7 +8,7 @@ const DeepWorkSlider = () => {
   onMount(() => {
     window.electron.ipcRenderer.send('fetch-deep-work-target')
 
-    const handleDeepWorkTargetResponse = (_event, target) => {
+    const handleDeepWorkTargetResponse = (_event: IpcRendererEvent, target: number) => {
       setDeepWorkTarget(target) // Set the fetched target value
     }
 
@@ -19,11 +20,13 @@ const DeepWorkSlider = () => {
     })
   })
 
-  const handleSliderChange = (e) => {
-    const value = parseInt(e.target.value, 10)
+  const handleSliderChange = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const value = parseInt(target.value, 10)
     setDeepWorkTarget(value)
     window.electron.ipcRenderer.send('update-deep-work-target', value)
   }
+  
 
   return (
     <div class="my-6">

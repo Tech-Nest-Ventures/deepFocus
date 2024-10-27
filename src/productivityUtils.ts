@@ -4,8 +4,9 @@ import {
   Result,
   SiteTimeTracker,
   WorkContext,
-  App,
-  DeepWorkHours
+  AppIcon,
+  DeepWorkHours,
+  TrackerType
 } from './types'
 import { TypedStore } from './main'
 import { exec } from 'child_process'
@@ -94,15 +95,18 @@ export function updateSiteTimeTracker(
 
   let trackerKey = ''
   let trackerTitle = ''
+  let trackerType: TrackerType
 
   if (url && isValidURL(url)) {
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = url
     trackerTitle = url
+    trackerType = TrackerType.Website
   } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
     trackerKey = appName || 'Unknown App'
     trackerTitle = appName || 'Unknown App'
+    trackerType = TrackerType.App
   }
 
   // Find an existing tracker or create a new one
@@ -116,7 +120,8 @@ export function updateSiteTimeTracker(
       url: trackerKey,
       title: trackerTitle,
       timeSpent: 0,
-      lastActiveTimestamp: currentTime
+      lastActiveTimestamp: currentTime,
+      type: trackerType
     }
     timeTrackers.push(tracker)
   }
@@ -138,13 +143,13 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
   } else if (context.type === 'appName') {
     const unproductiveApps: unknown = store.get('unproductiveApps', [])
 
-    const validUnproductiveApps: App[] =
+    const validUnproductiveApps: AppIcon[] =
       Array.isArray(unproductiveApps) &&
       unproductiveApps.every((item) => typeof item === 'object' && 'name' in item)
-        ? (unproductiveApps as App[])
+        ? (unproductiveApps as AppIcon[])
         : []
 
-    if (validUnproductiveApps.some((app) => formattedItem.includes(app.name.toLowerCase()))) {
+    if (validUnproductiveApps.some((app) => formattedItem.includes(app.appName.toLowerCase()))) {
       console.log('Unproductive app detected:', formattedItem)
       return false
     }
