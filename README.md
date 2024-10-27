@@ -40,24 +40,16 @@ Primarily for macOS. Coming to Windows & Linux shortly.
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js LTS >=v20.12.2
-- npm v10.5.0
 
 ### Installation
 
-```bash
-npm install
-```
+1. In the Releases section, click on the [latest release] (https://github.com/Tech-Nest-Ventures/deepFocus/releases/latest) and download the Deep Focus.dmg file.
 
-```bash
-npm run dev
-```
+Open the .dmg file and drag the Deep Focus app to your Applications folder.
 
-## Usage
+2. Add the Deep Focus app to your Dock.
 
-Note, for running this app locally, you may run into issues with active-window. Try running `npm install --ignore-scripts` to fix this. More info [here](https://github.com/sindresorhus/active-window/issues/10).
+3. Sign up for an account or log in to your existing account.
 
 ## Goals
 
@@ -72,15 +64,15 @@ Note, for running this app locally, you may run into issues with active-window. 
 - [x] Use inspiration from debugtron to render the electron apps most commonly used. Use another API service to get the favicons of the top websites and include this in email and in the desktop app.
 - [x] Implement a basic email notification system
 - [x] Sign & Notarize the app for macOS
+- [x] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
+- [ ] Fix Auto update logic so users don't have to manually update.
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
 - [ ] Migrate from electron-storage to SQLite for improved data handling
 - [ ] Enhance data analysis and insights
 - [ ] Develop comprehensive test suite for main and renderer processes
 - [ ] Create cloud synchronization for user data and preferences
 - [ ] Implement secure user authentication system
-- [ ] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 - [ ] To do list like functionality? Have people add tasks to their list and mark as productive or not productive. Then, at the end of the day, they can see a list of tasks and see how productive they were.
-- [] Add toast components.
 
 ## Philosophy
 
