@@ -24,11 +24,8 @@ export default defineConfig({
       plugins: [
         commonjs({
           dynamicRequireTargets: [
-            'node_modules/bplist-creator/**',
-            'node_modules/bplist-parser/**'
-            // Add other dependencies if necessary
           ],
-          ignoreDynamicRequires: false // Ensure dynamic requires are not ignored
+          ignoreDynamicRequires: false 
         }),
         nodeResolve() // Enables resolving modules from node_modules
       ]

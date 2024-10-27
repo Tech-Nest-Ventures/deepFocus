@@ -303,10 +303,9 @@ function stopActivityMonitoring() {
 
 async function createWindow(): Promise<BrowserWindow> {
   mainWindow = new BrowserWindow({
-    width: 600,
-    height: 670,
+    width: 400,
+    height: 700,
     show: false,
-    autoHideMenuBar: false,
     icon: join(resourcesPath, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -316,8 +315,6 @@ async function createWindow(): Promise<BrowserWindow> {
   })
   app.dock.setIcon(getIconPath('icon.png', resourcesPath))
 
-  // log.info('Loading loader.html', path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`))
-  //  mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/loader.html`));
 
   mainWindow.on('ready-to-show', async () => {
     mainWindow?.show()
@@ -328,17 +325,6 @@ async function createWindow(): Promise<BrowserWindow> {
     return { action: 'deny' }
   })
 
-  // setTimeout(() => {
-  //   if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
-  //     mainWindow?.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  //   } else {
-  //        mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-
-  //   }
-  //   mainWindow?.once('ready-to-show', () => {
-  //     mainWindow?.show()
-  //   })
-  // }, 5000)
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

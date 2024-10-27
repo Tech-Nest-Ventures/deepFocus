@@ -5,6 +5,7 @@ import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
 import { IpcRendererEvent } from 'electron'
+import {Motion} from 'solid-motionone';
 
 const Home = () => {
   const [loggedIn] = useAuth()
@@ -87,6 +88,12 @@ const Home = () => {
   }
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div class="flex justify-center items-center h-screen flex-col space-y-8">
       {!loggedIn() || !user ? (
         <div>
@@ -126,6 +133,7 @@ const Home = () => {
         </div>
       )}
     </div>
+    </Motion.div>
   )
 }
 

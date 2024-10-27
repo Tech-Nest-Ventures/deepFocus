@@ -7,7 +7,7 @@ const UnproductiveApps = () => {
   const [apps, setApps] = createSignal<AppIcon[]>([])
   const [unproductiveApps, setUnproductiveApps] = createSignal<AppIcon[]>([])
   const [currentPage, setCurrentPage] = createSignal(1)
-  const appsPerPage = 3
+  const appsPerPage = 5
 
   // Function to fetch the icon data URL
   const fetchAppIcon = async (iconPath: string) => {

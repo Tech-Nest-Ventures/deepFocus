@@ -11,6 +11,7 @@ import { API_BASE_URL } from './config'
 import { useAuth } from './lib/AuthContext'
 import countries from 'world-countries'
 import 'flag-icons/css/flag-icons.min.css'
+import { Motion } from 'solid-motionone'
 
 import type { SubmitHandler } from '@modular-forms/solid'
 // import type { InferInput } from 'valibot'
@@ -88,6 +89,12 @@ function Signup() {
   }
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div class="flex justify-center items-center h-screen flex-col space-y-4">
       <h2 class="text-2xl font-light">Create an account</h2>
       <p class="text-gray-500 text-sm w-[60%]">
@@ -232,6 +239,7 @@ function Signup() {
         </a>
       </p>
     </div>
+    </Motion.div>
   )
 }
 

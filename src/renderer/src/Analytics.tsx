@@ -3,6 +3,7 @@ import { Button } from './components/ui/button'
 import { SiteTimeTracker, TrackerType, AppIcon } from './types'
 const BarChart = lazy(() => import('./BarChart'))
 import { IpcRendererEvent } from 'electron'
+import {Motion} from 'solid-motionone';
 
 const Analytics = () => {
   const [showDeepWork, setShowDeepWork] = createSignal(true) // State for toggle
@@ -101,6 +102,12 @@ const Analytics = () => {
   })
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div>
       <div class="flex justify-between items-center p-4">
         <Button onClick={() => setShowDeepWork(!showDeepWork())}>
@@ -128,6 +135,7 @@ const Analytics = () => {
         </div>
       )}
     </div>
+    </Motion.div>
   )
 }
 

@@ -4,12 +4,19 @@ import DeepWorkSlider from './DeepWorkSlider'
 import UnproductiveWebsites from './UnproductiveWebsites'
 import UnproductiveApps from './UnproductiveApps'
 import Modal from './components/modal'
+import { Motion } from 'solid-motionone'
 
 const Settings = () => {
   const [showEditWebsites, setShowEditWebsites] = createSignal(false)
   const [showEditApps, setShowEditApps] = createSignal(false)
 
   return (
+    <Motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, easing: "ease-in-out" }}
+  >
     <div class="flex justify-center items-center h-screen flex-col space-y-8">
       <div class="space-y-8">
         <h2 class="mb-10 text-2xl font-light">Settings</h2>
@@ -43,6 +50,7 @@ const Settings = () => {
         </div>
       </div>
     </div>
+    </Motion.div>
   )
 }
 
