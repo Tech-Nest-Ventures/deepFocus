@@ -27,7 +27,8 @@ const config: ForgeConfig = {
       'resources/icon_green.png',
       'resources/icon_red.png',
       'resources/icon_yellow.png',
-      'resources/icon_blue.png'
+      'resources/icon_blue.png',
+      'resources/DOG_MEME.avif'
     ]
   },
   rebuildConfig: {},

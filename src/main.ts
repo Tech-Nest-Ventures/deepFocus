@@ -306,7 +306,6 @@ async function createWindow(): Promise<BrowserWindow> {
     width: 400,
     height: 700,
     show: false,
-    icon: join(resourcesPath, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegrationInWorker: true,
@@ -314,7 +313,6 @@ async function createWindow(): Promise<BrowserWindow> {
     }
   })
   app.dock.setIcon(getIconPath('icon.png', resourcesPath))
-
 
   mainWindow.on('ready-to-show', async () => {
     mainWindow?.show()

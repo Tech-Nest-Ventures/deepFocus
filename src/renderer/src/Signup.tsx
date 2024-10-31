@@ -78,6 +78,7 @@ function Signup() {
       // Store token and user info in localStorage
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem('onboarded', 'false')
       sendUserToBackend(user)
       setIsLoggedIn(true)
       navigate('/onboarding')
@@ -99,8 +100,7 @@ function Signup() {
       <h2 class="text-2xl font-light">Create an account</h2>
       <p class="text-gray-500 text-sm w-[60%]">
         {' '}
-        We store all your data locally on your computer with the exception of login credentials
-        (encrypted).
+        Gain insights into how you spend your time today.
       </p>
       {signUpError && <p class="text-red-500">{signUpError()}</p>}
       <Form onSubmit={handleSubmit}>

@@ -46,6 +46,7 @@ const Settings = () => {
         </div>
 
         <div>
+        <h3 class="text-base font-normal mb-2">Daily Deep Work Target</h3>
           <DeepWorkSlider />
         </div>
       </div>

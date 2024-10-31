@@ -66,7 +66,10 @@ Open the .dmg file and drag the Deep Focus app to your Applications folder.
 - [x] Sign & Notarize the app for macOS
 - [x] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
 - [ ] Fix Auto update logic so users don't have to manually update.
+- [ ] Fix Emails not sending on schedule. 
+- [ ] Add Frigade onboarding flow to improve user comprehension
 - [ ] Allow users to enter session goals and customize productive/unproductive sites
+- [ ] Add tests to ensure emails are being deleted
 - [ ] Migrate from electron-storage to SQLite for improved data handling
 - [ ] Enhance data analysis and insights
 - [ ] Develop comprehensive test suite for main and renderer processes

@@ -63,13 +63,14 @@ export function checkForUpdates() {
     isCheckingForUpdates = false
   })
 }
-export function getIconPath(iconName: string, resourcesPath: string) {
+export function getIconPath(iconName: string, resourcesPath: string): string {
   if (app.isPackaged) {
     // In production, resolve the path from the asar-unpacked resources
     return path.join(resourcesPath, iconName)
   } else {
     // In development mode, resolve the path from your local development folder
     return path.join(__dirname, '../../resources', iconName)
+    //return path.join(__dirname, 'resources', iconName);
   }
 }
 
