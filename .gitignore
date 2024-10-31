@@ -10,10 +10,10 @@ playwright-report
 .vite/*
 .vite/build
 out
-resources
 forge.config.ts 
 Deep Focus.itmsp/
 notarization_log.txt
 3rdPartyMacDeveloperInstaller.p12
 distribution.provisionprofile
 development.provisionprofile
+resources/.env
