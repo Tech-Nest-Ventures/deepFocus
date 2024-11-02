@@ -7,6 +7,7 @@ import {
   Notification,
   Menu,
   MenuItemConstructorOptions,
+  Tray,
   nativeImage
 } from 'electron'
 import { Worker } from 'worker_threads'
@@ -16,7 +17,15 @@ import fs from 'fs'
 import schedule from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, AppIcon, TrackerType } from './types'
+import {
+  StoreSchema,
+  SiteTimeTracker,
+  DeepWorkHours,
+  MessageType,
+  User,
+  AppIcon,
+  TrackerType
+} from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -56,6 +65,7 @@ let currentDeepWork = 0
 let user: User | null = null
 let iconPath = ''
 let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 
@@ -93,52 +103,6 @@ function setupEnvironment() {
   }
 }
 
-export function updateAppMenu() {
-  createAppMenu()
-}
-
-function createAppMenu() {
-  const totalDeepWorkHours = getDeepWorkHours()
-
-  const menuTemplate: MenuItemConstructorOptions[] = [
-    {
-      label: 'DeepFocus',
-      submenu: [
-        {
-          label: `Total Deep Work: ${totalDeepWorkHours} hours`,
-          enabled: false
-        },
-        { type: 'separator' },
-        {
-          label: 'Reset Data',
-          click: () => {
-            handleDailyReset()
-            new Notification({
-              title: 'DeepFocus',
-              body: 'Daily data has been reset.',
-              icon: join(resourcesPath, 'icon.png')
-            }).show()
-            updateAppMenu()
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'Quit',
-          click: () => {
-            app.quit()
-          }
-        }
-      ]
-    }
-  ]
-
-  // Create the menu from the template
-  const menu = Menu.buildFromTemplate(menuTemplate)
-
-  // Set the application menu
-  Menu.setApplicationMenu(menu)
-}
-
 // Store user data in the electron-store and send to worker
 export function handleUserData(user: User, store: TypedStore): User {
   store.set('user', {
@@ -161,11 +125,14 @@ export function loadUserData() {
   const savedUser: User | null = store.get('user') || null
   if (savedUser) {
     schedulerWorker.postMessage({ type: MessageType.SET_USER_INFO, user: savedUser })
+    const iconPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'icon.png')
+      : path.join(__dirname, '../../resources/icon.png')
 
     new Notification({
       title: 'DeepFocus',
       body: 'Welcome back, ' + savedUser.firstName,
-      icon: join(resourcesPath, 'icon.png')
+      icon: iconPath
     }).show()
   }
   return savedUser
@@ -269,7 +236,6 @@ export function startActivityMonitoring() {
         let URL = ''
 
         if (isBrowser(appName)) {
-
           URL = getBaseURL(await getBrowserURL(appName))
         }
 
@@ -310,7 +276,8 @@ async function createWindow(): Promise<BrowserWindow> {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegrationInWorker: true,
       sandbox: false
-    }
+    },
+    icon: iconPath
   })
   app.dock.setIcon(getIconPath('icon.png', resourcesPath))
 
@@ -322,7 +289,6 @@ async function createWindow(): Promise<BrowserWindow> {
     shell.openExternal(url)
     return { action: 'deny' }
   })
-
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -346,6 +312,9 @@ async function createWindow(): Promise<BrowserWindow> {
 }
 
 app.whenReady().then(async () => {
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'trayIcon.png')
+    : path.join(__dirname, '../../resources/trayIcon.png')
   log.info('app is ready. Retrieving currentSiteTimeTrackers and deepWorkHours from store')
   currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
   deepWorkHours = store.get('deepWorkHours', {
@@ -364,14 +333,59 @@ app.whenReady().then(async () => {
       setupIPCListeners()
       user = loadUserData()
       setupPeriodicSave()
+      console.log('updating app menu')
     } catch (error) {
       console.error('Error during permission check or timeout:', error)
 
       new Notification({
         title: 'DeepFocus',
         body: `Deep Focus can't function properly without permissions.`,
-        icon: join(__dirname, 'resources/icon.png')
+        icon: iconPath
       })
+    }
+  })
+  const image = nativeImage.createFromPath(iconPath)
+  tray = new Tray(image)
+  tray.setToolTip('Deep Focus. Get more done.')
+
+  const trayMenu = Menu.buildFromTemplate([
+    {
+      label: 'Total Deep Work',
+      click: () => {
+        const today = dayjs().format('dddd') as keyof typeof deepWorkHours
+        const totalDeepWorkHours = getDeepWorkHours()[today]
+        new Notification({
+          title: 'DeepFocus',
+          body: `Total Deep Work: ${totalDeepWorkHours} hours`,
+          icon: iconPath
+        }).show()
+      }
+    },
+    {
+      label: 'Reset Data',
+      click: () => {
+        handleDailyReset() // Replace with your function to reset data
+        new Notification({
+          title: 'DeepFocus',
+          body: 'Daily data has been reset.',
+          icon: iconPath
+        }).show()
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit',
+      click: () => {
+        app.quit()
+      }
+    }
+  ])
+
+  tray.setContextMenu(trayMenu)
+
+  tray.on('click', () => {
+    if (mainWindow) {
+      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
     }
   })
 })
@@ -407,10 +421,13 @@ export function handleUserLogout(): void {
   store.set('lastResetDate', dayjs().toISOString())
   user = null
   stopActivityMonitoring()
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(__dirname, '../../resources/icon.png')
   new Notification({
     title: 'DeepFocus',
     body: 'You have been logged out',
-    icon: join(__dirname, 'resources/icon.png')
+    icon: iconPath
   }).show()
 }
 
@@ -517,19 +534,19 @@ function setupIPCListeners() {
 
   ipcMain.handle('get-icon', async (_event, iconPath) => {
     try {
-      const image = nativeImage.createFromPath(iconPath);
-  
+      const image = nativeImage.createFromPath(iconPath)
+
       if (image.isEmpty()) {
-        console.warn(`Icon at path "${iconPath}" could not be loaded.`);
-        return null; // Indicate that the icon could not be loaded
+        console.warn(`Icon at path "${iconPath}" could not be loaded.`)
+        return null // Indicate that the icon could not be loaded
       }
-  
-      return image.toDataURL();
+
+      return image.toDataURL()
     } catch (error) {
-      console.error(`Failed to load icon from path "${iconPath}":`, error);
-      return null; // Handle error by returning a default fallback
+      console.error(`Failed to load icon from path "${iconPath}":`, error)
+      return null // Handle error by returning a default fallback
     }
-  });
+  })
 
   // Fetch the user's site time trackers
   ipcMain.on('fetch-site-trackers', async (event) => {
@@ -573,7 +590,7 @@ function setupIPCListeners() {
   // Update the user's deep work target daily
   ipcMain.on('update-deep-work-target', (_event, newTarget: number) => {
     store.set('deepWorkTarget', newTarget)
-    updateAppMenu()
+    // updateAppMenu()
     console.log(`Updated Deep Work Target: ${newTarget}`)
   })
   // Fetch the user's current deep work hours daily

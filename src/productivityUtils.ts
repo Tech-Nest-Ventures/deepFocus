@@ -195,11 +195,7 @@ export function getBrowserURL(browser: string): Promise<string> {
     let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
     if (browser === 'Safari') {
       script = `osascript -e 'tell application "${browser}" to get URL of front document'`
-<<<<<<< HEAD
-    } else if (browser === 'Firefox' || browser === 'firefox') {
-=======
     } else if (browser.toLowerCase() === 'firefox') {
->>>>>>> 788e2091b5282f0f9c9fac1d59269704222ef7f8
       script = `
       osascript -e 'tell application "System Events" to get value of UI element 1 of combo box 1 of toolbar "Navigation" of first group of front window of application process "Firefox"'
     `

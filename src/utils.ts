@@ -100,7 +100,7 @@ export function updateIconBasedOnProgress(
   const isIconPathChanged = iconPath !== newIconPath
   if (isIconPathChanged) {
     log.info('Comparison of icon paths is ', iconPath, newIconPath)
-    app.dock.setIcon(iconPath)
+    // app.dock.setIcon(iconPath)
     new Notification({
       title: 'DeepFocus',
       body: message,
