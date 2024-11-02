@@ -6,7 +6,6 @@ import {
   BrowserWindow,
   Notification,
   Menu,
-  MenuItemConstructorOptions,
   Tray,
   nativeImage
 } from 'electron'
@@ -24,7 +23,6 @@ import {
   MessageType,
   User,
   AppIcon,
-  TrackerType
 } from './types'
 import {
   updateSiteTimeTracker,
@@ -391,7 +389,7 @@ app.whenReady().then(async () => {
 })
 
 app.on('ready', () => {
-  log.info('Checking for updates in app software')
+
   checkForUpdates()
 })
 

@@ -1,18 +1,18 @@
-import { autoUpdater, dialog, app, Notification } from 'electron'
+import { dialog, app, Notification, autoUpdater } from 'electron'
 import log from 'electron-log/node.js'
 import path from 'path'
 // import FormData from 'form-data'
 // import fs from 'fs'
 // import fetch from 'node-fetch'
 
-export function checkForUpdates() {
-  let isCheckingForUpdates = false
-  if (isCheckingForUpdates) {
-    log.info('Update check already in progress')
-    return
-  }
-
+export function checkForUpdates(): void {
+  const server = 'https://github.com/Tech-Nest-Ventures/deepFocus'
+  const feedURL = `${server}/latest-mac.json`
+  autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
+  log.info(autoUpdater.getFeedURL())
   autoUpdater.checkForUpdates()
+
+  log.info('Checking for updates in app software')
 
   autoUpdater.on('update-available', () => {
     log.info('Update available.')
@@ -33,7 +33,6 @@ export function checkForUpdates() {
       message: 'No updates available',
       detail: 'You are currently running the latest version of DeepFocus.'
     })
-    isCheckingForUpdates = false
   })
 
   autoUpdater.on('error', (error) => {
@@ -44,7 +43,6 @@ export function checkForUpdates() {
       message: 'Error',
       detail: 'An error occurred while checking for updates.'
     })
-    isCheckingForUpdates = false
   })
 
   autoUpdater.on('update-downloaded', async () => {
@@ -60,7 +58,6 @@ export function checkForUpdates() {
     if (response === 0) {
       setImmediate(() => autoUpdater.quitAndInstall())
     }
-    isCheckingForUpdates = false
   })
 }
 export function getIconPath(iconName: string, resourcesPath: string): string {
