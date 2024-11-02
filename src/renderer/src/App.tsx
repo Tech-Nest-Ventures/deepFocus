@@ -107,7 +107,7 @@ const App = (props: ComponentProps<typeof Router>) => {
   // Initialize the tour for new users
   createEffect(() => {
     console.log('checking if logged in and new user')
-    if(localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) {
+    if((localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) && localStorage.getItem('token') && localStorage.getItem('user')) {
       initializeTour()
       localStorage.setItem('onboarded', 'true')
       setIsNewUser(false)
