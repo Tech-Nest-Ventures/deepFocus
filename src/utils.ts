@@ -6,7 +6,7 @@ import path from 'path'
 // import fetch from 'node-fetch'
 
 export function checkForUpdates(): void {
-  const server = 'https://github.com/Tech-Nest-Ventures/deepFocus'
+  const server = 'https://raw.githubusercontent.com/Tech-Nest-Ventures/deepFocus/main'
   const feedURL = `${server}/latest-mac.json`
   autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
   log.info(autoUpdater.getFeedURL())
@@ -46,17 +46,15 @@ export function checkForUpdates(): void {
   })
 
   autoUpdater.on('update-downloaded', async () => {
-    log.info('Update downloaded. Installing now...')
+    log.info('Update downloaded to:', autoUpdater.getFeedURL())
     const { response } = await dialog.showMessageBox({
       type: 'info',
-      title: 'Install Updates',
-      message: 'Updates downloaded, the application will quit for update...',
-      detail: 'New version downloaded. Quitting.',
-      buttons: ['Restart Now']
+      title: 'Install Update',
+      message: 'The update has been downloaded. The application will restart to apply the update.',
+      buttons: ['Restart Now', 'Later']
     })
-
     if (response === 0) {
-      setImmediate(() => autoUpdater.quitAndInstall())
+      autoUpdater.quitAndInstall()
     }
   })
 }
