@@ -7,19 +7,11 @@ import path from 'path'
 
 export function checkForUpdates(): void {
   const server = 'https://github.com/Tech-Nest-Ventures/deepFocus'
-  const feedURL = `${server}/releases/download/${app.getVersion()}/`
-  log.info('feedURL', feedURL)
-
-  autoUpdater.setFeedURL({ url: feedURL })
+  const feedURL = `${server}/latest-mac.json`
+  autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
+  log.info(autoUpdater.getFeedURL())
   autoUpdater.checkForUpdates()
 
-  let isCheckingForUpdates = false
-  if (isCheckingForUpdates) {
-    log.info('Update check already in progress')
-    return
-  }
-
-  autoUpdater.checkForUpdates()
   log.info('Checking for updates in app software')
 
   autoUpdater.on('update-available', () => {
@@ -41,7 +33,6 @@ export function checkForUpdates(): void {
       message: 'No updates available',
       detail: 'You are currently running the latest version of DeepFocus.'
     })
-    isCheckingForUpdates = false
   })
 
   autoUpdater.on('error', (error) => {
@@ -52,7 +43,6 @@ export function checkForUpdates(): void {
       message: 'Error',
       detail: 'An error occurred while checking for updates.'
     })
-    isCheckingForUpdates = false
   })
 
   autoUpdater.on('update-downloaded', async () => {
@@ -68,7 +58,6 @@ export function checkForUpdates(): void {
     if (response === 0) {
       setImmediate(() => autoUpdater.quitAndInstall())
     }
-    isCheckingForUpdates = false
   })
 }
 export function getIconPath(iconName: string, resourcesPath: string): string {
