@@ -266,10 +266,10 @@ export function startActivityMonitoring() {
           return
         }
 
-        // console.log(`Active Application: ${appName}`)
         let URL = ''
 
         if (isBrowser(appName)) {
+
           URL = getBaseURL(await getBrowserURL(appName))
         }
 
@@ -401,7 +401,7 @@ app.on('browser-window-focus', () => {
     mainWindow.webContents.send('deep-work-data-response', chartData)
   }
 })
-export function handleUserLogout() {
+export function handleUserLogout(): void {
   log.info('Handling user logout')
   store.delete('user')
   store.set('lastResetDate', dayjs().toISOString())

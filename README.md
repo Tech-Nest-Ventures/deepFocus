@@ -135,3 +135,9 @@ This will whitelist the app for future use.
 
 
 ```
+
+4. For Firefox users, there's addditional setup to get the URL of the active tab.
+
+First enable Firefox support for VoiceOver by going to about:config and setting the accessibility.force_disabled property to -1
+
+Source: https://apple.stackexchange.com/questions/404841/get-url-of-opened-firefox-tabs-from-terminal

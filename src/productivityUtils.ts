@@ -190,17 +190,21 @@ export function getActiveWindowApp(): Promise<string | browser> {
   })
 }
 // Function to get the URL for a specific browser
-export function getBrowserURL(browser: browser): Promise<string> {
+export function getBrowserURL(browser: string): Promise<string> {
   return new Promise<string>((resolve, _reject) => {
     let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
     if (browser === 'Safari') {
       script = `osascript -e 'tell application "${browser}" to get URL of front document'`
+    } else if (browser === 'Firefox' || browser === 'firefox') {
+      script = `
+      osascript -e 'tell application "System Events" to get value of UI element 1 of combo box 1 of toolbar "Navigation" of first group of front window of application process "Firefox"'
+    `
     }
 
     exec(script, (err, stdout, stderr) => {
       if (err) {
         console.error(`Error getting URL for ${browser}: ${stderr}`)
-        resolve('') // Return an empty string if there's an error
+        resolve('')
       } else {
         resolve(stdout.trim())
       }
@@ -244,6 +248,7 @@ export function isBrowser(appName: string): appName is browser {
     'Vivaldi',
     'Opera',
     'Safari',
-    'Firefox'
+    'Firefox',
+    'firefox'
   ].includes(appName)
 }
