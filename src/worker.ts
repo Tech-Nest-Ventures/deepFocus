@@ -33,7 +33,7 @@ parentPort?.on('message', (message) => {
   }
 })
 
-function requestData() {
+function requestData(): void {
   parentPort?.postMessage({ type: MessageType.GET_DATA })
 }
 

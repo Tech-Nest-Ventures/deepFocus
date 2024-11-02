@@ -103,11 +103,15 @@ const App = (props: ComponentProps<typeof Router>) => {
 
     tour.start()
   }
-  
+
   // Initialize the tour for new users
   createEffect(() => {
     console.log('checking if logged in and new user')
-    if((localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) && localStorage.getItem('token') && localStorage.getItem('user')) {
+    if (
+      (localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) &&
+      localStorage.getItem('token') &&
+      localStorage.getItem('user')
+    ) {
       initializeTour()
       localStorage.setItem('onboarded', 'true')
       setIsNewUser(false)
@@ -133,8 +137,9 @@ const App = (props: ComponentProps<typeof Router>) => {
       setIsLoggedIn(true)
       sendUserToBackend(JSON.parse(user))
       setIsNewUser(false)
-      navigate('/onboarding')
     }
+    // TODO: better navigate user to home page to show Home component
+    navigate('/')
   })
 
   const NavBar = () => {

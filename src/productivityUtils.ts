@@ -190,7 +190,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
   })
 }
 // Function to get the URL for a specific browser
-export function getBrowserURL(browser: browser): Promise<string> {
+export function getBrowserURL(browser: string): Promise<string> {
   return new Promise<string>((resolve, _reject) => {
     let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
     if (browser === 'Safari') {
