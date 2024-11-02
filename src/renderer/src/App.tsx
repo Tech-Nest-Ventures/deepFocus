@@ -107,11 +107,15 @@ const App = (props: ComponentProps<typeof Router>) => {
   // Initialize the tour for new users
   createEffect(() => {
     console.log('checking if logged in and new user')
+<<<<<<< HEAD
     if (
       (localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) &&
       localStorage.getItem('token') &&
       localStorage.getItem('user')
     ) {
+=======
+    if((localStorage.getItem('onboarded') === 'false' || !localStorage.getItem('onboarded')) && localStorage.getItem('token') && localStorage.getItem('user')) {
+>>>>>>> 788e2091b5282f0f9c9fac1d59269704222ef7f8
       initializeTour()
       localStorage.setItem('onboarded', 'true')
       setIsNewUser(false)
