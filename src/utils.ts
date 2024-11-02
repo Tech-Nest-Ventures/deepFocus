@@ -6,7 +6,7 @@ import path from 'path'
 // import fetch from 'node-fetch'
 
 export function checkForUpdates(): void {
-  const server = 'https://github.com/Tech-Nest-Ventures/deepFocus'
+  const server = 'https://raw.githubusercontent.com/Tech-Nest-Ventures/deepFocus/main'
   const feedURL = `${server}/latest-mac.json`
   autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
   log.info(autoUpdater.getFeedURL())
