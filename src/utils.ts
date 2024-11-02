@@ -1,11 +1,18 @@
-import { autoUpdater, dialog, app, Notification } from 'electron'
+import { dialog, app, Notification, autoUpdater } from 'electron'
 import log from 'electron-log/node.js'
 import path from 'path'
 // import FormData from 'form-data'
 // import fs from 'fs'
 // import fetch from 'node-fetch'
 
-export function checkForUpdates() {
+export function checkForUpdates(): void {
+  const server = 'https://github.com/Tech-Nest-Ventures/deepFocus'
+  const feedURL = `${server}/releases/download/${app.getVersion()}/`
+  log.info('feedURL', feedURL)
+
+  autoUpdater.setFeedURL({ url: feedURL })
+  autoUpdater.checkForUpdates()
+
   let isCheckingForUpdates = false
   if (isCheckingForUpdates) {
     log.info('Update check already in progress')
@@ -13,6 +20,7 @@ export function checkForUpdates() {
   }
 
   autoUpdater.checkForUpdates()
+  log.info('Checking for updates in app software')
 
   autoUpdater.on('update-available', () => {
     log.info('Update available.')

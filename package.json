@@ -1,7 +1,7 @@
 {
   "name": "deepFocus",
   "productName": "Deep Focus",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "DEBUG=electron* electron-forge start",
@@ -77,5 +77,14 @@
     "vinxi": "^0.4.3",
     "vite-plugin-solid": "^2.10.2",
     "world-countries": "^5.0.0"
+  },
+  "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Tech-Nest-Ventures",
+        "repo": "deepFocus"
+      }
+    ]
   }
 }
