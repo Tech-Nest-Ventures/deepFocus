@@ -652,3 +652,63 @@ export function handleDailyReset() {
     }
   }
 }
+
+async function sendDailyEmail(username, date, deepWorkHours, siteTimeTrackers) {
+  if (!username || siteTimeTrackers.length === 0) {
+    console.log('No data to send in email.')
+    return
+  }
+
+  const MIN_TIME_THRESHOLD = 60
+  const filteredTrackers = siteTimeTrackers.filter(
+    (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
+  )
+
+  const emailData = {
+    username,
+    date,
+    deepWorkHours,
+    trackers: filteredTrackers.map((tracker) => ({
+      title: tracker.title,
+      url: tracker.url,
+      timeSpent: tracker.timeSpent
+    }))
+  }
+
+  try {
+    const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/email/send-daily`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(emailData)
+    })
+    console.log('Email sent status:', response.status)
+  } catch (error) {
+    console.error('Error sending email:', error)
+  }
+}
+
+
+async function checkAndSendMissedEmails() {
+  const lastEmailDate = dayjs(store.get(LAST_EMAIL_DATE_KEY, null) || dayjs().subtract(1, 'day'))
+  const today = dayjs().startOf('day')
+
+  if (!lastEmailDate.isSame(today, 'day')) {
+    let dateToProcess = lastEmailDate.add(1, 'day')
+
+    while (dateToProcess.isBefore(today) || dateToProcess.isSame(today, 'day')) {
+      const formattedDate = dateToProcess.format('YYYY-MM-DD')
+      console.log(`Sending missed email for date: ${formattedDate}`)
+
+      const username = store.get('user')?.username
+      const deepWorkHours = store.get('deepWorkHours')
+      const siteTimeTrackers = store.get('siteTimeTrackers', [])
+      
+      await sendDailyEmail(username, formattedDate, deepWorkHours, siteTimeTrackers)
+
+      // Update the last email date after each successful send
+      store.set(LAST_EMAIL_DATE_KEY, dateToProcess.toISOString())
+      
+      dateToProcess = dateToProcess.add(1, 'day')
+    }
+  }
+}

@@ -2,20 +2,12 @@ import { createSignal, For, onMount, onCleanup } from 'solid-js'
 import { TextField, TextFieldInput } from './components/ui/text-field'
 import { Button } from './components/ui/button'
 import { IoRemoveCircleOutline, VsAdd } from './components/ui/icons'
+import { getFavicon } from './lib/utils'
 
 const UnproductiveWebsites = () => {
   const [site, setSite] = createSignal('')
   const [unproductiveSites, setUnproductiveSites] = createSignal<string[]>([])
 
-  const getFavicon = (url: string) => {
-    try {
-      const domain = new URL(url).hostname
-      return `https://www.google.com/s2/favicons?domain=${domain}`
-    } catch (error) {
-      console.error('Invalid URL format:', url)
-      return ''
-    }
-  }
 
   onMount(() => {
     window.electron.ipcRenderer.send('fetch-unproductive-urls') // Request URLs from main process
