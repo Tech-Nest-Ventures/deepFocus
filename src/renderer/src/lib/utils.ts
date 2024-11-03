@@ -18,3 +18,19 @@ export const stopActivityMonitoring = () => {
   console.log('Stopping activity monitoring')
   window?.electron.ipcRenderer.send('logout-user')
 }
+
+
+export const getFavicon = (url: string): string => {
+  try {
+    const formattedUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url
+    const domain = new URL(formattedUrl).hostname
+    if (domain === 'mail.google.com') {
+      return 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico'
+    } else {
+      return `https://www.google.com/s2/favicons?sz=64&domain=${formattedUrl}`
+    }
+  } catch (error) {
+    console.error('Invalid URL format:', url)
+    return ''
+  }
+}

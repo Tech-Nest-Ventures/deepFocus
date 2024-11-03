@@ -193,7 +193,7 @@ export function getActiveWindowApp(): Promise<string | browser> {
 export function getBrowserURL(browser: string): Promise<string> {
   return new Promise<string>((resolve, _reject) => {
     let script = `osascript -e 'tell application "${browser}" to get URL of active tab of front window'`
-    if (browser === 'Safari') {
+    if (browser === 'Safari' || browser === 'Orion') {
       script = `osascript -e 'tell application "${browser}" to get URL of front document'`
     } else if (browser.toLowerCase() === 'firefox') {
       script = `
@@ -249,6 +249,7 @@ export function isBrowser(appName: string): appName is browser {
     'Opera',
     'Safari',
     'Firefox',
-    'firefox'
+    'firefox',
+    'Orion'
   ].includes(appName)
 }

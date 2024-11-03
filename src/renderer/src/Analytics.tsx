@@ -4,6 +4,7 @@ import { SiteTimeTracker, TrackerType, AppIcon } from './types'
 const BarChart = lazy(() => import('./BarChart'))
 import { IpcRendererEvent } from 'electron'
 import {Motion} from 'solid-motionone';
+import { getFavicon } from './lib/utils'
 
 const Analytics = () => {
   const [showDeepWork, setShowDeepWork] = createSignal(true) // State for toggle
@@ -13,24 +14,17 @@ const Analytics = () => {
 
 
   // Function to fetch the icon data URL
-  const fetchAppIcon = async (iconPath?: string) => {
+  const fetchAppIcon = async (iconPath?: string): Promise<string> => {
     try {
       const iconDataUrl = await window.electron.ipcRenderer.invoke('get-icon', iconPath)
       const iconUrl = iconDataUrl || 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'
-      
       // Cache the fetched icon
       setIconCache({ ...iconCache(), [iconPath]: iconUrl })
-      
       return iconUrl
     } catch (error) {
       console.error('Error fetching app icon:', error)
       return 'https://cdn-icons-png.freepik.com/512/7022/7022186.png' // Return default icon on error
     }
-  }
-
-  // Function to fetch the favicon for websites
-  const fetchFavicon = (url: string) => {
-    return `https://www.google.com/s2/favicons?sz=64&domain=${new URL(url).hostname}`
   }
 
   const fetchSiteTrackers = () => {
@@ -50,12 +44,12 @@ const Analytics = () => {
           console.warn('Skipping invalid tracker:', tracker)
           return null
         }
-  
+
         let iconUrl = ''
-  
+
         if (tracker.type === TrackerType.Website) {
           // Fetch the favicon for websites
-          iconUrl = fetchFavicon(tracker.url)
+          iconUrl = getFavicon(tracker.url)
         } else if (tracker.type === TrackerType.App && tracker.iconUrl) {
           // If tracker has a valid iconPath, fetch the app icon
           iconUrl = await fetchAppIcon(tracker.iconUrl)

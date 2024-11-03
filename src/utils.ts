@@ -9,6 +9,7 @@ export function checkForUpdates(): void {
   const server = 'https://raw.githubusercontent.com/Tech-Nest-Ventures/deepFocus/main'
   const feedURL = `${server}/latest-mac.json`
   autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
+
   log.info(autoUpdater.getFeedURL())
   autoUpdater.checkForUpdates()
 
@@ -22,6 +23,10 @@ export function checkForUpdates(): void {
       message: 'Update available',
       detail: 'A new version of DeepFocus is available. Please update to the latest version.'
     })
+  })
+
+  autoUpdater.on('checking-for-update', () => {
+    log.info('Checking for update...')
   })
 
   autoUpdater.on('update-not-available', () => {
@@ -45,8 +50,8 @@ export function checkForUpdates(): void {
     })
   })
 
-  autoUpdater.on('update-downloaded', async () => {
-    log.info('Update downloaded to:', autoUpdater.getFeedURL())
+  autoUpdater.on('update-downloaded', async (event, releaseNotes, releaseDate, updateURL) => {
+    log.info('Update downloaded to:', releaseNotes, releaseDate, updateURL)
     const { response } = await dialog.showMessageBox({
       type: 'info',
       title: 'Install Update',
