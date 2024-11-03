@@ -177,6 +177,7 @@ export type browser =
   | 'Safari'
   | 'Firefox'
   | 'firefox'
+  | 'Orion'
 
 export interface WorkContext {
   type: 'URL' | 'appName'
@@ -189,7 +190,6 @@ export interface AppIcon {
   appName: string
   iconPath: string
 }
-
 
 export enum TrackerType {
   Website = 'website',
