@@ -23,6 +23,7 @@ export interface StoreSchema {
   siteTimeTrackers: SiteTimeTracker[]
   user?: User
   lastResetDate?: string
+  lastEmailDate?: string
   unproductiveUrls?: string[]
   deepWorkHours?: {
     Monday: number

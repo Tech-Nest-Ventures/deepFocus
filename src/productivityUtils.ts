@@ -12,6 +12,9 @@ import { TypedStore } from './main'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
 import log from 'electron-log/node.js'
+import path from 'path'
+import { app } from 'electron'
+import fs from 'fs'
 
 export function getUrlFromResult(result: Result): string | undefined {
   if ('url' in result) {
@@ -86,6 +89,26 @@ export function formatTime(milliseconds: number): string {
     return `${seconds}s`
   }
 }
+
+// Dynamically get the user's data path for icon storage
+const ICONS_BASE_PATH = path.join(app.getPath('userData'), 'icons')
+
+function findBestIconMatch(appName: string): string | null {
+  const sanitizedAppName = appName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
+  const icons = fs.readdirSync(ICONS_BASE_PATH)
+  const matchedIcon = icons.find((icon) => icon.toLowerCase().includes(sanitizedAppName))
+  if (matchedIcon) {
+    log.info(`Found matching icon: ${matchedIcon} for app: ${appName}`)
+    return path.join(ICONS_BASE_PATH, matchedIcon)
+  }
+  return null
+}
+
+function getBase64Icon(iconPath: string): string {
+  const iconBuffer = fs.readFileSync(iconPath)
+  return `data:image/png;base64,${iconBuffer.toString('base64')}`
+}
+
 export function updateSiteTimeTracker(
   appName: string,
   timeTrackers: SiteTimeTracker[],
@@ -96,17 +119,30 @@ export function updateSiteTimeTracker(
   let trackerKey = ''
   let trackerTitle = ''
   let trackerType: TrackerType
+  let iconUrl = ''
 
   if (url && isValidURL(url)) {
     // For URLs, use the base URL as the tracker key and the title as the URL's base domain
     trackerKey = url
     trackerTitle = url
     trackerType = TrackerType.Website
+    iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${trackerTitle}`
   } else {
     // If it's a desktop app (no valid URL), use the app path and name for the tracker
     trackerKey = appName || 'Unknown App'
     trackerTitle = appName || 'Unknown App'
     trackerType = TrackerType.App
+
+    // Attempt to find the cached icon for this app
+    const iconPath = findBestIconMatch(appName);
+
+    if (fs.existsSync(iconPath)) {
+      iconUrl = getBase64Icon(iconPath) // Use Base64 data URI for the icon
+      log.info(`Using cached icon: ${iconPath}`)
+    } else {
+      iconUrl = 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'
+      log.info(`Using default icon for app: ${appName}`)
+    }
   }
 
   // Find an existing tracker or create a new one
@@ -115,13 +151,15 @@ export function updateSiteTimeTracker(
     log.info('Updating existing tracker', tracker.title, tracker.timeSpent)
     tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
+    tracker.iconUrl = iconUrl
   } else {
     tracker = {
       url: trackerKey,
       title: trackerTitle,
       timeSpent: 0,
       lastActiveTimestamp: currentTime,
-      type: trackerType
+      type: trackerType,
+      iconUrl
     }
     timeTrackers.push(tracker)
   }
