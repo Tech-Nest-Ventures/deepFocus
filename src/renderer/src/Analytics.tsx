@@ -103,7 +103,7 @@ const Analytics = () => {
     transition={{ duration: 0.5, easing: "ease-in-out" }}
   >
     <div>
-      <div class="flex justify-between items-center p-4">
+      <div class="flex justify-content items-center p-4">
         <Button onClick={() => setShowDeepWork(!showDeepWork())}>
           {showDeepWork() ? 'Show Top Sites' : 'Show Deep Work Hours'}
         </Button>

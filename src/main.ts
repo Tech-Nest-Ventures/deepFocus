@@ -16,14 +16,7 @@ import fs from 'fs'
 import schedule from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import {
-  StoreSchema,
-  SiteTimeTracker,
-  DeepWorkHours,
-  MessageType,
-  User,
-  AppIcon,
-} from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, AppIcon } from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -47,7 +40,7 @@ export interface TypedStore extends Store<StoreSchema> {
 }
 
 const store = new Store<StoreSchema>() as TypedStore
-let currentSiteTimeTrackers: SiteTimeTracker[] = []
+let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
 let deepWorkHours = {
   Monday: 0,
@@ -60,7 +53,7 @@ let deepWorkHours = {
 } as DeepWorkHours
 
 let currentDeepWork = 0
-let user: User | null = null
+let user: User | null = store.get('user', null) // change back to null
 let iconPath = ''
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -72,22 +65,19 @@ const resourcesPath: string = setupEnvironment()
 log.info('Set up Environment')
 
 // Initialize environment variables based on the environment
-function setupEnvironment() {
+function setupEnvironment(): string {
   try {
     log.info('Setting up environment...')
 
-    // Initialize resourcesPath within this function
     const resourcesPath = app.isPackaged
       ? path.join(process.resourcesPath)
       : path.join(__dirname, 'resources')
     log.info('app.isPackaged:', app.isPackaged)
     log.info('resourcesPath:', resourcesPath)
 
-    // Set up the path to the .env file
     const envPath = path.join(resourcesPath, '.env')
     log.info('Looking for .env at:', envPath)
 
-    // Load environment variables from the .env file if it exists
     if (fs.existsSync(envPath)) {
       dotenv.config({ path: envPath })
       log.info('Loaded .env file from:', envPath)
@@ -119,7 +109,7 @@ export function handleUserData(user: User, store: TypedStore): User {
 }
 
 // Load user data if available on app start
-export function loadUserData() {
+export function loadUserData(): User | null {
   const savedUser: User | null = store.get('user') || null
   if (savedUser) {
     schedulerWorker.postMessage({ type: MessageType.SET_USER_INFO, user: savedUser })
@@ -136,23 +126,23 @@ export function loadUserData() {
   return savedUser
 }
 
-async function storeData() {
+async function storeData(): Promise<void> {
   const today = dayjs().format('dddd') as keyof typeof deepWorkHours
   log.info(
     'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
   store.set('deepWorkHours', deepWorkHours)
-
   currentDeepWork = deepWorkHours[today] || 0
-  deepWorkHours[today] = 0
 }
 
-export async function resetCounters(type: 'daily' | 'weekly') {
+export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
   const now = dayjs()
   log.info('Invoked resetCounters')
 
   stopActivityMonitoring()
+  log.info('Loaded API_BASE_URL:', process.env.VITE_SERVER_URL_PROD)
+  checkAndSendMissedEmails()
 
   if (type === 'daily') {
     currentSiteTimeTrackers?.forEach((tracker) => {
@@ -188,7 +178,7 @@ export async function resetCounters(type: 'daily' | 'weekly') {
 }
 
 // Periodic saving of time trackers, deep work hours, and icon progress every 2 minutes
-function setupPeriodicSave() {
+function setupPeriodicSave(): void {
   if (!monitoringInterval) {
     setInterval(
       () => {
@@ -212,7 +202,7 @@ function setupPeriodicSave() {
   }
 }
 
-export function startActivityMonitoring() {
+export function startActivityMonitoring(): void {
   if (!monitoringInterval) {
     const today = dayjs()
     monitoringInterval = setInterval(async () => {
@@ -255,7 +245,7 @@ export function startActivityMonitoring() {
 }
 
 // Handles both periodicSave & activity monitoring
-function stopActivityMonitoring() {
+function stopActivityMonitoring(): void {
   if (monitoringInterval) {
     clearInterval(monitoringInterval) // Clear the interval
     monitoringInterval = null // Reset the interval ID
@@ -345,51 +335,38 @@ app.whenReady().then(async () => {
   const image = nativeImage.createFromPath(iconPath)
   tray = new Tray(image)
   tray.setToolTip('Deep Focus. Get more done.')
+  createTrayMenu()
 
-  const trayMenu = Menu.buildFromTemplate([
-    {
-      label: 'Total Deep Work',
-      click: () => {
-        const today = dayjs().format('dddd') as keyof typeof deepWorkHours
-        const totalDeepWorkHours = getDeepWorkHours()[today]
-        new Notification({
-          title: 'DeepFocus',
-          body: `Total Deep Work: ${totalDeepWorkHours} hours`,
-          icon: iconPath
-        }).show()
-      }
-    },
-    {
-      label: 'Reset Data',
-      click: () => {
-        handleDailyReset() // Replace with your function to reset data
-        new Notification({
-          title: 'DeepFocus',
-          body: 'Daily data has been reset.',
-          icon: iconPath
-        }).show()
-      }
-    },
-    { type: 'separator' },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit()
-      }
-    }
-  ])
+  function createTrayMenu() {
+    const today = dayjs().format('dddd') as keyof typeof deepWorkHours
+    const totalDeepWorkHours = getDeepWorkHours()[today]
+    log.info('totalDeepWorkHours', totalDeepWorkHours)
 
-  tray.setContextMenu(trayMenu)
+    // Update the label directly with the latest deep work hours
+    const trayMenu = Menu.buildFromTemplate([
+      {
+        label: `Total Deep Work: ${totalDeepWorkHours} hours`
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          app.quit()
+        }
+      }
+    ])
 
-  tray.on('click', () => {
-    if (mainWindow) {
-      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
-    }
-  })
+    tray?.setContextMenu(trayMenu)
+  }
+  // TODO: Undecided if we want to show app on tray click
+  // tray.on('click', () => {
+  //   if (mainWindow) {
+  //     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+  //   }
+  // })
 })
 
 app.on('ready', () => {
-
   checkForUpdates()
 })
 
@@ -470,6 +447,7 @@ export function getSiteTrackers(): SiteTimeTracker[] {
 schedule.scheduleJob('0 0 0 * * *', () => {
   log.info('Scheduled daily reset at midnight')
   resetCounters('daily')
+  sendDailyEmail()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
@@ -639,7 +617,6 @@ export function handleDailyReset() {
     log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
     resetCounters('daily')
     log.info(`Daily reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
-
     // Check if we need to do a full weekly reset (if last reset was more than a week ago)
     if (now.diff(lastResetDate, 'week') >= 1) {
       log.info('Performing full weekly reset for the previous week.')
@@ -653,33 +630,38 @@ export function handleDailyReset() {
   }
 }
 
-async function sendDailyEmail(username, date, deepWorkHours, siteTimeTrackers) {
-  if (!username || siteTimeTrackers.length === 0) {
-    console.log('No data to send in email.')
-    return
-  }
+async function sendDailyEmail() {
+  const now = dayjs()
+  log.info('currentSiteTimeTrackers:', currentSiteTimeTrackers)
 
-  const MIN_TIME_THRESHOLD = 60
-  const filteredTrackers = siteTimeTrackers.filter(
+  const MIN_TIME_THRESHOLD = 10
+  const filteredTrackers = currentSiteTimeTrackers.filter(
     (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
   )
+  const today = now.format('dddd') // needs to be number to access deepWorkHours
+  const deepWorkHours = getDeepWorkHours()
+  const workToday = deepWorkHours[today] as number
+  log.info('workToday:', workToday)
+  const lastResetDate = now.toISOString()
+  store?.set('lastResetDate', lastResetDate)
 
-  const emailData = {
-    username,
-    date,
-    deepWorkHours,
-    trackers: filteredTrackers.map((tracker) => ({
+  const dailyData = {
+    username: user.username,
+    date: today,
+    workToday,
+    trackers: filteredTrackers.map((tracker: SiteTimeTracker) => ({
       title: tracker.title,
       url: tracker.url,
-      timeSpent: tracker.timeSpent
+      timeSpent: tracker.timeSpent,
+      iconUrl: tracker.iconUrl
     }))
   }
 
   try {
-    const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/email/send-daily`, {
+    const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/activity/send-daily`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(emailData)
+      body: JSON.stringify(dailyData)
     })
     console.log('Email sent status:', response.status)
   } catch (error) {
@@ -687,9 +669,8 @@ async function sendDailyEmail(username, date, deepWorkHours, siteTimeTrackers) {
   }
 }
 
-
-async function checkAndSendMissedEmails() {
-  const lastEmailDate = dayjs(store.get(LAST_EMAIL_DATE_KEY, null) || dayjs().subtract(1, 'day'))
+async function checkAndSendMissedEmails(): Promise<void> {
+  const lastEmailDate = dayjs(store.get(lastEmailDate, null) || dayjs().subtract(1, 'day'))
   const today = dayjs().startOf('day')
 
   if (!lastEmailDate.isSame(today, 'day')) {
@@ -698,16 +679,9 @@ async function checkAndSendMissedEmails() {
     while (dateToProcess.isBefore(today) || dateToProcess.isSame(today, 'day')) {
       const formattedDate = dateToProcess.format('YYYY-MM-DD')
       console.log(`Sending missed email for date: ${formattedDate}`)
-
-      const username = store.get('user')?.username
-      const deepWorkHours = store.get('deepWorkHours')
-      const siteTimeTrackers = store.get('siteTimeTrackers', [])
-      
-      await sendDailyEmail(username, formattedDate, deepWorkHours, siteTimeTrackers)
-
+      await sendDailyEmail()
       // Update the last email date after each successful send
-      store.set(LAST_EMAIL_DATE_KEY, dateToProcess.toISOString())
-      
+      store.set(lastEmailDate, dateToProcess.toISOString())
       dateToProcess = dateToProcess.add(1, 'day')
     }
   }

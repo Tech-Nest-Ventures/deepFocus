@@ -89,7 +89,7 @@ const BarChart = () => {
       <Button class="mt-2 px-4 rounded text-white" onClick={fetchDeepWorkData}>
         <VsRefresh />
       </Button>
-      <Bar data={chartData()} options={chartOptions} width={500} height={500} />
+      <Bar data={chartData()} options={chartOptions} width={400} height={400} />
     </div>
   )
 }
