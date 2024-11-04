@@ -87,9 +87,6 @@ const UnproductiveApps = () => {
   return (
     <div class="p-4">
       <h1 class="mb-8 text-lg mt-4 font-normal">Change Unproductive Apps</h1>
-      <Button onClick={fetchApps} class="mb-4 p-2 bg-blue-500 text-white rounded">
-        Fetch Apps
-      </Button>
       <div class="max-h-96 overflow-y-auto">
         <ul class="space-y-2">
           <For each={paginatedApps()}>

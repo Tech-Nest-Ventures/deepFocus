@@ -45,7 +45,7 @@ Primarily for macOS. Coming to Windows & Linux shortly.
 
 1. In the Releases section, click on the [latest release] (https://github.com/Tech-Nest-Ventures/deepFocus/releases/latest) and download the Deep Focus.dmg file.
 
-Open the .dmg file and drag the Deep Focus app to your Applications folder.
+Open the .dmg or .zip file and drag the Deep Focus app to your Applications folder.
 
 2. Add the Deep Focus app to your Dock.
 
@@ -65,17 +65,12 @@ Open the .dmg file and drag the Deep Focus app to your Applications folder.
 - [x] Implement a basic email notification system
 - [x] Sign & Notarize the app for macOS
 - [x] Collect each site visited. Show users all sites visited in the past day at the end of the day/next day and ask them to label them as productive or unproductive.
-- [ ] Fix Auto update logic so users don't have to manually update.
-- [ ] Fix Emails not sending on schedule. 
-- [ ] Add Frigade onboarding flow to improve user comprehension
-- [ ] Allow users to enter session goals and customize productive/unproductive sites
-- [ ] Add tests to ensure emails are being deleted
-- [ ] Migrate from electron-storage to SQLite for improved data handling
-- [ ] Enhance data analysis and insights
-- [ ] Develop comprehensive test suite for main and renderer processes
-- [ ] Create cloud synchronization for user data and preferences
-- [ ] Implement secure user authentication system
-- [ ] To do list like functionality? Have people add tasks to their list and mark as productive or not productive. Then, at the end of the day, they can see a list of tasks and see how productive they were.
+- [x] Fix Auto update logic so users don't have to manually update.
+- [x] Fix Emails not sending on schedule. 
+- [x] Add onboarding flow to improve user comprehension
+- [x] Allow users to customize productive/unproductive sites
+- [ ] Add more comprehensive test suite for main and renderer processes
+
 
 ## Philosophy
 
