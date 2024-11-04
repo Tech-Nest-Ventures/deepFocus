@@ -131,6 +131,7 @@ async function storeData(): Promise<void> {
   log.info(
     'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
+  log.info('Loaded API_BASE_URL:', process.env.VITE_SERVER_URL_PROD)
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
   store.set('deepWorkHours', deepWorkHours)
   currentDeepWork = deepWorkHours[today] || 0

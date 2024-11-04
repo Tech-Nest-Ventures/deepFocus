@@ -1,7 +1,7 @@
 {
   "name": "deepFocus",
   "productName": "Deep Focus",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "DEBUG=electron* electron-forge start",
