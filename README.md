@@ -70,7 +70,8 @@ Open the .dmg or .zip file and drag the Deep Focus app to your Applications fold
 - [x] Add onboarding flow to improve user comprehension
 - [x] Allow users to customize productive/unproductive sites
 - [ ] Add more comprehensive test suite for main and renderer processes
-
+- [ ] Add timeline view for daily email summaries
+- [ ] Upload app to the App Store
 
 ## Philosophy
 

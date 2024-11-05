@@ -38,7 +38,7 @@ export interface TypedStore extends Store<StoreSchema> {
   delete<K extends keyof StoreSchema>(key: K): void
   clear(): void
 }
-
+const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
@@ -131,7 +131,6 @@ async function storeData(): Promise<void> {
   log.info(
     'Periodic save triggered (updating siteTimeTrackers, deepWorkHours, currentDeepWork and icon): '
   )
-  log.info('Loaded API_BASE_URL:', process.env.VITE_SERVER_URL_PROD)
   store.set('siteTimeTrackers', currentSiteTimeTrackers)
   store.set('deepWorkHours', deepWorkHours)
   currentDeepWork = deepWorkHours[today] || 0
@@ -142,7 +141,6 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
   log.info('Invoked resetCounters')
 
   stopActivityMonitoring()
-  log.info('Loaded API_BASE_URL:', process.env.VITE_SERVER_URL_PROD)
   checkAndSendMissedEmails()
 
   if (type === 'daily') {
@@ -360,11 +358,12 @@ app.whenReady().then(async () => {
     tray?.setContextMenu(trayMenu)
   }
   // TODO: Undecided if we want to show app on tray click
-  // tray.on('click', () => {
-  //   if (mainWindow) {
-  //     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
-  //   }
-  // })
+  tray.on('click', () => {
+    // if (mainWindow) {
+    //   mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+    // }
+    createTrayMenu()
+  })
 })
 
 app.on('ready', () => {
@@ -419,7 +418,7 @@ app.on('window-all-closed', () => {
 const schedulerWorkerPath = join(__dirname, 'worker.js')
 const schedulerWorker = new Worker(schedulerWorkerPath, {
   workerData: {
-    API_BASE_URL: process.env.VITE_SERVER_URL_PROD
+    API_BASE_URL: API_BASE_URL
   }
 })
 schedulerWorker.on('message', (message: any) => {
@@ -659,7 +658,7 @@ async function sendDailyEmail() {
   }
 
   try {
-    const response = await fetch(`${process.env.VITE_SERVER_URL_PROD}/api/v1/activity/send-daily`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/activity/send-daily`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dailyData)
