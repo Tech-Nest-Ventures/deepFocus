@@ -4,11 +4,6 @@
   <img src="resources/icon.png" alt="DeepFocus Logo" width="200" height="200">
 </p>
 
-<p align="center">
-  <img src="ezgif.com-optimize.gif" alt="DeepFocus in Action" width="700">
-</p>
-
-
 [![Release](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -44,6 +39,12 @@ Primarily for macOS. Coming to Windows & Linux shortly.
 ![SolidJS](https://img.shields.io/badge/-SolidJS-2C4F7C?style=flat-square&logo=solid&logoColor=white)
 
 ## Getting Started
+
+<p align="center">
+  <img src="ezgif.com-optimize.gif" alt="DeepFocus in Action" width="700">
+</p>
+
+
 
 
 ### Installation
