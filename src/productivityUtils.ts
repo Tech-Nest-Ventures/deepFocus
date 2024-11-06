@@ -12,7 +12,7 @@ import { TypedStore } from './main'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
 import log from 'electron-log/node.js'
-import path from 'path'
+import path, { format } from 'path'
 import { app } from 'electron'
 import fs from 'fs'
 
@@ -180,13 +180,13 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
     }
   } else if (context.type === 'appName') {
     const unproductiveApps: unknown = store.get('unproductiveApps', [])
-
     const validUnproductiveApps: AppIcon[] =
       Array.isArray(unproductiveApps) &&
-      unproductiveApps.every((item) => typeof item === 'object' && 'name' in item)
+      unproductiveApps.every((item) => typeof item === 'object' && 'appName' in item)
         ? (unproductiveApps as AppIcon[])
         : []
-
+      console.log(formattedItem)
+      console.log(validUnproductiveApps.map((app) => app.appName))
     if (validUnproductiveApps.some((app) => formattedItem.includes(app.appName.toLowerCase()))) {
       console.log('Unproductive app detected:', formattedItem)
       return false
