@@ -4,6 +4,11 @@
   <img src="resources/icon.png" alt="DeepFocus Logo" width="200" height="200">
 </p>
 
+<p align="center">
+  <img src="ezgif.com-optimize.gif" alt="DeepFocus in Action" width="700">
+</p>
+
+
 [![Release](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml/badge.svg)](https://github.com/Tech-Nest-Ventures/deepFocus/actions/workflows/release.yml)
 [![Version](https://img.shields.io/npm/v/project.svg)](https://www.npmjs.com/package/project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -69,11 +74,11 @@ Open the .dmg or .zip file and drag the Deep Focus app to your Applications fold
 - [x] Fix Emails not sending on schedule. 
 - [x] Add onboarding flow to improve user comprehension
 - [x] Allow users to customize productive/unproductive sites
+- [x] Add a gif to the README that shows the app in action
 - [ ] Add more comprehensive test suite for main and renderer processes
 - [ ] Add timeline view for daily email summaries
 - [ ] Upload app to the App Store
 - [ ] Collect error logs (sentry, etc)
-- [ ] Add a gif to the README that shows the app in action
 
 ## Philosophy
 
