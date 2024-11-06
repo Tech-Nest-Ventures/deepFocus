@@ -48,6 +48,7 @@ jobs:
         run: |
           echo "$CERTIFICATE_P12" | base64 --decode > Certificates.p12
           security import Certificates.p12 -P "$CERTIFICATE_PASSWORD" -A
+          security unlock-keychain -p "$CERTIFICATE_PASSWORD" /Users/runner/Library/Keychains/login.keychain-db
           security set-key-partition-list -S apple-tool:,apple: -s -k "$CERTIFICATE_PASSWORD" /Users/runner/Library/Keychains/login.keychain-db
         env:
           CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
