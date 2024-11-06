@@ -72,6 +72,8 @@ Open the .dmg or .zip file and drag the Deep Focus app to your Applications fold
 - [ ] Add more comprehensive test suite for main and renderer processes
 - [ ] Add timeline view for daily email summaries
 - [ ] Upload app to the App Store
+- [ ] Collect error logs (sentry, etc)
+- [ ] Add a gif to the README that shows the app in action
 
 ## Philosophy
 

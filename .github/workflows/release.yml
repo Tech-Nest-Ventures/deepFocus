@@ -1,64 +1,101 @@
-name: Release
+name: "Deep Focus CI/CD and Release Workflow"
+
 on:
+  pull_request:
+    paths:
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "package.json"
+      - "package-lock.json"
   push:
     branches:
       - main
     paths:
-      - '**/*.ts'
-      - '**/*.js'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/release.yml'
+      - "**/*.ts"
+      - "**/*.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/release.yml"
 
 permissions:
-  contents: read # for checkout
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 jobs:
-  release:
-    name: Release
+  build-and-release:
     runs-on: macos-latest
-    permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for npm provenance
+    env:
+      CI_JOB_NUMBER: 1
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
-      - name: Rebuild native modules for Electron
-        run: pnpm build:mac
+      - name: Install Code Signing Certificate
+        run: |
+          echo "$CERTIFICATE_P12" | base64 --decode > Certificates.p12
+          security import Certificates.p12 -P "$CERTIFICATE_PASSWORD" -A
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$CERTIFICATE_PASSWORD" /Users/runner/Library/Keychains/login.keychain-db
+        env:
+          CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
 
-      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
-        run: pnpm audit signatures
+      - name: Store Notarization Credentials
+        run: |
+          xcrun notarytool store-credentials --apple-id "timwillie73@gmail.com" --team-id "3Y4F3KTSJA" --password ${{ secrets.APPLE_APP_PASSWORD }} --keychain-profile "notary"
 
-      - name: Semantic Release
+      - name: Run Linting
+        run: npm run lint
+
+      - name: Build Electron App
+        run: npm run make
+
+      - name: Package as Zip
+        run: |
+          mkdir -p release
+          zip -r release/DeepFocus-${{ github.run_number }}.zip out/make/*
+
+      - name: Analyze and Create Bundle Size Badge
+        uses: timeowilliams/package-size-badge-action@v1.0.7
+        with:
+          path: ".vite/build/*.js"
+          limit: "800"
+          label: "Bundle Size"
+          color: "green"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Package Integrity
+        run: npm audit
+
+      - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      # This step will retrieve the latest created tag
       - name: Set Release Tag
         id: set_tag
         run: echo "RELEASE_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
 
-      # Now, upload the DMG to the GitHub release
-      - name: Upload DMG to GitHub Release
-        uses: softprops/action-gh-release@v2.0.8
+      - name: Notarize App
+        run: |
+          xcrun notarytool submit release/DeepFocus-${{ github.run_number }}.zip --keychain-profile "notary" --wait
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_TAG }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: DeepFocus-${{ steps.set_tag.outputs.RELEASE_TAG }}-mac.zip
+          path: release/DeepFocus-${{ github.run_number }}.zip
