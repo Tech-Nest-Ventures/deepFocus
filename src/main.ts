@@ -140,9 +140,6 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
   const now = dayjs()
   log.info('Invoked resetCounters')
 
-  stopActivityMonitoring()
-  checkAndSendMissedEmails()
-
   if (type === 'daily') {
     currentSiteTimeTrackers?.forEach((tracker) => {
       tracker.timeSpent = 0
@@ -168,8 +165,6 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
     })
     store.set('siteTimeTrackers', [])
   }
-
-  startActivityMonitoring()
 
   log.info(
     `${type.charAt(0).toUpperCase() + type.slice(1)} reset performed. Activity monitoring restarted.`
@@ -446,17 +441,41 @@ export function getSiteTrackers(): SiteTimeTracker[] {
 
 schedule.scheduleJob('0 0 0 * * *', () => {
   log.info('Scheduled daily reset at midnight')
+  stopActivityMonitoring()
+  checkAndSendMissedEmails()
   resetCounters('daily')
-  sendDailyEmail()
+  stopActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
 // Schedule a weekly reset for 11:55 PM on Sunday
 schedule.scheduleJob('55 23 * * 0', () => {
   log.info('Scheduled weekly reset at 11:55 PM on Sunday')
-  resetCounters('weekly')
+  stopActivityMonitoring()
+  checkAndSendMissedEmails()
+  resetCounters('daily')
+  stopActivityMonitoring()
   log.info('Weekly counters have been reset')
 })
+
+schedule.scheduleJob('0 0 12 * * *', () => {
+  log.info('Scheduled daily reset at 12 PM')
+  stopActivityMonitoring()
+  checkAndSendMissedEmails()
+  resetCounters('daily')
+  stopActivityMonitoring()
+  log.info('new reset date is ', store.get('lastResetDate'))
+})
+
+// TODO: For testing only
+// schedule.scheduleJob('* * * * *', () => {
+//   log.info('Scheduled daily reset at 12 PM')
+//   stopActivityMonitoring()
+//   checkAndSendMissedEmails()
+//   resetCounters('daily')
+//   stopActivityMonitoring()
+//   log.info('new reset date is ', store.get('lastResetDate'))
+// })
 
 // Log unhandled promise rejections
 process.on('unhandledRejection', (error) => {
@@ -572,8 +591,9 @@ function setupIPCListeners() {
   // Fetch the user's current deep work hours daily
   ipcMain.on('fetch-deep-work-data', (event) => {
     log.info('Received event for fetch-deep-work-data')
+    stopActivityMonitoring()
     handleDailyReset()
-
+    startActivityMonitoring()
     const updatedDeepWorkHours = getDeepWorkHours()
 
     // Convert the object into an array format for the front-end chart
@@ -611,7 +631,7 @@ export function handleDailyReset() {
 
   log.info('lastResetDate is ', store.get('lastResetDate'))
   const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-
+  checkAndSendMissedEmails()
   // Perform daily reset if the last reset was not today
   if (!lastResetDate.isSame(now, 'day')) {
     log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
@@ -670,9 +690,10 @@ async function sendDailyEmail() {
 }
 
 async function checkAndSendMissedEmails(): Promise<void> {
-  const lastEmailDate = dayjs(store.get(lastEmailDate, null) || dayjs().subtract(1, 'day'))
+  const lastEmailDate = dayjs(store.get('lastEmailDate', null) || dayjs().subtract(1, 'day'))
   const today = dayjs().startOf('day')
-
+  log.info('checking and sending missed emails')
+  log.info('lastEmailDate', lastEmailDate.format('YYYY-MM-DD'), 'today', today.format('YYYY-MM-DD'))
   if (!lastEmailDate.isSame(today, 'day')) {
     let dateToProcess = lastEmailDate.add(1, 'day')
 
@@ -681,7 +702,7 @@ async function checkAndSendMissedEmails(): Promise<void> {
       console.log(`Sending missed email for date: ${formattedDate}`)
       await sendDailyEmail()
       // Update the last email date after each successful send
-      store.set(lastEmailDate, dateToProcess.toISOString())
+      store.set('lastEmailDate', dateToProcess.toISOString())
       dateToProcess = dateToProcess.add(1, 'day')
     }
   }
