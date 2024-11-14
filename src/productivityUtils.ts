@@ -98,7 +98,7 @@ function findBestIconMatch(appName: string): string | null {
   const icons = fs.readdirSync(ICONS_BASE_PATH)
   const matchedIcon = icons.find((icon) => icon.toLowerCase().includes(sanitizedAppName))
   if (matchedIcon) {
-    log.info(`Found matching icon: ${matchedIcon} for app: ${appName}`)
+    // log.info(`Found matching icon: ${matchedIcon} for app: ${appName}`)
     return path.join(ICONS_BASE_PATH, matchedIcon)
   }
   return null
@@ -134,11 +134,11 @@ export function updateSiteTimeTracker(
     trackerType = TrackerType.App
 
     // Attempt to find the cached icon for this app
-    const iconPath = findBestIconMatch(appName);
+    const iconPath = findBestIconMatch(appName)
 
     if (fs.existsSync(iconPath)) {
       iconUrl = getBase64Icon(iconPath) // Use Base64 data URI for the icon
-      log.info(`Using cached icon: ${iconPath}`)
+      // log.info(`Using cached icon: ${iconPath}`)
     } else {
       iconUrl = 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'
       log.info(`Using default icon for app: ${appName}`)
@@ -185,10 +185,13 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
       unproductiveApps.every((item) => typeof item === 'object' && 'appName' in item)
         ? (unproductiveApps as AppIcon[])
         : []
-      console.log(formattedItem)
-      console.log(validUnproductiveApps.map((app) => app.appName))
-    if (validUnproductiveApps.some((app) => formattedItem.includes(app.appName.toLowerCase()))) {
+    if (
+      validUnproductiveApps.some((app) =>
+        formattedItem.includes(app.appName.toLowerCase().replaceAll(' ', ''))
+      )
+    ) {
       console.log('Unproductive app detected:', formattedItem)
+      console.log(validUnproductiveApps.map((app) => app.appName))
       return false
     }
   }

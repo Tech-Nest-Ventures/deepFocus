@@ -118,7 +118,7 @@ export function loadUserData(): User | null {
       : path.join(__dirname, '../../resources/icon.png')
 
     new Notification({
-      title: 'DeepFocus',
+      title: 'Deep Focus',
       body: 'Welcome back, ' + savedUser.firstName,
       icon: iconPath
     }).show()
@@ -320,7 +320,7 @@ app.whenReady().then(async () => {
       console.error('Error during permission check or timeout:', error)
 
       new Notification({
-        title: 'DeepFocus',
+        title: 'Deep Focus',
         body: `Deep Focus can't function properly without permissions.`,
         icon: iconPath
       })
@@ -395,7 +395,7 @@ export function handleUserLogout(): void {
     ? path.join(process.resourcesPath, 'icon.png')
     : path.join(__dirname, '../../resources/icon.png')
   new Notification({
-    title: 'DeepFocus',
+    title: 'Deep Focus',
     body: 'You have been logged out',
     icon: iconPath
   }).show()
@@ -439,12 +439,12 @@ export function getSiteTrackers(): SiteTimeTracker[] {
   return currentSiteTimeTrackers
 }
 
-schedule.scheduleJob('0 0 0 * * *', () => {
+schedule.scheduleJob('0 0 0 * * *', async () => {
   log.info('Scheduled daily reset at midnight')
   stopActivityMonitoring()
-  checkAndSendMissedEmails()
-  resetCounters('daily')
-  stopActivityMonitoring()
+  await checkAndSendMissedEmails()
+  await resetCounters('daily')
+  // startActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
@@ -454,7 +454,7 @@ schedule.scheduleJob('55 23 * * 0', () => {
   stopActivityMonitoring()
   checkAndSendMissedEmails()
   resetCounters('daily')
-  stopActivityMonitoring()
+  // startActivityMonitoring()
   log.info('Weekly counters have been reset')
 })
 
@@ -463,7 +463,7 @@ schedule.scheduleJob('0 0 12 * * *', () => {
   stopActivityMonitoring()
   checkAndSendMissedEmails()
   resetCounters('daily')
-  stopActivityMonitoring()
+  // startActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
@@ -626,25 +626,25 @@ function setupIPCListeners() {
   })
 }
 
-export function handleDailyReset() {
+export async function handleDailyReset() {
   const now = dayjs()
 
   log.info('lastResetDate is ', store.get('lastResetDate'))
   const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-  checkAndSendMissedEmails()
+  await checkAndSendMissedEmails()
   // Perform daily reset if the last reset was not today
   if (!lastResetDate.isSame(now, 'day')) {
     log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
-    resetCounters('daily')
+    await resetCounters('daily')
     log.info(`Daily reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
     // Check if we need to do a full weekly reset (if last reset was more than a week ago)
     if (now.diff(lastResetDate, 'week') >= 1) {
       log.info('Performing full weekly reset for the previous week.')
-      resetCounters('weekly')
+      await resetCounters('weekly')
       log.info(`Weekly reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
     } else if (now.day() === 0) {
       // Perform weekly reset if today is Sunday and it's a new week
-      resetCounters('weekly')
+      await resetCounters('weekly')
       log.info(`Weekly reset performed. New reset date stored: ${now.format('YYYY-MM-DD')}`)
     }
   }
@@ -694,6 +694,10 @@ async function checkAndSendMissedEmails(): Promise<void> {
   const today = dayjs().startOf('day')
   log.info('checking and sending missed emails')
   log.info('lastEmailDate', lastEmailDate.format('YYYY-MM-DD'), 'today', today.format('YYYY-MM-DD'))
+  new Notification({
+    title: 'Deep Focus',
+    body: 'Checking for missed emails...'
+  }).show()
   if (!lastEmailDate.isSame(today, 'day')) {
     let dateToProcess = lastEmailDate.add(1, 'day')
 

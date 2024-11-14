@@ -20,7 +20,6 @@ async function convertAndCacheIcon(appName: string, icnsPath: string): Promise<s
 
     // If the icon already exists, use the cached version
     if (fs.existsSync(outputPath)) {
-      console.log(`Using cached icon: ${outputPath}`);
       return resolve(outputPath);
     }
 
