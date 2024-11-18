@@ -462,8 +462,7 @@ schedule.scheduleJob('0 0 12 * * *', () => {
   log.info('Scheduled daily reset at 12 PM')
   stopActivityMonitoring()
   checkAndSendMissedEmails()
-  resetCounters('daily')
-  // startActivityMonitoring()
+  startActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
@@ -650,7 +649,7 @@ export async function handleDailyReset() {
   }
 }
 
-async function sendDailyEmail() {
+async function sendDailyEmail(): Promise<boolean> {
   const now = dayjs()
   log.info('currentSiteTimeTrackers:', currentSiteTimeTrackers)
 
@@ -684,30 +683,47 @@ async function sendDailyEmail() {
       body: JSON.stringify(dailyData)
     })
     console.log('Email sent status:', response.status)
+    if (response.status === 200) {
+      return true // Indicate success
+    } else {
+      return false // Indicate failure
+    }
   } catch (error) {
     console.error('Error sending email:', error)
+    return false
   }
 }
 
 async function checkAndSendMissedEmails(): Promise<void> {
-  const lastEmailDate = dayjs(store.get('lastEmailDate', null) || dayjs().subtract(1, 'day'))
-  const today = dayjs().startOf('day')
-  log.info('checking and sending missed emails')
-  log.info('lastEmailDate', lastEmailDate.format('YYYY-MM-DD'), 'today', today.format('YYYY-MM-DD'))
-  new Notification({
-    title: 'Deep Focus',
-    body: 'Checking for missed emails...'
-  }).show()
-  if (!lastEmailDate.isSame(today, 'day')) {
-    let dateToProcess = lastEmailDate.add(1, 'day')
+  try {
+    const lastEmailDate = dayjs(store.get('lastEmailDate', null) || dayjs().subtract(1, 'day'))
+    const today = dayjs().startOf('day')
+    log.info('checking and sending missed emails')
+    log.info(
+      'lastEmailDate',
+      lastEmailDate.format('YYYY-MM-DD'),
+      'today',
+      today.format('YYYY-MM-DD')
+    )
+    new Notification({
+      title: 'Deep Focus',
+      body: 'Checking for missed emails...'
+    }).show()
+    if (!lastEmailDate.isSame(today, 'day')) {
+      let dateToProcess = lastEmailDate.add(1, 'day')
 
-    while (dateToProcess.isBefore(today) || dateToProcess.isSame(today, 'day')) {
-      const formattedDate = dateToProcess.format('YYYY-MM-DD')
-      console.log(`Sending missed email for date: ${formattedDate}`)
-      await sendDailyEmail()
-      // Update the last email date after each successful send
-      store.set('lastEmailDate', dateToProcess.toISOString())
-      dateToProcess = dateToProcess.add(1, 'day')
+      while (dateToProcess.isBefore(today) || dateToProcess.isSame(today, 'day')) {
+        const formattedDate = dateToProcess.format('YYYY-MM-DD')
+        log.info(`Sending missed email for date: ${formattedDate}`)
+        const sendEmailResponse = await sendDailyEmail()
+        if (sendEmailResponse) {
+          // Update the last email date after each successful send
+          store.set('lastEmailDate', dateToProcess.toISOString())
+          dateToProcess = dateToProcess.add(1, 'day')
+        }
+      }
     }
+  } catch (error) {
+    console.error('Error checking and sending missed emails:', error)
   }
 }
