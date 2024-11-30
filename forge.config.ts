@@ -17,7 +17,7 @@ const config: ForgeConfig = {
     osxSign: {
       identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
       type: 'distribution',
-      provisioningProfile: '/Users/timeo/deepFocus/deepWork/distribution.provisionprofile'
+      provisioningProfile: '/Users/timeo/Desktop/Deep Focus/deepWork/distribution.provisionprofile'
     },
     appBundleId: 'com.electron.deepfocus',
     extraResource: [

@@ -669,12 +669,14 @@ async function sendDailyEmail(): Promise<boolean> {
     date: today,
     workToday,
     trackers: filteredTrackers.map((tracker: SiteTimeTracker) => ({
-      title: tracker.title,
-      url: tracker.url,
+      title: tracker.title.slice(0, 100), // Truncate long titles
+      url: tracker.url.slice(0, 200), // Truncate long URLs
       timeSpent: tracker.timeSpent,
-      iconUrl: tracker.iconUrl
+      iconUrl: null // Optionally remove icon URLs if they're large
     }))
   }
+
+  log.info('Payload size:', JSON.stringify(dailyData).length);
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/activity/send-daily`, {
@@ -720,6 +722,12 @@ async function checkAndSendMissedEmails(): Promise<void> {
           // Update the last email date after each successful send
           store.set('lastEmailDate', dateToProcess.toISOString())
           dateToProcess = dateToProcess.add(1, 'day')
+        } else {
+          log.info('Missed email not sent. Retrying in 10 minutes.')
+          new Notification({
+            title: 'Deep Focus',
+            body: 'Missed email not sent. Retrying in 10 minutes.'
+          }).show()
         }
       }
     }

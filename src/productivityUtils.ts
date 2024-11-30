@@ -190,8 +190,8 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
         formattedItem.includes(app.appName.toLowerCase().replaceAll(' ', ''))
       )
     ) {
-      console.log('Unproductive app detected:', formattedItem)
-      console.log(validUnproductiveApps.map((app) => app.appName))
+      // console.log('Unproductive app detected:', formattedItem)
+      //console.log(validUnproductiveApps.map((app) => app.appName))
       return false
     }
   }
