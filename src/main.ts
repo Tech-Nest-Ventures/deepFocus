@@ -36,8 +36,8 @@ export interface TypedStore extends Store<StoreSchema> {
   delete<K extends keyof StoreSchema>(key: K): void
   clear(): void
 }
-//const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
-const API_BASE_URL = 'http://localhost:5000'
+const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
+//const API_BASE_URL = 'http://localhost:5000'
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
@@ -433,15 +433,12 @@ scheduleJob('0 0 12 * * *', () => {
 })
 
 // TODO: For testing only
-scheduleJob('* * * * *', () => {
-  log.info('Scheduled daily reset at 12 PM')
-  stopActivityMonitoring()
-  // checkAndSendMissedEmails()
-  sendDailyEmail()
-  // resetCounters('daily')
-  stopActivityMonitoring()
-  log.info('new reset date is ', store.get('lastResetDate'))
-})
+// scheduleJob('* * * * *', () => {
+//   log.info('TESTING')
+//   stopActivityMonitoring()
+//   sendDailyEmail()
+//   stopActivityMonitoring()
+// })
 
 // Log unhandled promise rejections
 process.on('unhandledRejection', (error) => {
