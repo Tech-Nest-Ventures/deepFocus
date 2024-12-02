@@ -9,7 +9,6 @@ import {
   Tray,
   nativeImage
 } from 'electron'
-import { Worker } from 'worker_threads'
 import path, { join } from 'path'
 import dayjs from 'dayjs'
 import fs from 'fs'
@@ -100,11 +99,6 @@ export function handleUserData(user: User, store: TypedStore): User {
     country: user.country,
     language: user.language
   })
-  schedulerWorker.postMessage({
-    type: MessageType.SET_USER_INFO,
-    user
-  })
-
   return user
 }
 
@@ -112,7 +106,6 @@ export function handleUserData(user: User, store: TypedStore): User {
 export function loadUserData(): User | null {
   const savedUser: User | null = store.get('user') || null
   if (savedUser) {
-    schedulerWorker.postMessage({ type: MessageType.SET_USER_INFO, user: savedUser })
     const iconPath = app.isPackaged
       ? path.join(process.resourcesPath, 'icon.png')
       : path.join(__dirname, '../../resources/icon.png')
@@ -401,34 +394,12 @@ export function handleUserLogout(): void {
   }).show()
 }
 
-app.on('before-quit', () => schedulerWorker.terminate())
 app.on('will-quit', () => {
   ipcMain.removeAllListeners()
 })
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
-
-// Initialize worker and listen for messages
-const schedulerWorkerPath = join(__dirname, 'worker.js')
-const schedulerWorker = new Worker(schedulerWorkerPath, {
-  workerData: {
-    API_BASE_URL: API_BASE_URL
-  }
-})
-schedulerWorker.on('message', (message: any) => {
-  if (message.type === MessageType.RESET_WEEKLY) resetCounters('weekly')
-  if (message.type === MessageType.GET_DATA) {
-    const currentSiteTimeTrackers = getSiteTrackers()
-    const deepWorkHours = getDeepWorkHours()
-    schedulerWorker.postMessage({
-      type: MessageType.REPLY_DATA,
-      data: { currentSiteTimeTrackers, deepWorkHours }
-    })
-  }
-})
-schedulerWorker.on('error', (err) => console.error('Worker Error:', err))
-schedulerWorker.on('message', (message) => console.log('Worker Message:', message))
 
 // Getters
 export function getDeepWorkHours(): DeepWorkHours {
@@ -444,7 +415,7 @@ schedule.scheduleJob('0 0 0 * * *', async () => {
   stopActivityMonitoring()
   await checkAndSendMissedEmails()
   await resetCounters('daily')
-  // startActivityMonitoring()
+  startActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
 
@@ -453,8 +424,8 @@ schedule.scheduleJob('55 23 * * 0', () => {
   log.info('Scheduled weekly reset at 11:55 PM on Sunday')
   stopActivityMonitoring()
   checkAndSendMissedEmails()
-  resetCounters('daily')
-  // startActivityMonitoring()
+  resetCounters('weekly')
+  startActivityMonitoring()
   log.info('Weekly counters have been reset')
 })
 
