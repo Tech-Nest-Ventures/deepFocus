@@ -30,6 +30,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "electron": "33.0.2",
     "eslint": "^8.57.1",
+    "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-solid": "^0.14.3",
     "prettier": "^3.3.3",

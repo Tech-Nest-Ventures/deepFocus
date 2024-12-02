@@ -141,7 +141,6 @@ export function updateSiteTimeTracker(
       // log.info(`Using cached icon: ${iconPath}`)
     } else {
       iconUrl = 'https://cdn-icons-png.freepik.com/512/7022/7022186.png'
-      log.info(`Using default icon for app: ${appName}`)
     }
   }
 
@@ -149,7 +148,7 @@ export function updateSiteTimeTracker(
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     log.info('Updating existing tracker', tracker.title, tracker.timeSpent)
-    tracker.timeSpent += 5
+    tracker.timeSpent += 30
     tracker.lastActiveTimestamp = currentTime
     tracker.iconUrl = iconUrl
   } else {

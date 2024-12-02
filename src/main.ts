@@ -9,13 +9,13 @@ import {
   Tray,
   nativeImage
 } from 'electron'
-import path, { join } from 'path'
+import path from 'path'
 import dayjs from 'dayjs'
 import fs from 'fs'
-import schedule from 'node-schedule'
+import { scheduleJob } from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, MessageType, User, AppIcon } from './types'
+import { StoreSchema, SiteTimeTracker, DeepWorkHours, User, AppIcon } from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -29,7 +29,6 @@ import {
 import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
-
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
@@ -37,7 +36,8 @@ export interface TypedStore extends Store<StoreSchema> {
   delete<K extends keyof StoreSchema>(key: K): void
   clear(): void
 }
-const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
+//const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
+const API_BASE_URL = 'http://localhost:5000'
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
@@ -226,7 +226,7 @@ export function startActivityMonitoring(): void {
       } catch (error) {
         console.error('Error getting active window or URL:', error)
       }
-    }, 5000) // Run the monitoring function every 5 seconds
+    }, 30000) // Run the monitoring function every 5 seconds
     log.info('Activity monitoring started.', today.format('dddd, HH:mm'))
   }
 }
@@ -410,26 +410,21 @@ export function getSiteTrackers(): SiteTimeTracker[] {
   return currentSiteTimeTrackers
 }
 
-schedule.scheduleJob('0 0 0 * * *', async () => {
+scheduleJob('0 0 0 * * *', async () => {
   log.info('Scheduled daily reset at midnight')
   stopActivityMonitoring()
   await checkAndSendMissedEmails()
   await resetCounters('daily')
+
+  // Check if today is Sunday and perform weekly reset if true
+  if (dayjs().day() === 0) {
+    log.info('Performing weekly reset on Sunday')
+    await resetCounters('weekly')
+  }
   startActivityMonitoring()
-  log.info('new reset date is ', store.get('lastResetDate'))
 })
 
-// Schedule a weekly reset for 11:55 PM on Sunday
-schedule.scheduleJob('55 23 * * 0', () => {
-  log.info('Scheduled weekly reset at 11:55 PM on Sunday')
-  stopActivityMonitoring()
-  checkAndSendMissedEmails()
-  resetCounters('weekly')
-  startActivityMonitoring()
-  log.info('Weekly counters have been reset')
-})
-
-schedule.scheduleJob('0 0 12 * * *', () => {
+scheduleJob('0 0 12 * * *', () => {
   log.info('Scheduled daily reset at 12 PM')
   stopActivityMonitoring()
   checkAndSendMissedEmails()
@@ -438,14 +433,15 @@ schedule.scheduleJob('0 0 12 * * *', () => {
 })
 
 // TODO: For testing only
-// schedule.scheduleJob('* * * * *', () => {
-//   log.info('Scheduled daily reset at 12 PM')
-//   stopActivityMonitoring()
-//   checkAndSendMissedEmails()
-//   resetCounters('daily')
-//   stopActivityMonitoring()
-//   log.info('new reset date is ', store.get('lastResetDate'))
-// })
+scheduleJob('* * * * *', () => {
+  log.info('Scheduled daily reset at 12 PM')
+  stopActivityMonitoring()
+  // checkAndSendMissedEmails()
+  sendDailyEmail()
+  // resetCounters('daily')
+  stopActivityMonitoring()
+  log.info('new reset date is ', store.get('lastResetDate'))
+})
 
 // Log unhandled promise rejections
 process.on('unhandledRejection', (error) => {
@@ -643,17 +639,19 @@ async function sendDailyEmail(): Promise<boolean> {
       title: tracker.title.slice(0, 100), // Truncate long titles
       url: tracker.url.slice(0, 200), // Truncate long URLs
       timeSpent: tracker.timeSpent,
-      iconUrl: null // Optionally remove icon URLs if they're large
+      iconUrl: tracker.iconUrl
     }))
   }
-
-  log.info('Payload size:', JSON.stringify(dailyData).length);
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/activity/send-daily`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dailyData)
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dailyData
+      })
     })
     console.log('Email sent status:', response.status)
     if (response.status === 200) {
