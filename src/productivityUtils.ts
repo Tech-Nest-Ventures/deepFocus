@@ -148,7 +148,7 @@ export function updateSiteTimeTracker(
   let tracker = timeTrackers.find((t) => t.url === trackerKey)
   if (tracker) {
     log.info('Updating existing tracker', tracker.title, tracker.timeSpent)
-    tracker.timeSpent += 30
+    tracker.timeSpent += 5
     tracker.lastActiveTimestamp = currentTime
     tracker.iconUrl = iconUrl
   } else {

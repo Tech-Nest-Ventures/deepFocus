@@ -119,6 +119,11 @@ This will whitelist the app for future use.
 2. pnpm (not supported)
    We saw some issues with how pnpm was bundling dependencies in the electron-builder stage and it's inability to target certain architectures. We recommend using npm for now.
 
+   If you're adamant - run this:
+  ```bash 
+   pnpm config set node-linker hoisted --location project
+   ```
+
 3. Verifying the app:
 
 ```bash

@@ -16,12 +16,11 @@ const config: ForgeConfig = {
     icon: './resources/icon.icns',
     osxSign: {
       identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
-      type: 'distribution',
-      provisioningProfile: '/Users/timeo/Desktop/Deep Focus/deepWork/distribution.provisionprofile'
+      // type: 'distribution',
+      // provisioningProfile: '/Users/timeo/Desktop/Deep Focus/deepWork/distribution.provisionprofile'
     },
     appBundleId: 'com.electron.deepfocus',
     extraResource: [
-      'resources/.env',
       'resources/icon.icns',
       'resources/icon.png',
       'resources/icon_green.png',
@@ -39,13 +38,12 @@ const config: ForgeConfig = {
     new MakerRpm({}),
     new MakerDeb({}),
     new MakerDMG({
-      appPath: './out/Deep Focus-darwin-arm64/Deep Focus.app',
       name: 'Deep Focus',
       icon: './resources/icon.icns',
       format: 'ULFO',
       overwrite: true,
       contents: (opts) => [
-        { x: 130, y: 220, type: 'file', path: opts.appPath },
+        { x: 130, y: 220, type: 'file', path: './out/Deep Focus-darwin-arm64/Deep Focus.app' },
         { x: 410, y: 220, type: 'link', path: '/Applications' }
       ]
     }),

@@ -1,5 +1,3 @@
-const isProduction = import.meta.env.PROD
+const isProduction = true
 
-export const API_BASE_URL = isProduction
-  ? import.meta.env.VITE_SERVER_URL_PROD
-  : import.meta.env.VITE_SERVER_URL_PROD
+export const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'

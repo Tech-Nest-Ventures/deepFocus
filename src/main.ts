@@ -37,7 +37,7 @@ export interface TypedStore extends Store<StoreSchema> {
   clear(): void
 }
 const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
-//const API_BASE_URL = 'http://localhost:5000'
+// const API_BASE_URL = 'http://localhost:3003'
 const store = new Store<StoreSchema>() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
@@ -56,6 +56,8 @@ let user: User | null = store.get('user', null) // change back to null
 let iconPath = ''
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
+let persistenceInterval: NodeJS.Timeout | null = null
+let isSystemSuspended = false
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 
@@ -226,7 +228,7 @@ export function startActivityMonitoring(): void {
       } catch (error) {
         console.error('Error getting active window or URL:', error)
       }
-    }, 30000) // Run the monitoring function every 5 seconds
+    }, 5000) // Run the monitoring function every 5 seconds
     log.info('Activity monitoring started.', today.format('dddd, HH:mm'))
   }
 }
@@ -356,6 +358,19 @@ app.whenReady().then(async () => {
 
 app.on('ready', () => {
   checkForUpdates()
+  startPersistenceInterval();
+
+  powerMonitor.on('suspend', () => {
+    isSystemSuspended = true;
+    stopPersistenceInterval();
+    console.log('System suspended.');
+  });
+
+  powerMonitor.on('resume', () => {
+    isSystemSuspended = false;
+    startPersistenceInterval();
+    console.log('System resumed.');
+  });
 })
 
 app.on('browser-window-focus', () => {
@@ -613,6 +628,80 @@ export async function handleDailyReset() {
   }
 }
 
+async function persistDailyData(
+  dailyData: any,
+  deepWorkHours: any,
+  today: keyof any,
+  username: string
+): Promise<boolean> {
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/activity/persist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dailyData,
+        deepWorkHours,
+        today,
+        username
+      })
+    })
+
+    if (response.ok) {
+      console.log('Daily data persisted successfully')
+      return true
+    } else {
+      console.error('Failed to persist daily data:', response.status, response.statusText)
+      return false
+    }
+  } catch (error) {
+    console.error('Error persisting daily data:', error)
+    return false
+  }
+}
+function startPersistenceInterval(): void {
+  if (!persistenceInterval && !isSystemSuspended) {
+    persistenceInterval = setInterval(
+      async () => {
+        const today = dayjs().format('dddd') as keyof DeepWorkHours; // "Wednesday"
+        const username = user.username;
+        const deepWorkHours = getDeepWorkHours();
+        const MIN_TIME_THRESHOLD = 10;
+
+        const filteredTrackers = currentSiteTimeTrackers.filter(
+          (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
+        );
+
+        const workToday = deepWorkHours[today as keyof DeepWorkHours] as number;
+        log.info('workToday:', workToday);
+
+        // Create an array of activity objects
+        const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
+          username: user.username,
+          date: today,
+          url: tracker.url ? tracker.url.slice(0, 200) : "unknown", // Fallback for undefined url
+          title: tracker.title ? tracker.title.slice(0, 100) : "Untitled",
+          timeSpent: tracker.timeSpent
+        }));
+
+        await persistDailyData(dailyData, deepWorkHours, today, username);
+      },
+      15 * 60 * 1000
+    );
+    console.log('Persistence interval started.');
+  }
+}
+
+function stopPersistenceInterval(): void {
+  if (persistenceInterval) {
+    clearInterval(persistenceInterval)
+    persistenceInterval = null
+    console.log('Persistence interval stopped.')
+  }
+}
+
 async function sendDailyEmail(): Promise<boolean> {
   const now = dayjs()
   log.info('currentSiteTimeTrackers:', currentSiteTimeTrackers)
@@ -623,7 +712,7 @@ async function sendDailyEmail(): Promise<boolean> {
   )
   const today = now.format('dddd') // needs to be number to access deepWorkHours
   const deepWorkHours = getDeepWorkHours()
-  const workToday = deepWorkHours[today] as number
+  const workToday = deepWorkHours[today as keyof DeepWorkHours] as number
   log.info('workToday:', workToday)
   const lastResetDate = now.toISOString()
   store?.set('lastResetDate', lastResetDate)
