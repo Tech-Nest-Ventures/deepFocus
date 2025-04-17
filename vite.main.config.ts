@@ -8,7 +8,10 @@ export default defineConfig({
     target: 'node16', // Ensure compatibility with the Electron version you are using
     emptyOutDir: false, // Clear the output directory before building
     lib: {
-      entry: 'src/main.ts', // The entry file for the main process
+      entry: {
+        main: 'src/main.ts', // The entry file for the main process
+        wsServer: 'src/wsServer.ts' // Add the WebSocket server entry point
+      },
       formats: ['cjs'] // Electron main process uses CommonJS
     },
     rollupOptions: {
@@ -17,15 +20,13 @@ export default defineConfig({
         'electron' // Exclude Electron from the bundle
       ],
       output: {
-        entryFileNames: 'main.js', // Output file name for the main process
-        manualChunks: undefined, // Disable code-splitting
-        inlineDynamicImports: true // Inline all dynamic imports
+        entryFileNames: '[name].js', // This will output main.js and wsServer.js
+        manualChunks: undefined // Disable code-splitting
       },
       plugins: [
         commonjs({
-          dynamicRequireTargets: [
-          ],
-          ignoreDynamicRequires: false 
+          dynamicRequireTargets: [],
+          ignoreDynamicRequires: false
         }),
         nodeResolve() // Enables resolving modules from node_modules
       ]

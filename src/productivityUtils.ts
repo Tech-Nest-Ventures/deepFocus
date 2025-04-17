@@ -8,7 +8,8 @@ import {
   DeepWorkHours,
   TrackerType
 } from './types'
-import { TypedStore } from './main'
+import { getDeepWorkHours, TypedStore } from './main'
+import { optiSync } from './optiSync'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
 import log from 'electron-log/node.js'
@@ -162,6 +163,7 @@ export function updateSiteTimeTracker(
     }
     timeTrackers.push(tracker)
   }
+  optiSync.sendUpdates(timeTrackers, getDeepWorkHours());
 
   return tracker
 }
