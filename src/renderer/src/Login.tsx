@@ -1,5 +1,5 @@
 import type { SubmitHandler } from '@modular-forms/solid'
-import { createSignal } from 'solid-js'
+import { createSignal, onMount, createEffect } from 'solid-js'
 import { createForm } from '@modular-forms/solid'
 import { useNavigate } from '@solidjs/router'
 import { Motion } from 'solid-motionone'
@@ -31,6 +31,16 @@ function Login() {
   const navigate = useNavigate()
   const [_loggedIn, setIsLoggedIn] = useAuth()
 
+  onMount(() => {
+    console.log("window.electron:", window.electron);
+    console.log("Available methods:", Object.keys(window.electron || {}));
+  });
+  
+  // Alternatively, you can use createEffect if you need reactivity
+  createEffect(() => {
+    console.log("window.electron (from createEffect):", window.electron);
+  });
+
   const handleSubmit: SubmitHandler<any> = async (values) => {
     try {
       console.log('Values are ', values)
@@ -53,7 +63,7 @@ function Login() {
 
       const result = await response.json()
       const { token, user } = result as { token: string; user: User }
-
+      console.log('User is ', user)
       // Store token and user info in localStorage
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))

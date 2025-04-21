@@ -5,6 +5,7 @@ import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
 import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerPKG } from '@electron-forge/maker-pkg'
@@ -15,7 +16,7 @@ const config: ForgeConfig = {
     name: 'Deep Focus',
     icon: './resources/icon.icns',
     osxSign: {
-      identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
+      identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)'
       // type: 'distribution',
       // provisioningProfile: '/Users/timeo/Desktop/Deep Focus/deepWork/distribution.provisionprofile'
     },
@@ -53,23 +54,24 @@ const config: ForgeConfig = {
     })
   ],
   plugins: [
+    new AutoUnpackNativesPlugin({}),
     new VitePlugin({
       build: [
         {
           entry: 'src/main.ts',
-          config: 'vite.main.config.ts',
+          config: 'vite.main.config.mts',
           target: 'main'
         },
         {
           entry: 'src/preload.ts',
-          config: 'vite.preload.config.ts',
+          config: 'vite.preload.config.mts',
           target: 'preload'
         }
       ],
       renderer: [
         {
           name: 'main_window',
-          config: 'vite.renderer.config.mts' // Path to Vite config for renderer process
+          config: 'vite.renderer.config.mts'
         }
       ]
     }),

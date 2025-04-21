@@ -14,7 +14,6 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import { scheduleJob } from 'node-schedule'
 import dotenv from 'dotenv'
-import Store from 'electron-store'
 import { StoreSchema, SiteTimeTracker, DeepWorkHours, User, AppIcon } from './types'
 import {
   updateSiteTimeTracker,
@@ -29,6 +28,9 @@ import {
 import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
 import log from 'electron-log/node.js'
+import { ChildProcess, fork } from 'child_process'
+import { join } from 'path'
+
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
@@ -38,8 +40,8 @@ export interface TypedStore extends Store<StoreSchema> {
 }
 const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
 // const API_BASE_URL = 'http://localhost:3003'
-const store = new Store<StoreSchema>() as TypedStore
-let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
+let store: TypedStore
+let currentSiteTimeTrackers: SiteTimeTracker[] = []
 let monitoringInterval: NodeJS.Timeout | null = null
 let deepWorkHours = {
   Monday: 0,
@@ -52,18 +54,80 @@ let deepWorkHours = {
 } as DeepWorkHours
 
 let currentDeepWork = 0
-let user: User | null = store.get('user', null) // change back to null
+let user: User | null = null
 let iconPath = ''
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let persistenceInterval: NodeJS.Timeout | null = null
 let isSystemSuspended = false
+let serverProcess: ChildProcess | null = null
+let isQuitting = false // Add this flag to track app quit state
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 
 log.info('Log from the main process')
 const resourcesPath: string = setupEnvironment()
 log.info('Set up Environment')
+
+// Initialize store asynchronously
+async function initializeStore() {
+  const { default: Store } = await import('electron-store')
+  store = new Store<StoreSchema>() as TypedStore
+
+  // Move initial store operations here
+  currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
+  deepWorkHours = store.get('deepWorkHours', {
+    Monday: 0,
+    Tuesday: 0,
+    Wednesday: 0,
+    Thursday: 0,
+    Friday: 0,
+    Saturday: 0,
+    Sunday: 0
+  }) as DeepWorkHours
+  user = store.get('user', null)
+}
+
+function startWebSocketServer() {
+  try {
+    // Don't start if we're quitting or if a process already exists
+    if (isQuitting || serverProcess) {
+      return
+    }
+
+    serverProcess = fork(join(__dirname, 'wsServer.js'), [], {
+      stdio: 'inherit'
+    })
+
+    serverProcess.on('error', (err) => {
+      log.error('WebSocket Server Error:', err)
+    })
+
+    serverProcess.on('exit', (code) => {
+      log.info(`WebSocket Server exited with code ${code}`)
+      serverProcess = null
+
+      // Only restart if:
+      // 1. Not quitting
+      // 2. Exit wasn't normal (code !== 0)
+      // 3. System isn't suspended
+      if (!isQuitting && code !== 0 && !isSystemSuspended) {
+        log.info('Restarting WebSocket Server...')
+        setTimeout(() => startWebSocketServer(), 1000) // Add delay before restart
+      }
+    })
+  } catch (err) {
+    log.error('Failed to start WebSocket Server:', err)
+  }
+}
+
+function stopWebSocketServer() {
+  if (serverProcess) {
+    log.info('Stopping WebSocket Server...')
+    serverProcess.kill()
+    serverProcess = null
+  }
+}
 
 // Initialize environment variables based on the environment
 function setupEnvironment(): string {
@@ -250,9 +314,9 @@ async function createWindow(): Promise<BrowserWindow> {
     height: 700,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegrationInWorker: true,
-      sandbox: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload/preload.js')
     },
     icon: iconPath
   })
@@ -289,21 +353,15 @@ async function createWindow(): Promise<BrowserWindow> {
 }
 
 app.whenReady().then(async () => {
+  await initializeStore()
+
   const iconPath = app.isPackaged
     ? path.join(process.resourcesPath, 'trayIcon.png')
     : path.join(__dirname, '../../resources/trayIcon.png')
   log.info('app is ready. Retrieving currentSiteTimeTrackers and deepWorkHours from store')
-  currentSiteTimeTrackers = store.get('siteTimeTrackers', [])
-  deepWorkHours = store.get('deepWorkHours', {
-    Monday: 0,
-    Tuesday: 0,
-    Wednesday: 0,
-    Thursday: 0,
-    Friday: 0,
-    Saturday: 0,
-    Sunday: 0
-  }) as DeepWorkHours
+  log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
 
+  startWebSocketServer()
   await createWindow().then(async () => {
     try {
       log.info('created window.')
@@ -358,19 +416,21 @@ app.whenReady().then(async () => {
 
 app.on('ready', () => {
   checkForUpdates()
-  startPersistenceInterval();
+  startPersistenceInterval()
 
   powerMonitor.on('suspend', () => {
-    isSystemSuspended = true;
-    stopPersistenceInterval();
-    console.log('System suspended.');
-  });
+    isSystemSuspended = true
+    stopPersistenceInterval()
+    console.log('System suspended.')
+    stopWebSocketServer()
+  })
 
   powerMonitor.on('resume', () => {
-    isSystemSuspended = false;
-    startPersistenceInterval();
-    console.log('System resumed.');
-  });
+    isSystemSuspended = false
+    startPersistenceInterval()
+    console.log('System resumed.')
+    startWebSocketServer()
+  })
 })
 
 app.on('browser-window-focus', () => {
@@ -409,8 +469,9 @@ export function handleUserLogout(): void {
   }).show()
 }
 
-app.on('will-quit', () => {
-  ipcMain.removeAllListeners()
+app.on('before-quit', () => {
+  isQuitting = true
+  stopWebSocketServer()
 })
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
@@ -602,6 +663,11 @@ function setupIPCListeners() {
       event.reply('app-icons-response', [])
     }
   })
+
+  ipcMain.on('user-data', (_, user) => {
+    console.log('Received user data in main process:', user)
+    // Handle the user data as needed
+  })
 }
 
 export async function handleDailyReset() {
@@ -634,7 +700,6 @@ async function persistDailyData(
   today: keyof any,
   username: string
 ): Promise<boolean> {
-
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/activity/persist`, {
       method: 'POST',
@@ -665,32 +730,32 @@ function startPersistenceInterval(): void {
   if (!persistenceInterval && !isSystemSuspended) {
     persistenceInterval = setInterval(
       async () => {
-        const today = dayjs().format('dddd') as keyof DeepWorkHours; // "Wednesday"
-        const username = user.username;
-        const deepWorkHours = getDeepWorkHours();
-        const MIN_TIME_THRESHOLD = 10;
+        const today = dayjs().format('dddd') as keyof DeepWorkHours // "Wednesday"
+        const username = user.username
+        const deepWorkHours = getDeepWorkHours()
+        const MIN_TIME_THRESHOLD = 10
 
         const filteredTrackers = currentSiteTimeTrackers.filter(
           (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
-        );
+        )
 
-        const workToday = deepWorkHours[today as keyof DeepWorkHours] as number;
-        log.info('workToday:', workToday);
+        const workToday = deepWorkHours[today as keyof DeepWorkHours] as number
+        log.info('workToday:', workToday)
 
         // Create an array of activity objects
         const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
           username: user.username,
           date: today,
-          url: tracker.url ? tracker.url.slice(0, 200) : "unknown", // Fallback for undefined url
-          title: tracker.title ? tracker.title.slice(0, 100) : "Untitled",
+          url: tracker.url ? tracker.url.slice(0, 200) : 'unknown', // Fallback for undefined url
+          title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
           timeSpent: tracker.timeSpent
-        }));
+        }))
 
-        await persistDailyData(dailyData, deepWorkHours, today, username);
+        await persistDailyData(dailyData, deepWorkHours, today, username)
       },
       15 * 60 * 1000
-    );
-    console.log('Persistence interval started.');
+    )
+    console.log('Persistence interval started.')
   }
 }
 
