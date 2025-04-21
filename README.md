@@ -45,7 +45,13 @@ Primarily for macOS. Coming to Windows & Linux shortly.
 </p>
 
 
-
+# deepFocus with OptiSync
+Electron app with WebSocket sync for productivity tracking.
+## Setup
+1. `pnpm install`
+2. `pnpm run start`
+## Demo
+Logs show WebSocket sync of SiteTimeTracker updates.
 
 ### Installation
 
