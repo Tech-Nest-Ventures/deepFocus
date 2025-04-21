@@ -314,9 +314,9 @@ async function createWindow(): Promise<BrowserWindow> {
     height: 700,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegrationInWorker: true,
-      sandbox: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload/preload.js')
     },
     icon: iconPath
   })
@@ -662,6 +662,11 @@ function setupIPCListeners() {
       console.error('Error fetching app icons:', error)
       event.reply('app-icons-response', [])
     }
+  })
+
+  ipcMain.on('user-data', (_, user) => {
+    console.log('Received user data in main process:', user)
+    // Handle the user data as needed
   })
 }
 

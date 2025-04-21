@@ -5,15 +5,15 @@ import { builtinModules } from 'module'
 
 export default defineConfig({
   build: {
-    target: 'node20', // Ensure compatibility with the Electron version you are using
-    emptyOutDir: false, // Clear the output directory before building
-    outDir: '.vite/build', // Use absolute path
+    target: 'node20',
+    emptyOutDir: false,
+    outDir: '.vite/build',
     lib: {
       entry: {
-        main: 'src/main.ts', // The entry file for the main process
-        wsServer: 'src/wsServer.ts' // Add the WebSocket server entry point
+        main: 'src/main.ts',
+        wsServer: 'src/wsServer.ts'
       },
-      formats: ['cjs'] // Electron main process uses CommonJS
+      formats: ['cjs']
     },
     rollupOptions: {
       external: [
@@ -28,8 +28,8 @@ export default defineConfig({
         'isomorphic-ws'
       ],
       output: {
-        entryFileNames: '[name].js', // This will output main.js and wsServer.js
-        manualChunks: undefined // Disable code-splitting
+        entryFileNames: '[name].js',
+        manualChunks: undefined
       },
       plugins: [
         commonjs({
