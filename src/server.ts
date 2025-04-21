@@ -15,7 +15,7 @@ export function startServer() {
         const msg = JSON.parse(data.toString())
         if (msg.type === 'SYNC_UPDATE') {
           const { trackers, deepWorkHours } = msg.data
-          // Forward to Railway
+          // Forward to Railway using native fetch
           const response = await fetch(`${API_BASE_URL}/api/v1/activity/persist`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

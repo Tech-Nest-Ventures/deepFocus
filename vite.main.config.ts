@@ -7,6 +7,7 @@ export default defineConfig({
   build: {
     target: 'node16', // Ensure compatibility with the Electron version you are using
     emptyOutDir: false, // Clear the output directory before building
+    outDir: '.vite/build', // Use absolute path
     lib: {
       entry: {
         main: 'src/main.ts', // The entry file for the main process
@@ -16,8 +17,12 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        ...builtinModules, // Exclude built-in Node.js modules from the bundle
-        'electron' // Exclude Electron from the bundle
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+        'electron',
+        'ws',
+        'electron-store',
+        'conf' // electron-store dependency
       ],
       output: {
         entryFileNames: '[name].js', // This will output main.js and wsServer.js
@@ -26,10 +31,17 @@ export default defineConfig({
       plugins: [
         commonjs({
           dynamicRequireTargets: [],
-          ignoreDynamicRequires: false
+          ignoreDynamicRequires: true,
+          requireReturnsDefault: 'auto'
         }),
-        nodeResolve() // Enables resolving modules from node_modules
+        nodeResolve({
+          preferBuiltins: true,
+          exportConditions: ['node', 'import', 'require']
+        })
       ]
     }
+  },
+  optimizeDeps: {
+    exclude: ['electron-store', 'node-fetch', 'conf']
   }
 })
