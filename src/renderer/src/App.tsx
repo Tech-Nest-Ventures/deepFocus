@@ -165,43 +165,46 @@ const App = (props: ComponentProps<typeof Router>) => {
 
     return (
       <>
-        <header class="flex justify-between items-center p-2 bg-gray-800 opacity-[0.50] w-full">
-          <img alt="logo" class="logo h-[40px] w-[40px]" src={logo} />
-          <nav class="flex items-center justify-center space-x-4">
+        {/* Swiss Typography: Clean header with grid-based layout, left-aligned, extreme whitespace */}
+        <header class="flex justify-between items-center p-swiss-6 bg-background border-b-2 border-foreground w-full">
+          <img alt="logo" class="logo h-10 w-10" src={logo} />
+          <nav class="flex items-center justify-end space-x-swiss-4">
             {!isLoggedIn() ? (
               location.pathname !== '/signup' ? (
-                <A href="/signup" class="px-4 py-2 rounded text-white logo">
-                  <Button id="signup">Sign Up</Button>
+                <A href="/signup" class="logo">
+                  <Button id="signup" variant="outline" size="sm">SIGN UP</Button>
                 </A>
               ) : (
-                <A href="/login" class="px-4 py-2 rounded text-white logo">
-                  <Button id="login">Login</Button>
+                <A href="/login" class="logo">
+                  <Button id="login" variant="outline" size="sm">LOGIN</Button>
                 </A>
               )
             ) : (
               <>
-                <A href="/" class=" py-2 rounded text-white logo" id="home">
-                  <Button class="logo">
+                <A href="/" class="logo" id="home">
+                  <Button variant="ghost" size="icon" class="logo">
                     <VsHome />
                   </Button>
                 </A>
-                <A href="/analytics" class="py-2 rounded text-white logo" id="analytics">
-                  <Button class="logo">
+                <A href="/analytics" class="logo" id="analytics">
+                  <Button variant="ghost" size="icon" class="logo">
                     <SiSimpleanalytics />
                   </Button>
                 </A>
                 <A
                   href="/settings"
-                  class="py-2 rounded text-white flex items-center logo"
+                  class="flex items-center logo"
                   id="settings"
                 >
-                  <Button class="logo">
+                  <Button variant="ghost" size="icon" class="logo">
                     <IoSettingsSharp />
                   </Button>
                 </A>
                 <Button
                   onClick={handleLogoutClick}
-                  class="px-4 rounded text-white logo"
+                  variant="ghost"
+                  size="icon"
+                  class="logo"
                   id="logout"
                 >
                   <IoLogOutOutline />
@@ -213,14 +216,15 @@ const App = (props: ComponentProps<typeof Router>) => {
 
         {showLogoutModal() && (
           <Modal onClose={handleCloseModal}>
-            <div class="p-4 text-center">
-              <h2 class="text-lg font-medium mb-4">Are you sure you want to logout?</h2>
-              <div class="flex justify-center space-x-4">
-                <Button onClick={handleCloseModal} class="bg-gray-500 text-white px-4 py-2 rounded">
-                  Cancel
+            {/* Swiss Typography: Left-aligned, clean typography, extreme whitespace */}
+            <div class="p-swiss-8">
+              <h2 class="text-xl font-extrabold mb-swiss-6 uppercase tracking-tight">ARE YOU SURE YOU WANT TO LOGOUT?</h2>
+              <div class="flex justify-start space-x-swiss-4">
+                <Button onClick={handleCloseModal} variant="outline" size="sm">
+                  CANCEL
                 </Button>
-                <Button onClick={handleLogout} class="bg-red-500 text-white px-4 py-2 rounded">
-                  Yes, Logout
+                <Button onClick={handleLogout} variant="destructive" size="sm">
+                  YES, LOGOUT
                 </Button>
               </div>
             </div>
@@ -233,7 +237,9 @@ const App = (props: ComponentProps<typeof Router>) => {
   return (
     <>
       <NavBar />
-      {props.children}
+      <main class="flex-1 overflow-y-auto overflow-x-hidden">
+        {props.children}
+      </main>
     </>
   )
 }

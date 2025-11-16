@@ -16,13 +16,11 @@ const config: ForgeConfig = {
     icon: './resources/icon.icns',
     osxSign: {
       identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
-      // type: 'distribution',
-      // provisioningProfile: '/Users/timeo/Desktop/Deep Focus/deepWork/distribution.provisionprofile'
+      type: 'distribution'
     },
     appBundleId: 'com.electron.deepfocus',
     extraResource: [
       'resources/icon.icns',
-      'resources/icon.png',
       'resources/icon_green.png',
       'resources/icon_red.png',
       'resources/icon_yellow.png',
@@ -47,10 +45,11 @@ const config: ForgeConfig = {
         { x: 410, y: 220, type: 'link', path: '/Applications' }
       ]
     }),
-    new MakerPKG({
-      name: 'Deep Focus',
-      identity: 'Developer ID Installer: Timeo Williams (3Y4F3KTSJA)'
-    })
+    // Temporarily disabled until we have the correct certificate
+    // new MakerPKG({
+    //   name: 'Deep Focus',
+    //   identity: 'Developer ID Installer: Timeo Williams (3Y4F3KTSJA)'
+    // })
   ],
   plugins: [
     new VitePlugin({

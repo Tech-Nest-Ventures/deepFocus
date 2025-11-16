@@ -85,21 +85,20 @@ const UnproductiveApps = () => {
   }
 
   return (
-    <div class="p-4">
-      <h1 class="mb-8 text-lg mt-4 font-normal">Change Unproductive Apps</h1>
+    <div class="space-y-swiss-8">
+      <h1 class="mb-swiss-6 text-xl font-extrabold uppercase tracking-tight">CHANGE UNPRODUCTIVE APPS</h1>
       <div class="max-h-96 overflow-y-auto">
-        <ul class="space-y-2">
+        <ul class="space-y-swiss-4">
           <For each={paginatedApps()}>
             {(app) => (
-              <li class="flex items-center">
-                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-4 h-4 mr-2" />
-                {app.appName}
+              <li class="flex items-center justify-between border-b-2 border-foreground pb-swiss-3">
+                <div class="flex items-center gap-swiss-3">
+                  <img src={app.iconPath} alt={`${app.appName} icon`} class="w-6 h-6" />
+                  <span class="font-semibold uppercase">{app.appName}</span>
+                </div>
                 <Button
-                  class={`ml-auto p-1 rounded ${
-                    unproductiveApps().some((unproductiveApp) => unproductiveApp.appName === app.appName)
-                      ? 'bg-red-500 text-white'
-                      : 'bg-blue-500'
-                  }`}
+                  variant={unproductiveApps().some((unproductiveApp) => unproductiveApp.appName === app.appName) ? 'destructive' : 'outline'}
+                  size="sm"
                   onClick={() => toggleUnproductive(app)}
                 >
                   {unproductiveApps().some(
@@ -116,23 +115,23 @@ const UnproductiveApps = () => {
         </ul>
       </div>
 
-      <div class="flex justify-between mt-4">
-        <Button onClick={prevPage} disabled={currentPage() === 1}>
-          Previous
+      <div class="flex justify-between mt-swiss-6">
+        <Button onClick={prevPage} disabled={currentPage() === 1} variant="outline" size="sm">
+          PREVIOUS
         </Button>
-        <Button onClick={nextPage} disabled={currentPage() * appsPerPage >= apps().length}>
-          Next
+        <Button onClick={nextPage} disabled={currentPage() * appsPerPage >= apps().length} variant="outline" size="sm">
+          NEXT
         </Button>
       </div>
 
-      <div class="mt-6">
-        <h3 class="text-base mb-2">Unproductive Apps:</h3>
-        <ul>
+      <div class="mt-swiss-8">
+        <h3 class="text-lg font-bold mb-swiss-4 uppercase tracking-tight">UNPRODUCTIVE APPS:</h3>
+        <ul class="space-y-swiss-3">
           <For each={unproductiveApps()}>
             {(app) => (
-              <li class="flex items-center">
-                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-4 h-4 mr-2" />
-                {app.appName}
+              <li class="flex items-center gap-swiss-3 border-b-2 border-foreground pb-swiss-2">
+                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-6 h-6" />
+                <span class="font-semibold uppercase">{app.appName}</span>
               </li>
             )}
           </For>

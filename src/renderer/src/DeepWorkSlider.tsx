@@ -29,8 +29,7 @@ const DeepWorkSlider = () => {
   
 
   return (
-    <div class="my-6">
-      {/* <h3 class="text-base font-normal mb-2">Select Deep Work Goal Hours</h3> */}
+    <div class="my-swiss-8">
       <input
         type="range"
         min="1"
@@ -39,8 +38,8 @@ const DeepWorkSlider = () => {
         class="slider"
         onInput={handleSliderChange}
       />
-      <div class="mt-2">
-        <span>{deepWorkTarget()} hours</span>
+      <div class="mt-swiss-4">
+        <span class="text-xl font-extrabold font-mono uppercase">{deepWorkTarget()} HOURS</span>
       </div>
     </div>
   )

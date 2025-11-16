@@ -64,7 +64,7 @@ const SandTimer = () => {
           width: 4px;
           height: 4px;
           border-radius: 50%;
-          background-color: rgba(255, 165, 0, 0.9);
+          background-color: rgba(255, 255, 255, 0.9);
           position: absolute;
         }
       `}</style>

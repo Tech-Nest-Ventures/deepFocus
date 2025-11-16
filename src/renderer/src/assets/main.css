@@ -1,32 +1,41 @@
 @import './base.css';
 
+/* Swiss Typography: Clean, minimal body styling - Dark theme with high contrast */
 body {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: auto;
   background-size: cover;
   user-select: none;
-  overflow-y: show;
-  font-size: 85%;
-  background-color: black;
-  color: white;
+  font-size: 16px; /* Swiss Typography: Standard base size */
+  background-color: #000000; /* Pure black */
+  color: #FFFFFF; /* Pure white */
+  /* Swiss Typography: Generous white space */
+  padding: 0;
+  margin: 0;
 }
 
+/* Swiss Typography: Clean code styling */
 code {
-  font-weight: 600;
-  padding: 3px 5px;
-  border-radius: 2px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border: 2px solid currentColor;
+  font-family: 'Inter', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
+/* Swiss Typography: Grid-based layout with asymmetric positioning */
 #root {
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
-  margin-bottom: 80px;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  /* Swiss Typography: Left-aligned, generous margins */
+  padding: 0;
+  margin: 0;
+  overflow: visible;
 }
 
 .logo {
@@ -38,42 +47,34 @@ code {
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 1.2em #6988e6aa);
+  opacity: 0.8;
+  transition: opacity 0.2s ease-out;
 }
 
+/* Swiss Typography: Clean typography */
 .creator {
   font-size: 14px;
-  line-height: 16px;
+  line-height: 1.6;
   color: var(--ev-c-text-2);
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
 }
 
+/* Swiss Typography: Left-aligned, bold typography */
 .text {
   font-size: 28px;
   color: var(--ev-c-text-1);
-  font-weight: 700;
-  line-height: 32px;
-  text-align: center;
-  margin: 0 10px;
-  padding: 16px 0;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
-.solid {
-  background: -webkit-linear-gradient(315deg, #4e86c5 55%, #f1f1f3);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-}
-
-.ts {
-  background: -webkit-linear-gradient(315deg, #3178c6 45%, #f0dc4e);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-}
+/* Removed gradient styles - brutal minimalism: black and white only */
 
 .actions {
   display: flex;
@@ -88,18 +89,21 @@ code {
   padding: 6px;
 }
 
+/* Swiss Typography: No rounded corners, clean borders */
 .action a {
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
-  border: 1px solid transparent;
-  text-align: center;
-  font-weight: 600;
+  border: 2px solid currentColor;
+  text-align: left;
+  font-weight: 700;
   white-space: nowrap;
-  border-radius: 20px;
-  padding: 0 20px;
-  line-height: 38px;
+  border-radius: 0;
+  padding: 12px 24px;
+  line-height: 1.2;
   font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   border-color: var(--ev-button-alt-border);
   color: var(--ev-button-alt-text);
   background-color: var(--ev-button-alt-bg);
@@ -128,4 +132,30 @@ code {
   .actions {
     display: none;
   }
+}
+
+/* Swiss Typography: Custom scrollbar styling - High contrast, minimal */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid #000000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) #000000;
 }

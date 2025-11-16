@@ -12,19 +12,20 @@ const Settings = () => {
 
   return (
     <Motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    transition={{ duration: 0.5, easing: "ease-in-out" }}
+    initial={{ opacity: 0, y: -8 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.3, easing: "ease-out" }}
   >
-    <div class="flex justify-center items-center h-screen flex-col space-y-8">
-      <div class="space-y-8">
-        <h2 class="mb-10 text-2xl font-light">Settings</h2>
+    {/* Swiss Typography: Left-aligned, asymmetric layout, extreme whitespace */}
+    <div class="flex justify-start items-start h-full flex-col p-swiss-10 space-y-swiss-12">
+      <div class="space-y-swiss-12 w-full">
+        <h2 class="mb-swiss-8 text-2xl font-extrabold tracking-tight uppercase">SETTINGS</h2>
 
-        <div class="mb-8">
-          <h3 class="text-base font-normal mb-2">Unproductive Websites</h3>
-          <Button class="mt-4" onClick={() => setShowEditWebsites(true)}>
-            Change
+        <div class="mb-swiss-10 border-b-2 border-foreground pb-swiss-6">
+          <h3 class="text-xl font-bold mb-swiss-4 uppercase tracking-tight">UNPRODUCTIVE WEBSITES</h3>
+          <Button variant="outline" size="sm" class="mt-swiss-4" onClick={() => setShowEditWebsites(true)}>
+            CHANGE
           </Button>
           {showEditWebsites() && (
             <Modal title="" onClose={() => setShowEditWebsites(false)}>
@@ -33,10 +34,10 @@ const Settings = () => {
           )}
         </div>
 
-        <div class="mb-8">
-          <h3 class="text-base font-normal mb-2">Unproductive Apps</h3>
-          <Button class="mt-4" onClick={() => setShowEditApps(true)}>
-            Change
+        <div class="mb-swiss-10 border-b-2 border-foreground pb-swiss-6">
+          <h3 class="text-xl font-bold mb-swiss-4 uppercase tracking-tight">UNPRODUCTIVE APPS</h3>
+          <Button variant="outline" size="sm" class="mt-swiss-4" onClick={() => setShowEditApps(true)}>
+            CHANGE
           </Button>
           {showEditApps() && (
             <Modal title="" onClose={() => setShowEditApps(false)}>
@@ -45,8 +46,8 @@ const Settings = () => {
           )}
         </div>
 
-        <div>
-        <h3 class="text-base font-normal mb-2">Daily Deep Work Target</h3>
+        <div class="border-b-2 border-foreground pb-swiss-6">
+          <h3 class="text-xl font-bold mb-swiss-4 uppercase tracking-tight">DAILY DEEP WORK TARGET</h3>
           <DeepWorkSlider />
         </div>
       </div>

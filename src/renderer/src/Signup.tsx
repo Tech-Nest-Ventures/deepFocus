@@ -91,41 +91,41 @@ function Signup() {
 
   return (
     <Motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    transition={{ duration: 0.5, easing: "ease-in-out" }}
+    initial={{ opacity: 0, y: -8 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.3, easing: "ease-out" }}
   >
-    <div class="flex justify-center items-center h-screen flex-col space-y-4">
-      <h2 class="text-2xl font-light">Create an account</h2>
-      <p class="text-gray-500 text-sm w-[60%]">
-        {' '}
-        Gain insights into how you spend your time today.
+    {/* Swiss Typography: Left-aligned, asymmetric layout, extreme whitespace */}
+    <div class="flex justify-start items-start h-full flex-col p-swiss-10 space-y-swiss-8 max-w-2xl">
+      <h2 class="text-2xl font-extrabold tracking-tight uppercase mb-swiss-4">CREATE AN ACCOUNT</h2>
+      <p class="text-muted-foreground text-lg font-normal w-full mb-swiss-6">
+        GAIN INSIGHTS INTO HOW YOU SPEND YOUR TIME TODAY.
       </p>
-      {signUpError && <p class="text-red-500">{signUpError()}</p>}
+      {signUpError && <p class="text-destructive font-semibold uppercase">{signUpError()}</p>}
       <Form onSubmit={handleSubmit}>
-        <Grid class="gap-4">
+        <Grid class="gap-swiss-4">
           <Field name="firstName">
             {(_, props) => (
-              <TextField class="gap-1">
+              <TextField class="gap-swiss-1">
                 <TextFieldLabel class="sr-only">First Name</TextFieldLabel>
-                <TextFieldInput {...props} type="text" placeholder="First Name" />
+                <TextFieldInput {...props} type="text" placeholder="FIRST NAME" class="uppercase" />
               </TextField>
             )}
           </Field>
           <Field name="lastName">
             {(_, props) => (
-              <TextField class="gap-1">
+              <TextField class="gap-swiss-1">
                 <TextFieldLabel class="sr-only">Last Name</TextFieldLabel>
-                <TextFieldInput {...props} type="text" placeholder="Last Name" />
+                <TextFieldInput {...props} type="text" placeholder="LAST NAME" class="uppercase" />
               </TextField>
             )}
           </Field>
           <Field name="email">
             {(_, props) => (
-              <TextField class="gap-1">
+              <TextField class="gap-swiss-1">
                 <TextFieldLabel class="sr-only">Email</TextFieldLabel>
-                <TextFieldInput {...props} type="email" placeholder="me@email.com" />
+                <TextFieldInput {...props} type="email" placeholder="ME@EMAIL.COM" class="uppercase" />
               </TextField>
             )}
           </Field>
@@ -133,12 +133,13 @@ function Signup() {
           {/* Password Field with Toggle */}
           <Field name="password">
             {(_, props) => (
-              <TextField class="gap-1 relative">
+              <TextField class="gap-swiss-1 relative">
                 <TextFieldLabel class="sr-only">Password</TextFieldLabel>
                 <TextFieldInput
                   {...props}
                   type={showPassword() ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder="ENTER YOUR PASSWORD"
+                  class="uppercase"
                 />
                 <span
                   class="absolute right-3 top-3 cursor-pointer"
@@ -153,12 +154,13 @@ function Signup() {
           {/* Confirm Password Field with Toggle */}
           <Field name="confirmPassword">
             {(_, props) => (
-              <TextField class="gap-1 relative">
+              <TextField class="gap-swiss-1 relative">
                 <TextFieldLabel class="sr-only">Confirm Password</TextFieldLabel>
                 <TextFieldInput
                   {...props}
                   type={showConfirmPassword() ? 'text' : 'password'}
-                  placeholder="Confirm your password"
+                  placeholder="CONFIRM YOUR PASSWORD"
+                  class="uppercase"
                 />
                 <span
                   class="absolute right-3 top-3 cursor-pointer"
@@ -176,20 +178,20 @@ function Signup() {
                 <div class="flex items-center">
                   <select
                     id="country"
-                    class="mt-1 block w-full p-2 border rounded-md shadow-sm bg-inherit"
+                    class="mt-1 block w-full p-3 border-2 border-foreground bg-inherit uppercase font-semibold"
                     value={selectedCountry()}
                     onChange={(e) => setSelectedCountry(e.target.value)}
                   >
                     <option value="" disabled>
-                      Select Country
+                      SELECT COUNTRY
                     </option>
                     <For each={countryOptions}>
-                      {(country) => <option value={country.code}>{country.name}</option>}
+                      {(country) => <option value={country.code}>{country.name.toUpperCase()}</option>}
                     </For>
                   </select>
                   {selectedCountry() && (
                     <span
-                      class={`fi fi-${selectedCountry()} ml-4`}
+                      class={`fi fi-${selectedCountry()} ml-swiss-4`}
                       style={{ 'font-size': '24px' }}
                       aria-label={`Flag of ${selectedCountry()}`}
                     />
@@ -204,12 +206,12 @@ function Signup() {
               <div>
                 <select
                   id="language"
-                  class="mt-1 block w-full p-2 border rounded-md shadow-sm bg-inherit"
+                  class="mt-1 block w-full p-3 border-2 border-foreground bg-inherit uppercase font-semibold"
                   value={selectedLanguage()}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                 >
                   <option value="" disabled>
-                    Select Language
+                    SELECT LANGUAGE
                   </option>
                   {
                     <For
@@ -218,7 +220,7 @@ function Signup() {
                           ?.languages
                       }
                     >
-                      {(language) => <option value={language}>{language}</option>}
+                      {(language) => <option value={language}>{language.toUpperCase()}</option>}
                     </For>
                   }
                 </select>
@@ -226,16 +228,16 @@ function Signup() {
             )}
           </Field>
 
-          <Button type="submit" disabled={authForm.submitting}>
+          <Button type="submit" disabled={authForm.submitting} size="lg">
             {authForm.submitting && <IconLoader class="mr-2 size-4 animate-spin" />}
-            Sign Up
+            SIGN UP
           </Button>
         </Grid>
       </Form>
-      <p class="text-gray-500 text-sm">
-        Already have an account?{' '}
-        <a href="/login" class="text-blue-500">
-          Login
+      <p class="text-muted-foreground text-sm font-normal">
+        ALREADY HAVE AN ACCOUNT?{' '}
+        <a href="/login" class="text-foreground font-bold underline uppercase">
+          LOGIN
         </a>
       </p>
     </div>

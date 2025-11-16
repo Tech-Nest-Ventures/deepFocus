@@ -63,10 +63,26 @@ module.exports = {
         }
       },
       borderRadius: {
-        xl: 'calc(var(--radius) + 4px)',
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        xl: '0px', /* Swiss Typography: No rounded corners */
+        lg: '0px',
+        md: '0px',
+        sm: '0px'
+      },
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        mono: ['JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', 'monospace'],
+      },
+      spacing: {
+        /* Swiss Typography: Mathematical spacing scale (8px base) */
+        'swiss-1': '8px',
+        'swiss-2': '16px',
+        'swiss-3': '24px',
+        'swiss-4': '32px',
+        'swiss-5': '40px',
+        'swiss-6': '48px',
+        'swiss-8': '64px',
+        'swiss-10': '80px',
+        'swiss-12': '96px',
       },
       keyframes: {
         'accordion-down': {
@@ -78,19 +94,19 @@ module.exports = {
           to: { height: 0 }
         },
         'content-show': {
-          from: { opacity: 0, transform: 'scale(0.96)' },
-          to: { opacity: 1, transform: 'scale(1)' }
+          from: { opacity: 0, transform: 'translateY(-8px)' }, /* Swiss Typography: Subtle movement */
+          to: { opacity: 1, transform: 'translateY(0)' }
         },
         'content-hide': {
-          from: { opacity: 1, transform: 'scale(1)' },
-          to: { opacity: 0, transform: 'scale(0.96)' }
+          from: { opacity: 1, transform: 'translateY(0)' },
+          to: { opacity: 0, transform: 'translateY(-8px)' }
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'content-show': 'content-show 0.2s ease-out',
-        'content-hide': 'content-hide 0.2s ease-out'
+        'content-show': 'content-show 0.3s ease-out', /* Swiss Typography: Precise timing */
+        'content-hide': 'content-hide 0.3s ease-out'
       }
     }
   },

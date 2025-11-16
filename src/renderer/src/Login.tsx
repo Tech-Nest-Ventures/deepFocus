@@ -68,44 +68,46 @@ function Login() {
 
   return (
     <Motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    transition={{ duration: 0.5, easing: "ease-in-out" }}
-  >
-    <div class="grid gap-6 mt-20">
-      <h2 class="text-2xl font-light">Login</h2>
-      <Form onSubmit={handleSubmit}>
-        <Grid class="gap-4">
-          <Field name="email">
-            {(_, props) => (
-              <TextField class="gap-1">
-                <TextFieldLabel class="sr-only">Email</TextFieldLabel>
-                <TextFieldInput {...props} type="email" placeholder="me@email.com" />
-              </TextField>
-            )}
-          </Field>
-          <Field name="password">
-            {(_, props) => (
-              <TextField class="gap-1">
-                <TextFieldLabel class="sr-only">Password</TextFieldLabel>
-                <TextFieldInput {...props} type="password" placeholder="Enter your password" />
-              </TextField>
-            )}
-          </Field>
-          <Button type="submit" disabled={authForm.submitting}>
-            {authForm.submitting && <IconLoader class="mr-2 size-4 animate-spin" />}
-            Login
-          </Button>
-        </Grid>
-      </Form>
-      <p class="text-gray-500 text-sm">
-        Don't have an account?{' '}
-        <a href="/signup" class="text-blue-500">
-          Sign Up
-        </a>
-      </p>
-    </div>
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.3, easing: "ease-out" }}
+      class="w-full h-full flex items-start justify-start"
+    >
+      {/* Swiss Typography: Left-aligned, asymmetric layout with extreme whitespace */}
+      <div class="grid gap-swiss-8 p-swiss-10 w-full max-w-md mx-auto sm:mx-0">
+        <h2 class="text-2xl font-extrabold tracking-tight uppercase">LOGIN</h2>
+        <Form onSubmit={handleSubmit}>
+          <Grid class="gap-swiss-4">
+            <Field name="email">
+              {(_, props) => (
+                <TextField class="gap-swiss-1">
+                  <TextFieldLabel class="sr-only">Email</TextFieldLabel>
+                  <TextFieldInput {...props} type="email" placeholder="ME@EMAIL.COM" class="uppercase" />
+                </TextField>
+              )}
+            </Field>
+            <Field name="password">
+              {(_, props) => (
+                <TextField class="gap-swiss-1">
+                  <TextFieldLabel class="sr-only">Password</TextFieldLabel>
+                  <TextFieldInput {...props} type="password" placeholder="ENTER YOUR PASSWORD" class="uppercase" />
+                </TextField>
+              )}
+            </Field>
+            <Button type="submit" disabled={authForm.submitting} size="lg" class="w-full sm:w-auto">
+              {authForm.submitting && <IconLoader class="mr-2 size-4 animate-spin" />}
+              LOGIN
+            </Button>
+          </Grid>
+        </Form>
+        <p class="text-muted-foreground text-sm font-normal">
+          DON'T HAVE AN ACCOUNT?{' '}
+          <a href="/signup" class="text-foreground font-bold underline uppercase">
+            SIGN UP
+          </a>
+        </p>
+      </div>
     </Motion.div>
   )
 }

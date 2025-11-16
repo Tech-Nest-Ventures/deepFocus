@@ -50,17 +50,16 @@ const UnproductiveWebsites = () => {
   }
 
   return (
-    <div>
-      {/* <h1 class="mb-8 text-lg mt-4 font-normal">Add/Remove Unproductive Websites</h1> */}
-      <div class="flex items-center gap-2 mb-4">
+    <div class="space-y-swiss-6">
+      <div class="flex items-center gap-swiss-4 mb-swiss-6">
         <TextField class="flex-grow">
           <TextFieldInput
             list="websites"
             type="text"
-            placeholder="Any unproductive websites?"
+            placeholder="ANY UNPRODUCTIVE WEBSITES?"
             value={site()}
             onInput={(e) => setSite(e.currentTarget.value)}
-            class="w-full p-2 border border-gray-300 rounded"
+            class="w-full uppercase"
           />
           <datalist id="websites">
             <option value="https://google.com" />
@@ -73,19 +72,22 @@ const UnproductiveWebsites = () => {
             <option value="https://twitter.com" />
           </datalist>
         </TextField>
-        <Button onClick={addSite} class="ml-2 p-2 bg-blue-500 text-white rounded">
+        <Button onClick={addSite} variant="outline" size="sm">
           <VsAdd />
         </Button>
       </div>
 
-      <ul class="mt-4">
+      <ul class="space-y-swiss-4">
         <For each={unproductiveSites()}>
           {(site) => (
-            <li class="flex items-center mb-2">
-              <img src={getFavicon(site)} alt={`${site} favicon`} class="w-4 h-4 mr-2" />
-              {site}
+            <li class="flex items-center justify-between border-b-2 border-foreground pb-swiss-3">
+              <div class="flex items-center gap-swiss-3">
+                <img src={getFavicon(site)} alt={`${site} favicon`} class="w-6 h-6" />
+                <span class="font-semibold uppercase">{site}</span>
+              </div>
               <Button
-                class="ml-4 bg-red-500 text-white px-2 py-1 rounded"
+                variant="outline"
+                size="sm"
                 onClick={() => handleRemoveSite(site)}
               >
                 <IoRemoveCircleOutline />

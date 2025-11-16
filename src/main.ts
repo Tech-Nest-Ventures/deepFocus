@@ -755,17 +755,43 @@ async function checkAndSendMissedEmails(): Promise<void> {
   try {
     const lastEmailDate = dayjs(store.get('lastEmailDate', null) || dayjs().subtract(1, 'day'))
     const today = dayjs().startOf('day')
+    const daysSinceLastEmail = today.diff(lastEmailDate, 'day')
+    
     log.info('checking and sending missed emails')
     log.info(
       'lastEmailDate',
       lastEmailDate.format('YYYY-MM-DD'),
       'today',
-      today.format('YYYY-MM-DD')
+      today.format('YYYY-MM-DD'),
+      'daysSinceLastEmail',
+      daysSinceLastEmail
     )
-    new Notification({
-      title: 'Deep Focus',
-      body: 'Checking for missed emails...'
-    }).show()
+    
+    // If there's a large gap (more than 1 day), skip sending missed emails for days in between
+    // The user wasn't using the app during those days, so there's no need to send emails
+    // But still send an email for today when they check in
+    if (daysSinceLastEmail > 1) {
+      log.info(
+        `Large gap detected (${daysSinceLastEmail} days). Skipping missed emails for days in between, but sending email for today.`
+      )
+      // Only send email for today
+      if (!lastEmailDate.isSame(today, 'day')) {
+        log.info(`Sending email for today: ${today.format('YYYY-MM-DD')}`)
+        const sendEmailResponse = await sendDailyEmail()
+        if (sendEmailResponse) {
+          store.set('lastEmailDate', today.toISOString())
+        } else {
+          log.info('Email not sent. Retrying in 10 minutes.')
+          new Notification({
+            title: 'Deep Focus',
+            body: 'Email not sent. Retrying in 10 minutes.'
+          }).show()
+        }
+      }
+      return
+    }
+    
+    // Normal flow: send missed emails for small gaps (1 day or less)
     if (!lastEmailDate.isSame(today, 'day')) {
       let dateToProcess = lastEmailDate.add(1, 'day')
 

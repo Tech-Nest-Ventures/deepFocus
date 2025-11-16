@@ -97,34 +97,35 @@ const Analytics = () => {
 
   return (
     <Motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    transition={{ duration: 0.5, easing: "ease-in-out" }}
+    initial={{ opacity: 0, y: -8 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.3, easing: "ease-out" }}
   >
-    <div>
-      <div class="flex justify-content items-center p-4">
-        <Button onClick={() => setShowDeepWork(!showDeepWork())}>
-          {showDeepWork() ? 'Show Top Sites' : 'Show Deep Work Hours'}
+    {/* Swiss Typography: Left-aligned, grid-based layout, extreme whitespace */}
+    <div class="p-swiss-10">
+      <div class="flex justify-start items-center mb-swiss-10">
+        <Button variant="outline" size="sm" onClick={() => setShowDeepWork(!showDeepWork())}>
+          {showDeepWork() ? 'SHOW TOP SITES' : 'SHOW DEEP WORK HOURS'}
         </Button>
       </div>
       {showDeepWork() ? (
         <BarChart />
       ) : (
-        <div class="space-y-4">
+        <div class="space-y-swiss-6">
           {siteTrackers().length > 0 ? (
             siteTrackers().map((tracker: SiteTimeTracker) => (
-              <div class="flex items-center space-x-4">
-                <img src={tracker.iconUrl} alt="icon" class="w-8 h-8" />
+              <div class="flex items-center space-x-swiss-6 border-b-2 border-foreground pb-swiss-6">
+                <img src={tracker.iconUrl} alt="icon" class="w-12 h-12" />
                 <div>
-                  <p class="text-white">{tracker.title}</p>
-                  <p class="text-gray-400">{Math.round(tracker.timeSpent / 60)} mins</p>
-                  <p class="text-sm italic text-gray-500">{tracker.type === TrackerType.Website ? 'Website' : 'App'}</p>
+                  <p class="text-lg font-bold uppercase tracking-tight mb-swiss-2">{tracker.title.toUpperCase()}</p>
+                  <p class="text-lg font-extrabold mt-swiss-2 font-mono">{Math.round(tracker.timeSpent / 60)} MINS</p>
+                  <p class="text-sm font-normal text-muted-foreground mt-swiss-2 uppercase">{tracker.type === TrackerType.Website ? 'WEBSITE' : 'APP'}</p>
                 </div>
               </div>
             ))
           ) : (
-            <p>No data available.</p>
+            <p class="text-xl font-extrabold uppercase">NO DATA AVAILABLE</p>
           )}
         </div>
       )}

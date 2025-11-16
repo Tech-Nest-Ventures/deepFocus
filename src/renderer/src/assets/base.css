@@ -2,96 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Swiss Typography: Import Inter (Helvetica alternative) and Monospaced font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Swiss Typography: Dark theme as default - Pure black background, Pure white text */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 0% 100%;
+    --destructive-foreground: 0 0% 0%;
 
-    --info: 204 94% 94%;
-    --info-foreground: 199 89% 48%;
+    --info: 0 0% 100%;
+    --info-foreground: 0 0% 0%;
 
-    --success: 149 80% 90%;
-    --success-foreground: 160 84% 39%;
+    --success: 0 0% 100%;
+    --success-foreground: 0 0% 0%;
 
-    --warning: 48 96% 89%;
-    --warning-foreground: 25 95% 53%;
+    --warning: 0 0% 100%;
+    --warning-foreground: 0 0% 0%;
 
-    --error: 0 93% 94%;
-    --error-foreground: 0 84% 60%;
+    --error: 0 0% 100%;
+    --error-foreground: 0 0% 0%;
 
-    --ring: 240 5.9% 10%;
+    --ring: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --radius: 0px; /* Swiss Typography: No rounded corners */
   }
 
-  .dark,
-  [data-kb-theme='dark'] {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+  .light,
+  [data-kb-theme='light'] {
+    /* Swiss Typography: Light theme variant */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 0% 0%;
+    --destructive-foreground: 0 0% 100%;
 
-    --info: 204 94% 94%;
-    --info-foreground: 199 89% 48%;
+    --info: 0 0% 0%;
+    --info-foreground: 0 0% 100%;
 
-    --success: 149 80% 90%;
-    --success-foreground: 160 84% 39%;
+    --success: 0 0% 0%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 48 96% 89%;
-    --warning-foreground: 25 95% 53%;
+    --warning: 0 0% 0%;
+    --warning-foreground: 0 0% 100%;
 
-    --error: 0 93% 94%;
-    --error-foreground: 0 84% 60%;
+    --error: 0 0% 0%;
+    --error-foreground: 0 0% 100%;
 
-    --ring: 240 4.9% 83.9%;
+    --ring: 0 0% 0%;
 
-    --radius: 0.5rem;
+    --radius: 0px;
   }
 }
 
@@ -101,9 +107,47 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Swiss Typography: Inter font (Helvetica alternative) */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
+    /* Swiss Typography: Left-aligned text, generous spacing */
+    text-align: left;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Monospaced metrics for all numbers and data */
+  .mono,
+  [data-mono],
+  .metric,
+  .number,
+  .data {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  
+  /* Swiss Typography: Strong typographic hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  
+  /* Swiss Typography: Remove default margins, use spacing system */
+  h1 { font-size: 2.5rem; font-weight: 800; }
+  h2 { font-size: 2rem; font-weight: 700; }
+  h3 { font-size: 1.5rem; font-weight: 600; }
+  h4 { font-size: 1.25rem; font-weight: 600; }
+  h5 { font-size: 1rem; font-weight: 600; }
+  h6 { font-size: 0.875rem; font-weight: 600; }
+  
+  p {
+    line-height: 1.6;
+    letter-spacing: -0.01em;
   }
 }
 
