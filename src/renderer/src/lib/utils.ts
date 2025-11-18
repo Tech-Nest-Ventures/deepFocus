@@ -34,3 +34,47 @@ export const getFavicon = (url: string): string => {
     return ''
   }
 }
+
+/**
+ * Formats a URL for display by extracting just the domain name.
+ * Removes protocol (https://, http://) and www. prefix.
+ * Example: "https://www.google.com/search?q=..." -> "google.com"
+ */
+export const formatUrlForDisplay = (url: string): string => {
+  if (!url || url === 'Unknown URL') {
+    return url
+  }
+  
+  try {
+    // Ensure the URL has a protocol for URL parsing
+    const urlWithProtocol = url.startsWith('http://') || url.startsWith('https://') 
+      ? url 
+      : `https://${url}`
+    
+    const urlObj = new URL(urlWithProtocol)
+    let hostname = urlObj.hostname
+    
+    // Remove www. prefix if present
+    if (hostname.startsWith('www.')) {
+      hostname = hostname.substring(4)
+    }
+    
+    return hostname
+  } catch (error) {
+    // If URL parsing fails, try to extract domain manually
+    console.error('Error parsing URL for display:', error)
+    
+    // Remove protocol
+    let cleaned = url.replace(/^https?:\/\//i, '')
+    
+    // Remove www. prefix
+    if (cleaned.startsWith('www.')) {
+      cleaned = cleaned.substring(4)
+    }
+    
+    // Remove path and query parameters
+    const domain = cleaned.split('/')[0]
+    
+    return domain || url
+  }
+}

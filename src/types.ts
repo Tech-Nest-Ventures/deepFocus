@@ -7,6 +7,20 @@ export interface User {
   language: string
 }
 
+export interface QueuedActivityData {
+  id: string
+  username: string
+  dailyData: Array<{
+    url: string
+    title: string
+    timeSpent: number
+    date: string
+  }>
+  timestamp: number
+  retryCount: number
+  lastRetryAttempt?: number
+}
+
 export interface StoreSchema {
   unproductiveSites?: string[]
   unproductiveApps?: string[]
@@ -25,6 +39,8 @@ export interface StoreSchema {
     Sunday: number
   }
   deepWorkTarget?: number
+  offlineQueue?: QueuedActivityData[]
+  lastSyncTimestamp?: number
 }
 export interface SiteTimeTracker {
   url: string

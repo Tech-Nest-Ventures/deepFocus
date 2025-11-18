@@ -15,7 +15,14 @@ import fs from 'fs'
 import { scheduleJob } from 'node-schedule'
 import dotenv from 'dotenv'
 import Store from 'electron-store'
-import { StoreSchema, SiteTimeTracker, DeepWorkHours, User, AppIcon } from './types'
+import {
+  StoreSchema,
+  SiteTimeTracker,
+  DeepWorkHours,
+  User,
+  AppIcon,
+  QueuedActivityData
+} from './types'
 import {
   updateSiteTimeTracker,
   getBrowserURL,
@@ -32,6 +39,7 @@ import log from 'electron-log/node.js'
 export interface TypedStore extends Store<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set(key: string, value: any): void
   delete<K extends keyof StoreSchema>(key: K): void
   clear(): void
@@ -58,6 +66,11 @@ let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let persistenceInterval: NodeJS.Timeout | null = null
 let isSystemSuspended = false
+let retryQueueInterval: NodeJS.Timeout | null = null
+const MAX_RETRY_ATTEMPTS = 5
+const INITIAL_RETRY_DELAY = 60000 // 1 minute
+const MAX_RETRY_DELAY = 600000 // 10 minutes
+const PERSISTENCE_INTERVAL = 5 * 60 * 1000 // 5 minutes
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 
@@ -279,6 +292,28 @@ async function createWindow(): Promise<BrowserWindow> {
     await storeData()
     store.set('lastResetDate', dayjs().toISOString())
     log.info('Last reset date is ', store.get('lastResetDate'))
+    
+    // Final sync attempt before closing
+    if (user && user.username) {
+      const today = dayjs().format('YYYY-MM-DD')
+      const MIN_TIME_THRESHOLD = 10
+      const filteredTrackers = currentSiteTimeTrackers.filter(
+        (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
+      )
+      
+      if (filteredTrackers.length > 0) {
+        const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
+          url: tracker.url ? tracker.url.slice(0, 200) : 'unknown',
+          title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
+          timeSpent: tracker.timeSpent,
+          date: today
+        }))
+        
+        await persistDailyData(dailyData, user.username)
+        await processOfflineQueue()
+      }
+    }
+    
     app.quit()
     if (process.platform === 'darwin') {
       app.dock.hide()
@@ -326,7 +361,7 @@ app.whenReady().then(async () => {
   tray.setToolTip('Deep Focus. Get more done.')
   createTrayMenu()
 
-  function createTrayMenu() {
+  function createTrayMenu(): void {
     const today = dayjs().format('dddd') as keyof typeof deepWorkHours
     const totalDeepWorkHours = getDeepWorkHours()[today]
     log.info('totalDeepWorkHours', totalDeepWorkHours)
@@ -339,7 +374,7 @@ app.whenReady().then(async () => {
       { type: 'separator' },
       {
         label: 'Quit',
-        click: () => {
+        click: (): void => {
           app.quit()
         }
       }
@@ -358,19 +393,37 @@ app.whenReady().then(async () => {
 
 app.on('ready', () => {
   checkForUpdates()
-  startPersistenceInterval();
+  startPersistenceInterval()
+  startRetryQueueProcessor()
+
+  // Process offline queue on app start if user is logged in
+  if (user && user.username) {
+    processOfflineQueue().catch((error) => {
+      log.error('Error processing offline queue on app start:', error)
+    })
+  }
 
   powerMonitor.on('suspend', () => {
-    isSystemSuspended = true;
-    stopPersistenceInterval();
-    console.log('System suspended.');
-  });
+    isSystemSuspended = true
+    stopPersistenceInterval()
+    stopRetryQueueProcessor()
+    log.info('System suspended.')
+  })
 
   powerMonitor.on('resume', () => {
-    isSystemSuspended = false;
-    startPersistenceInterval();
-    console.log('System resumed.');
-  });
+    isSystemSuspended = false
+    startPersistenceInterval()
+    startRetryQueueProcessor()
+    
+    // Process offline queue when system resumes
+    if (user && user.username) {
+      processOfflineQueue().catch((error) => {
+        log.error('Error processing offline queue on resume:', error)
+      })
+    }
+    
+    log.info('System resumed.')
+  })
 })
 
 app.on('browser-window-focus', () => {
@@ -399,6 +452,8 @@ export function handleUserLogout(): void {
   store.set('lastResetDate', dayjs().toISOString())
   user = null
   stopActivityMonitoring()
+  stopPersistenceInterval()
+  stopRetryQueueProcessor()
   const iconPath = app.isPackaged
     ? path.join(process.resourcesPath, 'icon.png')
     : path.join(__dirname, '../../resources/icon.png')
@@ -428,7 +483,7 @@ export function getSiteTrackers(): SiteTimeTracker[] {
 scheduleJob('0 0 0 * * *', async () => {
   log.info('Scheduled daily reset at midnight')
   stopActivityMonitoring()
-  await checkAndSendMissedEmails()
+  // Email sending is now handled automatically by the backend at 5:00 AM
   await resetCounters('daily')
 
   // Check if today is Sunday and perform weekly reset if true
@@ -442,7 +497,7 @@ scheduleJob('0 0 0 * * *', async () => {
 scheduleJob('0 0 12 * * *', () => {
   log.info('Scheduled daily reset at 12 PM')
   stopActivityMonitoring()
-  checkAndSendMissedEmails()
+  // Email sending is now handled automatically by the backend at 5:00 AM
   startActivityMonitoring()
   log.info('new reset date is ', store.get('lastResetDate'))
 })
@@ -460,14 +515,21 @@ process.on('unhandledRejection', (error) => {
   console.error('Unhandled Promise Rejection:', error)
 })
 
-function setupIPCListeners() {
+function setupIPCListeners(): void {
   ipcMain.setMaxListeners(20)
-  ipcMain.on('login-user', (_event, user: User) => {
-    user = handleUserData(user, store)
+  ipcMain.on('login-user', (_event, userData: User) => {
+    user = handleUserData(userData, store)
     if (user && mainWindow) {
       console.log('setting up listeners & monitoring')
       startActivityMonitoring()
+      startPersistenceInterval()
+      startRetryQueueProcessor()
       loadUserData()
+      
+      // Process any queued data when user logs in
+      processOfflineQueue().catch((error) => {
+        log.error('Error processing offline queue on login:', error)
+      })
     }
   })
   ipcMain.on('logout-user', () => handleUserLogout())
@@ -604,12 +666,12 @@ function setupIPCListeners() {
   })
 }
 
-export async function handleDailyReset() {
+export async function handleDailyReset(): Promise<void> {
   const now = dayjs()
 
   log.info('lastResetDate is ', store.get('lastResetDate'))
   const lastResetDate = dayjs(store.get('lastResetDate', now.subtract(1, 'day').toISOString()))
-  await checkAndSendMissedEmails()
+  // Email sending is now handled automatically by the backend at 5:00 AM
   // Perform daily reset if the last reset was not today
   if (!lastResetDate.isSame(now, 'day')) {
     log.info('Performing daily reset. Previous reset date:', lastResetDate.format('YYYY-MM-DD'))
@@ -628,13 +690,131 @@ export async function handleDailyReset() {
   }
 }
 
-async function persistDailyData(
-  dailyData: any,
-  deepWorkHours: any,
-  today: keyof any,
+/**
+ * Check if the device is online by attempting to fetch from the API
+ */
+async function isOnline(): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+    
+    // Try to fetch the base URL or use a simple HEAD request
+    await fetch(`${API_BASE_URL}`, {
+      method: 'HEAD',
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+    return true // If we get any response, we're online
+  } catch (error) {
+    return false
+  }
+}
+
+/**
+ * Add data to the offline queue for later retry
+ */
+function addToOfflineQueue(dailyData: Array<{ url: string; title: string; timeSpent: number; date: string }>, username: string): void {
+  const queue: QueuedActivityData[] = store.get('offlineQueue', [])
+  
+  const queuedItem: QueuedActivityData = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    username,
+    dailyData,
+    timestamp: Date.now(),
+    retryCount: 0
+  }
+  
+  queue.push(queuedItem)
+  store.set('offlineQueue', queue)
+  log.info(`Added ${dailyData.length} activities to offline queue. Queue size: ${queue.length}`)
+}
+
+
+/**
+ * Calculate exponential backoff delay
+ */
+function getRetryDelay(retryCount: number): number {
+  const delay = Math.min(INITIAL_RETRY_DELAY * Math.pow(2, retryCount), MAX_RETRY_DELAY)
+  return delay
+}
+
+/**
+ * Process the offline queue and retry failed syncs
+ */
+async function processOfflineQueue(): Promise<void> {
+  const queue: QueuedActivityData[] = store.get('offlineQueue', [])
+  
+  if (queue.length === 0) {
+    return
+  }
+  
+  const online = await isOnline()
+  if (!online) {
+    log.info('Device is offline. Skipping queue processing.')
+    return
+  }
+  
+  log.info(`Processing offline queue with ${queue.length} items`)
+  
+  const now = Date.now()
+  const updatedQueue: QueuedActivityData[] = []
+  
+  for (const item of queue) {
+    // Check if enough time has passed since last retry attempt
+    const timeSinceLastRetry = item.lastRetryAttempt ? now - item.lastRetryAttempt : Infinity
+    const retryDelay = getRetryDelay(item.retryCount)
+    
+    if (item.retryCount >= MAX_RETRY_ATTEMPTS) {
+      log.warn(`Item ${item.id} has exceeded max retry attempts. Removing from queue.`)
+      continue // Skip this item, effectively removing it
+    }
+    
+    if (timeSinceLastRetry < retryDelay) {
+      // Not time to retry yet, keep in queue
+      updatedQueue.push(item)
+      continue
+    }
+    
+    // Attempt to sync this item
+    try {
+      const success = await syncActivityData(item.dailyData, item.username)
+      
+      if (success) {
+        log.info(`Successfully synced queued item ${item.id}`)
+        // Remove from queue on success
+        continue
+      } else {
+        // Update retry count and last retry attempt
+        item.retryCount += 1
+        item.lastRetryAttempt = now
+        updatedQueue.push(item)
+        log.info(`Failed to sync item ${item.id}. Retry count: ${item.retryCount}`)
+      }
+    } catch (error) {
+      log.error(`Error processing queued item ${item.id}:`, error)
+      item.retryCount += 1
+      item.lastRetryAttempt = now
+      updatedQueue.push(item)
+    }
+  }
+  
+  store.set('offlineQueue', updatedQueue)
+  
+  if (updatedQueue.length > 0) {
+    log.info(`Queue processing complete. ${updatedQueue.length} items remaining.`)
+  } else {
+    log.info('Queue processing complete. All items synced successfully.')
+  }
+}
+
+/**
+ * Sync activity data to the backend
+ */
+async function syncActivityData(
+  dailyData: Array<{ url: string; title: string; timeSpent: number; date: string }>,
   username: string
 ): Promise<boolean> {
-
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/activity/persist`, {
       method: 'POST',
@@ -642,55 +822,121 @@ async function persistDailyData(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        dailyData,
-        deepWorkHours,
-        today,
-        username
+        username,
+        dailyData
       })
     })
 
     if (response.ok) {
-      console.log('Daily data persisted successfully')
+      log.info(`Successfully synced ${dailyData.length} activities for ${username}`)
+      store.set('lastSyncTimestamp', Date.now())
       return true
     } else {
-      console.error('Failed to persist daily data:', response.status, response.statusText)
+      const errorText = await response.text().catch(() => 'Unknown error')
+      log.error(`Failed to persist daily data: ${response.status} ${response.statusText} - ${errorText}`)
       return false
     }
   } catch (error) {
-    console.error('Error persisting daily data:', error)
+    log.error('Error persisting daily data:', error)
     return false
   }
+}
+
+/**
+ * Persist daily data with offline queue support
+ */
+async function persistDailyData(
+  dailyData: Array<{ url: string; title: string; timeSpent: number; date: string }>,
+  username: string
+): Promise<boolean> {
+  if (!username) {
+    log.warn('Cannot persist data: user not logged in')
+    return false
+  }
+  
+  // Check if online
+  const online = await isOnline()
+  
+  if (!online) {
+    log.info('Device is offline. Adding data to queue.')
+    addToOfflineQueue(dailyData, username)
+    return false
+  }
+  
+  // Try to sync
+  const success = await syncActivityData(dailyData, username)
+  
+  if (!success) {
+    // If sync failed, add to queue for retry
+    log.info('Sync failed. Adding data to offline queue.')
+    addToOfflineQueue(dailyData, username)
+  }
+  
+  return success
 }
 function startPersistenceInterval(): void {
   if (!persistenceInterval && !isSystemSuspended) {
     persistenceInterval = setInterval(
       async () => {
-        const today = dayjs().format('dddd') as keyof DeepWorkHours; // "Wednesday"
-        const username = user.username;
-        const deepWorkHours = getDeepWorkHours();
-        const MIN_TIME_THRESHOLD = 10;
+        if (!user || !user.username) {
+          log.info('User not logged in. Skipping persistence.')
+          return
+        }
+
+        const today = dayjs().format('YYYY-MM-DD') // Use ISO date format
+        const username = user.username
+        const MIN_TIME_THRESHOLD = 10
 
         const filteredTrackers = currentSiteTimeTrackers.filter(
           (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
-        );
+        )
 
-        const workToday = deepWorkHours[today as keyof DeepWorkHours] as number;
-        log.info('workToday:', workToday);
+        if (filteredTrackers.length === 0) {
+          log.info('No trackers to persist (all below threshold).')
+          return
+        }
 
-        // Create an array of activity objects
+        // Create an array of activity objects with ISO date format
         const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
-          username: user.username,
-          date: today,
-          url: tracker.url ? tracker.url.slice(0, 200) : "unknown", // Fallback for undefined url
-          title: tracker.title ? tracker.title.slice(0, 100) : "Untitled",
-          timeSpent: tracker.timeSpent
-        }));
+          url: tracker.url ? tracker.url.slice(0, 200) : 'unknown',
+          title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
+          timeSpent: tracker.timeSpent,
+          date: today
+        }))
 
-        await persistDailyData(dailyData, deepWorkHours, today, username);
+        log.info(`Persisting ${dailyData.length} activities for ${username}`)
+        await persistDailyData(dailyData, username)
+        
+        // Also process any queued items
+        await processOfflineQueue()
       },
-      15 * 60 * 1000
-    );
-    console.log('Persistence interval started.');
+      PERSISTENCE_INTERVAL
+    )
+    log.info('Persistence interval started (every 5 minutes).')
+  }
+}
+
+/**
+ * Start the retry queue processor
+ */
+function startRetryQueueProcessor(): void {
+  if (!retryQueueInterval) {
+    // Process queue every 2 minutes
+    retryQueueInterval = setInterval(async () => {
+      await processOfflineQueue()
+    }, 2 * 60 * 1000)
+    log.info('Retry queue processor started.')
+  }
+}
+
+/**
+ * Stop the retry queue processor
+ */
+function stopRetryQueueProcessor(): void {
+  if (retryQueueInterval) {
+    clearInterval(retryQueueInterval)
+    retryQueueInterval = null
+    log.info('Retry queue processor stopped.')
   }
 }
 

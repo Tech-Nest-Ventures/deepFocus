@@ -5,7 +5,8 @@ import CircularProgress from './CircularProgress'
 import SandTimer from './SandTimer'
 import dayjs from 'dayjs'
 import { IpcRendererEvent } from 'electron'
-import {Motion} from 'solid-motionone';
+import { Motion } from 'solid-motionone'
+import { formatUrlForDisplay } from './lib/utils'
 
 const Home = () => {
   const [loggedIn] = useAuth()
@@ -115,7 +116,7 @@ const Home = () => {
                   class={activeWindowInfo().isProductive ? 'text-foreground ml-swiss-3 font-extrabold' : 'text-foreground ml-swiss-3 font-extrabold'}
                 >
                   {activeWindowInfo().URL !== 'Unknown URL'
-                    ? activeWindowInfo().URL.toUpperCase()
+                    ? formatUrlForDisplay(activeWindowInfo().URL).toUpperCase()
                     : activeWindowInfo().appName.toUpperCase()}
                 </span>
                 {!activeWindowInfo().isProductive && (
