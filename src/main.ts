@@ -19,6 +19,7 @@ import {
   StoreSchema,
   SiteTimeTracker,
   DeepWorkHours,
+  DeepWorkHoursWithDates,
   User,
   AppIcon,
   QueuedActivityData
@@ -31,7 +32,9 @@ import {
   isDeepWork,
   calculateDeepWorkHours,
   isBrowser,
-  isValidURL
+  isValidURL,
+  closeBrowserTab,
+  quitApplication
 } from './productivityUtils'
 import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
@@ -71,6 +74,9 @@ const MAX_RETRY_ATTEMPTS = 5
 const INITIAL_RETRY_DELAY = 60000 // 1 minute
 const MAX_RETRY_DELAY = 600000 // 10 minutes
 const PERSISTENCE_INTERVAL = 5 * 60 * 1000 // 5 minutes
+// Track recently blocked items to avoid rapid-fire blocking
+const recentlyBlocked = new Map<string, number>()
+const BLOCK_COOLDOWN = 10000 // 10 seconds cooldown before blocking the same item again
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 
@@ -157,6 +163,16 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
     store?.set('lastResetDate', lastResetDate)
     const today = now.format('dddd') as keyof typeof deepWorkHours
     deepWorkHours[today] = 0
+    
+    // Also reset today's date-stamped data
+    const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
+    const todayDate = now.format('YYYY-MM-DD')
+    deepWorkHoursWithDates[today as keyof DeepWorkHoursWithDates] = {
+      hours: 0,
+      date: todayDate
+    }
+    store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
+    
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', currentSiteTimeTrackers)
     log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
@@ -171,6 +187,7 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
       Saturday: 0,
       Sunday: 0
     })
+    store.set('deepWorkHoursWithDates', {})
     store.set('siteTimeTrackers', [])
   }
 
@@ -237,6 +254,74 @@ export function startActivityMonitoring(): void {
             : isDeepWork({ type: 'appName', value: appName }, store)
 
           mainWindow.webContents.send('active-window-info', { appName, URL, isProductive })
+
+          // Check focus mode and take action if unproductive
+          const focusMode = store.get('focusMode', false) as boolean
+          if (!isProductive) {
+            const blockKey = URL.length > 0 ? URL : appName
+            const now = Date.now()
+            const lastBlocked = recentlyBlocked.get(blockKey) || 0
+
+            // Skip if we blocked this item recently (within cooldown period)
+            if (now - lastBlocked >= BLOCK_COOLDOWN) {
+              if (focusMode) {
+                // Focus mode ON: Block unproductive apps/websites
+                if (URL.length > 0 && isBrowser(appName)) {
+                  // Close the browser tab
+                  log.info(`Focus mode: Closing unproductive website tab: ${URL} in ${appName}`)
+                  const closed = await closeBrowserTab(appName)
+                  
+                  if (closed) {
+                    recentlyBlocked.set(blockKey, now)
+                    
+                    // Show notification
+                    const iconPath = app.isPackaged
+                      ? path.join(process.resourcesPath, 'icon.png')
+                      : path.join(__dirname, '../../resources/icon.png')
+                    new Notification({
+                      title: 'Deep Focus - Focus Mode',
+                      body: `Blocked unproductive website: ${URL}`,
+                      icon: iconPath
+                    }).show()
+                  }
+                } else {
+                  // Quit the unproductive app
+                  log.info(`Focus mode: Quitting unproductive app: ${appName}`)
+                  const quit = await quitApplication(appName)
+                  
+                  if (quit) {
+                    recentlyBlocked.set(blockKey, now)
+                    
+                    // Show notification
+                    const iconPath = app.isPackaged
+                      ? path.join(process.resourcesPath, 'icon.png')
+                      : path.join(__dirname, '../../resources/icon.png')
+                    new Notification({
+                      title: 'Deep Focus - Focus Mode',
+                      body: `Blocked unproductive app: ${appName}`,
+                      icon: iconPath
+                    }).show()
+                  }
+                }
+              } else {
+                // Focus mode OFF: Send notification only (cooldown already checked above)
+                recentlyBlocked.set(blockKey, now)
+                
+                const iconPath = app.isPackaged
+                  ? path.join(process.resourcesPath, 'icon.png')
+                  : path.join(__dirname, '../../resources/icon.png')
+                const notificationBody = URL.length > 0
+                  ? `You're on an unproductive website: ${URL}`
+                  : `You're using an unproductive app: ${appName}`
+                
+                new Notification({
+                  title: 'Deep Focus - Unproductive Activity',
+                  body: notificationBody,
+                  icon: iconPath
+                }).show()
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Error getting active window or URL:', error)
@@ -426,24 +511,72 @@ app.on('ready', () => {
   })
 })
 
+// Function to get chart data in Monday -> Sunday order
+// Always shows the current week (Monday through Sunday) with data from the most recent week
+function getChartDataInOrder(store: TypedStore): { data: number[]; labels: string[] } {
+  const now = dayjs()
+  const today = now.day() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
+  const deepWorkHours = getDeepWorkHours()
+
+  // Find the most recent Monday (start of the current week)
+  // If today is Sunday, go back 6 days to get Monday
+  // Otherwise, go back (today - 1) days to get Monday
+  let mondayDate = now
+  if (today === 0) {
+    // Today is Sunday, go back 6 days to get Monday
+    mondayDate = now.subtract(6, 'day')
+  } else {
+    // Go back to Monday
+    mondayDate = now.subtract(today - 1, 'day')
+  }
+
+  // Day names in Monday -> Sunday order
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  const dayAbbrevs = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+  const data: number[] = []
+  const labels: string[] = []
+
+  // Build array from Monday to Sunday
+  for (let i = 0; i < 7; i++) {
+    const currentDate = mondayDate.add(i, 'day')
+    const dayName = dayNames[i] as keyof DeepWorkHoursWithDates
+    const dateStr = currentDate.format('YYYY-MM-DD')
+
+    // Check if we have data with dates for this day
+    const dayData = deepWorkHoursWithDates[dayName]
+
+    if (dayData && dayData.date === dateStr) {
+      // Use the data with matching date
+      data.push(dayData.hours)
+    } else if (currentDate.isSame(now, 'day')) {
+      // For today, use current deepWorkHours
+      data.push(deepWorkHours[dayName as keyof DeepWorkHours] || 0)
+    } else if (currentDate.isBefore(now, 'day')) {
+      // For past days in the current week, try to use stored data or fallback to 0
+      if (dayData) {
+        data.push(dayData.hours)
+      } else {
+        data.push(deepWorkHours[dayName as keyof DeepWorkHours] || 0)
+      }
+    } else {
+      // Future days should be 0
+      data.push(0)
+    }
+
+    labels.push(dayAbbrevs[i])
+  }
+
+  return { data, labels }
+}
+
 app.on('browser-window-focus', () => {
   log.info('App window focused.')
-  const updatedDeepWorkHours = getDeepWorkHours()
-
-  // Convert the object into an array format for the front-end chart
-  const chartData = [
-    updatedDeepWorkHours?.Monday || 0,
-    updatedDeepWorkHours?.Tuesday || 0,
-    updatedDeepWorkHours?.Wednesday || 0,
-    updatedDeepWorkHours?.Thursday || 0,
-    updatedDeepWorkHours?.Friday || 0,
-    updatedDeepWorkHours?.Saturday || 0,
-    updatedDeepWorkHours?.Sunday || 0
-  ]
+  const { data, labels } = getChartDataInOrder(store)
 
   // Send the chartData to the renderer process
   if (mainWindow && mainWindow.webContents) {
-    mainWindow.webContents.send('deep-work-data-response', chartData)
+    mainWindow.webContents.send('deep-work-data-response', { data, labels })
   }
 })
 export function handleUserLogout(): void {
@@ -634,20 +767,11 @@ function setupIPCListeners(): void {
     stopActivityMonitoring()
     handleDailyReset()
     startActivityMonitoring()
-    const updatedDeepWorkHours = getDeepWorkHours()
 
-    // Convert the object into an array format for the front-end chart
-    const chartData = [
-      updatedDeepWorkHours?.Monday || 0,
-      updatedDeepWorkHours?.Tuesday || 0,
-      updatedDeepWorkHours?.Wednesday || 0,
-      updatedDeepWorkHours?.Thursday || 0,
-      updatedDeepWorkHours?.Friday || 0,
-      updatedDeepWorkHours?.Saturday || 0,
-      updatedDeepWorkHours?.Sunday || 0
-    ]
+    const { data, labels } = getChartDataInOrder(store)
 
-    event.reply('deep-work-data-response', chartData)
+    // Send both data and labels to the renderer
+    event.reply('deep-work-data-response', { data, labels })
   })
 
   // Fetch the App icons of the Users installed apps (MacOS)
@@ -662,6 +786,30 @@ function setupIPCListeners(): void {
     } catch (error) {
       console.error('Error fetching app icons:', error)
       event.reply('app-icons-response', [])
+    }
+  })
+
+  // Fetch focus mode state
+  ipcMain.on('fetch-focus-mode', (event) => {
+    const focusMode = store.get('focusMode', false) as boolean
+    event.reply('focus-mode-response', focusMode)
+  })
+
+  // Toggle focus mode
+  ipcMain.on('toggle-focus-mode', (_event, enabled: boolean) => {
+    store.set('focusMode', enabled)
+    log.info(`Focus mode ${enabled ? 'enabled' : 'disabled'}`)
+    
+    // Send notification when focus mode is enabled
+    if (enabled) {
+      const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'icon.png')
+        : path.join(__dirname, '../../resources/icon.png')
+      new Notification({
+        title: 'Deep Focus',
+        body: 'Focus mode enabled. Unproductive apps and websites will be blocked.',
+        icon: iconPath
+      }).show()
     }
   })
 }

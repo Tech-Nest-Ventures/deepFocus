@@ -1,14 +1,37 @@
-import { createSignal } from 'solid-js'
+import { createSignal, onMount, onCleanup } from 'solid-js'
 import { Button } from './components/ui/button'
 import DeepWorkSlider from './DeepWorkSlider'
 import UnproductiveWebsites from './UnproductiveWebsites'
 import UnproductiveApps from './UnproductiveApps'
 import Modal from './components/modal'
 import { Motion } from 'solid-motionone'
+import { IpcRendererEvent } from 'electron'
 
 const Settings = () => {
   const [showEditWebsites, setShowEditWebsites] = createSignal(false)
   const [showEditApps, setShowEditApps] = createSignal(false)
+  const [focusMode, setFocusMode] = createSignal(false)
+
+  onMount(() => {
+    // Fetch current focus mode state
+    window.electron.ipcRenderer.send('fetch-focus-mode')
+
+    const handleFocusModeResponse = (_event: IpcRendererEvent, enabled: boolean): void => {
+      setFocusMode(enabled)
+    }
+
+    window.electron.ipcRenderer.on('focus-mode-response', handleFocusModeResponse)
+
+    onCleanup(() => {
+      window.electron.ipcRenderer.removeAllListeners('focus-mode-response')
+    })
+  })
+
+  const toggleFocusMode = (): void => {
+    const newState = !focusMode()
+    setFocusMode(newState)
+    window.electron.ipcRenderer.send('toggle-focus-mode', newState)
+  }
 
   return (
     <Motion.div
@@ -49,6 +72,21 @@ const Settings = () => {
         <div class="border-b-2 border-foreground pb-swiss-6">
           <h3 class="text-xl font-bold mb-swiss-4 uppercase tracking-tight">DAILY DEEP WORK TARGET</h3>
           <DeepWorkSlider />
+        </div>
+
+        <div class="border-b-2 border-foreground pb-swiss-6">
+          <h3 class="text-xl font-bold mb-swiss-4 uppercase tracking-tight">FOCUS MODE</h3>
+          <p class="text-sm text-muted-foreground mb-swiss-4 uppercase">
+            When enabled, unproductive apps and websites will be automatically closed. When disabled, you'll receive notifications instead.
+          </p>
+          <Button
+            variant={focusMode() ? 'default' : 'outline'}
+            size="default"
+            onClick={toggleFocusMode}
+            class="w-full"
+          >
+            {focusMode() ? 'FOCUS MODE: ON' : 'FOCUS MODE: OFF'}
+          </Button>
         </div>
       </div>
     </div>

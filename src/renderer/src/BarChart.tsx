@@ -32,11 +32,25 @@ const BarChart = (): JSX.Element => {
     window?.electron?.ipcRenderer.send('fetch-deep-work-data')
   }
 
-  const handleDataResponse = (_event: IpcRendererEvent, data: number[]): void => {
+  const handleDataResponse = (_event: IpcRendererEvent, response: number[] | { data: number[]; labels: string[] }): void => {
+    // Handle both old format (array) and new format (object with data and labels)
+    let data: number[]
+    let labels: string[]
+    
+    if (Array.isArray(response)) {
+      // Old format - just an array of numbers
+      data = response
+      labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    } else {
+      // New format - object with data and labels
+      data = response.data
+      labels = response.labels
+    }
+    
     if (data && data.length) {
-      console.log('Retrieved Data! ', data)
+      console.log('Retrieved Data! ', data, 'Labels:', labels)
       setChartData((prevData) => ({
-        ...prevData,
+        labels,
         datasets: [{ ...prevData.datasets[0], data }]
       }))
     } else {

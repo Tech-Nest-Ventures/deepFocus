@@ -51,11 +51,24 @@ const Home = () => {
   })
 
   // Handle deep work data response from IPC
-  const handleDeepWorkData = (_event: IpcRendererEvent, data: number[]) => {
-    const todayIndex = dayjs().day() === 0 ? 7 : dayjs().day()
-    const dataIndex = todayIndex - 1
-    if (data && data.length > dataIndex) {
-      const workDone = data[dataIndex]
+  const handleDeepWorkData = (_event: IpcRendererEvent, response: number[] | { data: number[]; labels: string[] }) => {
+    // Handle both old format (array) and new format (object with data and labels)
+    let data: number[]
+
+    if (Array.isArray(response)) {
+      // Old format - just an array of numbers
+      data = response
+    } else {
+      // New format - object with data and labels
+      data = response.data
+    }
+
+    // Get today's data - data is always ordered MON, TUE, WED, THU, FRI, SAT, SUN
+    // dayjs().day() returns 0 for Sunday, 1 for Monday, etc.
+    // We need to convert: Sunday (0) -> index 6, Monday (1) -> index 0, etc.
+    const todayIndex = dayjs().day() === 0 ? 6 : dayjs().day() - 1
+    if (data && data.length > todayIndex) {
+      const workDone = data[todayIndex]
       setDeepWorkDone(workDone)
       setProgress(workDone / deepWorkTarget()) // Calculate the progress percentage
     } else {

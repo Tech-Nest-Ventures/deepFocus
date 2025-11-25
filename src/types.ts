@@ -38,9 +38,11 @@ export interface StoreSchema {
     Saturday: number
     Sunday: number
   }
+  deepWorkHoursWithDates?: DeepWorkHoursWithDates
   deepWorkTarget?: number
   offlineQueue?: QueuedActivityData[]
   lastSyncTimestamp?: number
+  focusMode?: boolean
 }
 export interface SiteTimeTracker {
   url: string
@@ -59,6 +61,16 @@ export type DeepWorkHours = {
   Friday: number
   Saturday: number
   Sunday: number
+}
+
+export interface DeepWorkHoursWithDates {
+  Monday?: { hours: number; date: string }
+  Tuesday?: { hours: number; date: string }
+  Wednesday?: { hours: number; date: string }
+  Thursday?: { hours: number; date: string }
+  Friday?: { hours: number; date: string }
+  Saturday?: { hours: number; date: string }
+  Sunday?: { hours: number; date: string }
 }
 export interface ElectronAPI {
   sendUserData: (user: {

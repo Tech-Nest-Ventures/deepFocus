@@ -6,6 +6,7 @@ import {
   WorkContext,
   AppIcon,
   DeepWorkHours,
+  DeepWorkHoursWithDates,
   TrackerType
 } from './types'
 import { TypedStore } from './main'
@@ -273,7 +274,17 @@ export function calculateDeepWorkHours(
     }
   })
   const timeSpentInHours = Number((totalDeepWorkTime / (60 * 60)).toFixed(2)) // Convert from sec to hours
-  deepWorkHours[today] = timeSpentInHours
+  deepWorkHours[today as keyof DeepWorkHours] = timeSpentInHours
+
+  // Also store with date information
+  const todayDate = dayjs().format('YYYY-MM-DD')
+  const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
+  deepWorkHoursWithDates[today as keyof DeepWorkHoursWithDates] = {
+    hours: timeSpentInHours,
+    date: todayDate
+  }
+  store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
+  
   // log.info(`Deep work hours for ${today}: ${deepWorkHours[today]} hours`)
   store.set('deepWorkHours', deepWorkHours)
   return deepWorkHours
@@ -292,4 +303,58 @@ export function isBrowser(appName: string): appName is browser {
     'firefox',
     'Orion'
   ].includes(appName)
+}
+
+// Function to close the active browser tab
+export function closeBrowserTab(browser: string): Promise<boolean> {
+  return new Promise<boolean>((resolve, _reject) => {
+    let script = ''
+    
+    if (browser === 'Google Chrome' || browser === 'Brave Browser' || browser === 'Microsoft Edge' || browser === 'Vivaldi' || browser === 'Opera' || browser === 'Arc') {
+      script = `osascript -e 'tell application "${browser}" to close active tab of front window'`
+    } else if (browser === 'Safari' || browser === 'Orion') {
+      script = `osascript -e 'tell application "${browser}" to close front document'`
+    } else if (browser.toLowerCase() === 'firefox') {
+      // Firefox requires a different approach - use keyboard shortcut
+      script = `osascript -e 'tell application "System Events" to keystroke "w" using {command down}'`
+    } else {
+      log.warn(`Unsupported browser for closing tab: ${browser}`)
+      resolve(false)
+      return
+    }
+
+    exec(script, (err, stdout, stderr) => {
+      if (err) {
+        log.error(`Error closing tab for ${browser}: ${stderr}`)
+        resolve(false)
+      } else {
+        log.info(`Successfully closed tab in ${browser}`)
+        resolve(true)
+      }
+    })
+  })
+}
+
+// Function to quit an application
+export function quitApplication(appName: string): Promise<boolean> {
+  return new Promise<boolean>((resolve, _reject) => {
+    // Don't quit Deep Focus itself
+    if (appName === 'Deep Focus' || appName === 'Electron') {
+      log.warn('Attempted to quit Deep Focus itself, ignoring')
+      resolve(false)
+      return
+    }
+
+    const script = `osascript -e 'tell application "${appName}" to quit'`
+
+    exec(script, (err, stdout, stderr) => {
+      if (err) {
+        log.error(`Error quitting application ${appName}: ${stderr}`)
+        resolve(false)
+      } else {
+        log.info(`Successfully quit application: ${appName}`)
+        resolve(true)
+      }
+    })
+  })
 }
