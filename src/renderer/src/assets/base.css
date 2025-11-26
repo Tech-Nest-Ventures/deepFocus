@@ -1,10 +1,12 @@
+/* Swiss Typography: Import Inter (Helvetica alternative) and Monospaced font */
+/* @import must come before all other CSS rules */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+/* @tailwind directives are valid and processed by Tailwind PostCSS plugin */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Swiss Typography: Import Inter (Helvetica alternative) and Monospaced font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -103,10 +105,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     /* Swiss Typography: Inter font (Helvetica alternative) */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-feature-settings:
@@ -130,29 +133,214 @@
     letter-spacing: 0;
   }
   
-  /* Swiss Typography: Strong typographic hierarchy */
+  /* Swiss Typography: Strong typographic hierarchy - Clear information architecture */
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
   }
   
-  /* Swiss Typography: Remove default margins, use spacing system */
-  h1 { font-size: 2.5rem; font-weight: 800; }
-  h2 { font-size: 2rem; font-weight: 700; }
-  h3 { font-size: 1.5rem; font-weight: 600; }
-  h4 { font-size: 1.25rem; font-weight: 600; }
-  h5 { font-size: 1rem; font-weight: 600; }
-  h6 { font-size: 0.875rem; font-weight: 600; }
+  /* Swiss Typography: Precise type scale - Mathematical progression */
+  h1 { 
+    font-size: 2.5rem; 
+    font-weight: 900; 
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  h2 { 
+    font-size: 2rem; 
+    font-weight: 800; 
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  h3 { 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  h4 { 
+    font-size: 1.25rem; 
+    font-weight: 700; 
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+  h5 { 
+    font-size: 1rem; 
+    font-weight: 600; 
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  h6 { 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    letter-spacing: 0;
+    line-height: 1.4;
+  }
   
+  /* Swiss Typography: Body text - Readable, clean */
   p {
     line-height: 1.6;
     letter-spacing: -0.01em;
+    margin: 0;
+    padding: 0;
   }
+  
+  /* Swiss Typography: Labels and metadata - Smaller, lighter weight */
+  label, .label, [data-label] {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+  }
+  
+  /* Swiss Typography: Data and metrics - Monospaced, tabular */
+  .metric, .data, [data-metric] {
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+}
+
+/* Swiss Typography: Utility classes for spacing - Ensure they work even if Tailwind doesn't process */
+.swiss-spacing-1 { gap: 8px; margin: 8px; padding: 8px; }
+.swiss-spacing-2 { gap: 16px; margin: 16px; padding: 16px; }
+.swiss-spacing-3 { gap: 24px; margin: 24px; padding: 24px; }
+.swiss-spacing-4 { gap: 32px; margin: 32px; padding: 32px; }
+.swiss-spacing-6 { gap: 48px; margin: 48px; padding: 48px; }
+.swiss-spacing-8 { gap: 64px; margin: 64px; padding: 64px; }
+.swiss-spacing-10 { gap: 80px; margin: 80px; padding: 80px; }
+.swiss-spacing-12 { gap: 96px; margin: 96px; padding: 96px; }
+
+/* Swiss Typography: Ensure uppercase and proper font weights */
+.swiss-heading {
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.swiss-label {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+}
+
+.swiss-metric {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+/* Swiss Typography: Range slider styling - Clean, minimal, high contrast */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  height: 8px;
+}
+
+input[type="range"]::-webkit-slider-track {
+  background: hsl(var(--muted));
+  height: 8px;
+  border: 2px solid hsl(var(--foreground));
+  border-radius: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: hsl(var(--foreground));
+  height: 24px;
+  width: 24px;
+  border: 2px solid hsl(var(--foreground));
+  margin-top: -10px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+input[type="range"]::-moz-range-track {
+  background: hsl(var(--muted));
+  height: 8px;
+  border: 2px solid hsl(var(--foreground));
+  border-radius: 0;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: hsl(var(--foreground));
+  height: 24px;
+  width: 24px;
+  border: 2px solid hsl(var(--foreground));
+  cursor: pointer;
+  border-radius: 0;
+}
+
+/* Swiss Typography: Input field styling - Clean, high contrast */
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="search"],
+textarea {
+  background: transparent;
+  border: 2px solid hsl(var(--foreground));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+  border-color: hsl(var(--foreground));
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="url"]::placeholder,
+input[type="search"]::placeholder,
+textarea::placeholder {
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+}
+
+/* Swiss Typography: Button text readability and width constraints */
+button,
+[role="button"] {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Ensure buttons don't cause horizontal overflow */
+button:not([class*="icon"]) {
+  min-width: 0;
+  width: auto;
 }
 
 @media (max-width: 640px) {
   .container {
-    @apply px-4;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }

@@ -85,16 +85,16 @@ const UnproductiveApps = () => {
   }
 
   return (
-    <div class="space-y-swiss-8">
-      <h1 class="mb-swiss-6 text-xl font-extrabold uppercase tracking-tight">CHANGE UNPRODUCTIVE APPS</h1>
-      <div class="max-h-96 overflow-y-auto">
-        <ul class="space-y-swiss-4">
+    <div style={{ 'gap': '64px', display: 'flex', 'flex-direction': 'column' }}>
+      <h1 class="swiss-heading" style={{ 'font-size': '1.25rem', 'margin-bottom': '48px' }}>CHANGE UNPRODUCTIVE APPS</h1>
+      <div style={{ 'max-height': '400px', 'overflow-y': 'auto' }}>
+        <ul style={{ 'gap': '32px', display: 'flex', 'flex-direction': 'column' }}>
           <For each={paginatedApps()}>
             {(app) => (
-              <li class="flex items-center justify-between border-b-2 border-foreground pb-swiss-3">
-                <div class="flex items-center gap-swiss-3">
-                  <img src={app.iconPath} alt={`${app.appName} icon`} class="w-6 h-6" />
-                  <span class="font-semibold uppercase">{app.appName}</span>
+              <li class="flex items-center justify-between" style={{ 'border-bottom': '2px solid hsl(var(--foreground))', 'padding-bottom': '24px' }}>
+                <div class="flex items-center" style={{ 'gap': '16px' }}>
+                  <img src={app.iconPath} alt={`${app.appName} icon`} style={{ width: '24px', height: '24px' }} />
+                  <span style={{ 'font-weight': 600, 'text-transform': 'uppercase', 'font-size': '0.875rem' }}>{app.appName}</span>
                 </div>
                 <Button
                   variant={unproductiveApps().some((unproductiveApp) => unproductiveApp.appName === app.appName) ? 'destructive' : 'outline'}
@@ -115,7 +115,7 @@ const UnproductiveApps = () => {
         </ul>
       </div>
 
-      <div class="flex justify-between mt-swiss-6">
+      <div class="flex justify-between" style={{ 'margin-top': '48px' }}>
         <Button onClick={prevPage} disabled={currentPage() === 1} variant="outline" size="sm">
           PREVIOUS
         </Button>
@@ -124,14 +124,14 @@ const UnproductiveApps = () => {
         </Button>
       </div>
 
-      <div class="mt-swiss-8">
-        <h3 class="text-lg font-bold mb-swiss-4 uppercase tracking-tight">UNPRODUCTIVE APPS:</h3>
-        <ul class="space-y-swiss-3">
+      <div style={{ 'margin-top': '64px' }}>
+        <h3 class="swiss-heading" style={{ 'font-size': '1.125rem', 'margin-bottom': '32px' }}>UNPRODUCTIVE APPS:</h3>
+        <ul style={{ 'gap': '24px', display: 'flex', 'flex-direction': 'column' }}>
           <For each={unproductiveApps()}>
             {(app) => (
-              <li class="flex items-center gap-swiss-3 border-b-2 border-foreground pb-swiss-2">
-                <img src={app.iconPath} alt={`${app.appName} icon`} class="w-6 h-6" />
-                <span class="font-semibold uppercase">{app.appName}</span>
+              <li class="flex items-center" style={{ 'gap': '16px', 'border-bottom': '2px solid hsl(var(--foreground))', 'padding-bottom': '20px' }}>
+                <img src={app.iconPath} alt={`${app.appName} icon`} style={{ width: '24px', height: '24px' }} />
+                <span style={{ 'font-weight': 600, 'text-transform': 'uppercase', 'font-size': '0.875rem' }}>{app.appName}</span>
               </li>
             )}
           </For>

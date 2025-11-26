@@ -8,16 +8,65 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
 import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerPKG } from '@electron-forge/maker-pkg'
+import * as fs from 'fs'
+import * as path from 'path'
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     name: 'Deep Focus',
     icon: './resources/icon.icns',
+    executableName: 'Deep Focus',
+    // Override main field for packaged app - Vite plugin outputs main.js at root of asar
+    // This ensures the packaged app uses the correct entry point
+    afterCopy: [
+      (buildPath, electronVersion, platform, arch) => {
+        const packageJsonPath = path.join(buildPath, 'package.json')
+        try {
+          if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+            packageJson.main = 'main.js'
+            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+            console.log('Updated package.json main field to main.js')
+          }
+        } catch (error) {
+          console.error('Failed to update package.json main field:', error)
+        }
+      }
+    ],
+    afterExtract: [
+      (buildPath, electronVersion, platform, arch) => {
+        // Also update package.json after asar extraction if needed
+        const packageJsonPath = path.join(buildPath, 'package.json')
+        try {
+          if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+            if (packageJson.main !== 'main.js') {
+              packageJson.main = 'main.js'
+              fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+              console.log('Updated package.json main field after extraction')
+            }
+          }
+        } catch (error) {
+          console.error('Failed to update package.json main field after extraction:', error)
+        }
+      }
+    ],
     osxSign: {
       identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
-      type: 'distribution'
+      type: 'distribution',
+      optionsForFile: () => ({
+        entitlements: './build/entitlements.mac.plist',
+        hardenedRuntime: true
+      })
     },
+    osxNotarize: process.env.APPLE_ID && process.env.APPLE_ID_PASS && process.env.APPLE_TEAM_ID
+      ? {
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_ID_PASS,
+          teamId: process.env.APPLE_TEAM_ID
+        }
+      : undefined,
     appBundleId: 'com.electron.deepfocus',
     extraResource: [
       'resources/icon.icns',

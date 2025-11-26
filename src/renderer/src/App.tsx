@@ -165,10 +165,13 @@ const App = (props: ComponentProps<typeof Router>) => {
 
     return (
       <>
-        {/* Swiss Typography: Clean header with grid-based layout, left-aligned, extreme whitespace */}
-        <header class="flex justify-between items-center p-swiss-6 bg-background border-b-2 border-foreground w-full">
-          <img alt="logo" class="logo h-10 w-10" src={logo} />
-          <nav class="flex items-center justify-end space-x-swiss-4">
+        {/* Swiss Typography: Clean header with grid-based layout, centered nav */}
+        <header class="flex justify-center items-center bg-background border-b-2 border-foreground w-full relative" style={{ padding: '24px 48px' }}>
+          <div class="flex items-center" style={{ position: 'absolute', left: '48px', gap: '12px' }}>
+            <img alt="logo" class="logo" src={logo} style={{ height: '20px', width: '20px' }} />
+            <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:block">DEEP FOCUS</span>
+          </div>
+          <nav class="flex items-center justify-center" style={{ gap: '8px' }}>
             {!isLoggedIn() ? (
               location.pathname !== '/signup' ? (
                 <A href="/signup" class="logo">

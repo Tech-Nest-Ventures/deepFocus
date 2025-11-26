@@ -14,7 +14,13 @@ import dayjs from 'dayjs'
 import fs from 'fs'
 import { scheduleJob } from 'node-schedule'
 import dotenv from 'dotenv'
-import Store from 'electron-store'
+// Import electron-store - handle both ESM and CommonJS when externalized
+// When externalized, electron-store is required as CommonJS which returns { default: Store }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import StoreModule from 'electron-store'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const StoreModuleAny = StoreModule as any
+const Store = (StoreModuleAny?.default != null) ? StoreModuleAny.default : StoreModuleAny
 import {
   StoreSchema,
   SiteTimeTracker,
@@ -38,8 +44,10 @@ import {
 } from './productivityUtils'
 import { getApplicationIcons } from './childProcess'
 import { checkForUpdates, getIconPath, updateIconBasedOnProgress } from './utils'
-import log from 'electron-log/node.js'
-export interface TypedStore extends Store<StoreSchema> {
+import log from 'electron-log/main'
+// Import Store type from electron-store for TypeScript
+import type StoreType from 'electron-store'
+export interface TypedStore extends StoreType<StoreSchema> {
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
   get<K extends keyof StoreSchema>(key: K, defaultValue: StoreSchema[K]): StoreSchema[K]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,8 +56,9 @@ export interface TypedStore extends Store<StoreSchema> {
   clear(): void
 }
 const API_BASE_URL = 'https://backend-production-5eec.up.railway.app'
-// const API_BASE_URL = 'http://localhost:3003'
-const store = new Store<StoreSchema>() as TypedStore
+// For running locally/testing: const API_BASE_URL = 'http://localhost:3003'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const store = new (Store as any)() as TypedStore
 let currentSiteTimeTrackers: SiteTimeTracker[] = store.get('siteTimeTrackers', [])
 let monitoringInterval: NodeJS.Timeout | null = null
 let deepWorkHours = {

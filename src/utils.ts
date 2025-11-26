@@ -1,5 +1,5 @@
 import { dialog, app, Notification, autoUpdater } from 'electron'
-import log from 'electron-log/node.js'
+import log from 'electron-log/main'
 import path from 'path'
 // import FormData from 'form-data'
 // import fs from 'fs'

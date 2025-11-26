@@ -1,7 +1,7 @@
 import { createSignal } from 'solid-js'
 import UnproductiveApps from './UnproductiveApps'
 import UnproductiveWebsites from './UnproductiveWebsites'
-import DeepWorkSlider from './DeepWorkSlider'
+import DeepWorkTarget from './DeepWorkTarget'
 import { Button } from './components/ui/button'
 import { useNavigate } from '@solidjs/router'
 import User from './types'
@@ -89,7 +89,7 @@ const Onboarding = () => {
           <p class="mb-5 text-medium font-extralight max-w-[70%]">
             On a good day, how many hours of deep work do you consider to be a productive day?
             </p>
-          <DeepWorkSlider />
+          <DeepWorkTarget />
         </>
       )}
 

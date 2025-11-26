@@ -50,8 +50,8 @@ const UnproductiveWebsites = () => {
   }
 
   return (
-    <div class="space-y-swiss-6">
-      <div class="flex items-center gap-swiss-4 mb-swiss-6">
+    <div style={{ 'gap': '48px', display: 'flex', 'flex-direction': 'column' }}>
+      <div class="flex items-center" style={{ 'gap': '16px', 'margin-bottom': '48px' }}>
         <TextField class="flex-grow">
           <TextFieldInput
             list="websites"
@@ -60,6 +60,7 @@ const UnproductiveWebsites = () => {
             value={site()}
             onInput={(e) => setSite(e.currentTarget.value)}
             class="w-full uppercase"
+            style={{ 'text-transform': 'uppercase' }}
           />
           <datalist id="websites">
             <option value="https://google.com" />
@@ -77,13 +78,13 @@ const UnproductiveWebsites = () => {
         </Button>
       </div>
 
-      <ul class="space-y-swiss-4">
+      <ul style={{ 'gap': '32px', display: 'flex', 'flex-direction': 'column' }}>
         <For each={unproductiveSites()}>
           {(site) => (
-            <li class="flex items-center justify-between border-b-2 border-foreground pb-swiss-3">
-              <div class="flex items-center gap-swiss-3">
-                <img src={getFavicon(site)} alt={`${site} favicon`} class="w-6 h-6" />
-                <span class="font-semibold uppercase">{site}</span>
+            <li class="flex items-center justify-between" style={{ 'border-bottom': '2px solid hsl(var(--foreground))', 'padding-bottom': '24px' }}>
+              <div class="flex items-center" style={{ 'gap': '16px' }}>
+                <img src={getFavicon(site)} alt={`${site} favicon`} style={{ width: '24px', height: '24px' }} />
+                <span style={{ 'font-weight': 600, 'text-transform': 'uppercase', 'font-size': '0.875rem' }}>{site}</span>
               </div>
               <Button
                 variant="outline"

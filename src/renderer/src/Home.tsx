@@ -108,41 +108,51 @@ const Home = () => {
     exit={{ opacity: 0, y: -8 }}
     transition={{ duration: 0.3, easing: "ease-out" }}
   >
-    {/* Swiss Typography: Asymmetric layout, left-aligned, extreme whitespace */}
-    <div class="flex justify-start items-start h-full flex-col p-swiss-8 space-y-swiss-12">
+    {/* Swiss Typography: Asymmetric layout, left-aligned, balanced whitespace */}
+    <div class="flex justify-start items-start h-full flex-col" style={{ padding: '48px 64px', 'gap': '48px' }}>
       {!loggedIn() || !user ? (
-        <div class="w-full">
-          <h1 class="mb-swiss-8 text-3xl font-extrabold tracking-tight uppercase">WELCOME TO DEEP FOCUS</h1>
+        <div class="w-full" style={{ 'gap': '48px', display: 'flex', 'flex-direction': 'column' }}>
+          <h1 class="swiss-heading" style={{ 'font-size': '2rem' }}>WELCOME TO DEEP FOCUS</h1>
           <SandTimer />
         </div>
       ) : (
-        <div class="space-y-swiss-12 w-full">
-          <h1 class="mb-swiss-8 text-2xl font-extrabold tracking-tight uppercase">
-            {user?.firstName.toUpperCase()}'S DAILY DEEP WORK
-          </h1>
-          <CircularProgress progress={progress()} />
+        <div class="w-full" style={{ 'gap': '48px', display: 'flex', 'flex-direction': 'column' }}>
+          {/* Primary heading - Largest, boldest */}
+          <div style={{ 'gap': '16px', display: 'flex', 'flex-direction': 'column' }}>
+            <h1 class="swiss-heading" style={{ 'font-size': '1.75rem' }}>
+              {user?.firstName.toUpperCase()}'S DAILY DEEP WORK
+            </h1>
+          </div>
+          
+          {/* Progress indicator - Clear visual hierarchy */}
+          <div style={{ 'gap': '32px', display: 'flex', 'flex-direction': 'column' }}>
+            <CircularProgress progress={progress()} />
+          </div>
+          
+          {/* Active task - Secondary information */}
           {activeWindowInfo() ? (
-            <div class="mt-swiss-10">
-              <h2 class="text-xl font-bold mb-swiss-4">
-                <span class="font-normal">ACTIVE TASK:</span>
+            <div style={{ 'gap': '16px', display: 'flex', 'flex-direction': 'column', 'border-top': '2px solid hsl(var(--foreground))', 'padding-top': '32px' }}>
+              <label class="swiss-label">ACTIVE TASK</label>
+              <h2 style={{ 'margin': 0, 'padding': 0, 'font-size': '1.125rem', 'font-weight': 700, 'text-transform': 'uppercase', 'line-height': 1.2 }}>
                 <span
-                  class={activeWindowInfo().isProductive ? 'text-foreground ml-swiss-3 font-extrabold' : 'text-foreground ml-swiss-3 font-extrabold'}
+                  style={{ 
+                    'color': activeWindowInfo().isProductive ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                    'font-weight': activeWindowInfo().isProductive ? 900 : 700
+                  }}
                 >
                   {activeWindowInfo().URL !== 'Unknown URL'
                     ? formatUrlForDisplay(activeWindowInfo().URL).toUpperCase()
                     : activeWindowInfo().appName.toUpperCase()}
                 </span>
                 {!activeWindowInfo().isProductive && (
-                  <span class="ml-swiss-3 text-muted-foreground font-normal uppercase">(UNPRODUCTIVE)</span>
+                  <span style={{ 'margin-left': '24px', 'color': 'hsl(var(--muted-foreground))', 'font-weight': 400, 'font-size': '0.875rem' }}>(UNPRODUCTIVE)</span>
                 )}
               </h2>
             </div>
           ) : (
-            <div class="mt-swiss-10">
-              <h2 class="text-xl font-bold">
-                <span class="font-normal">ACTIVE TASK:</span>
-                <span class="text-foreground ml-swiss-3 font-extrabold uppercase">NO ACTIVE TASK DETECTED</span>
-              </h2>
+            <div style={{ 'gap': '16px', display: 'flex', 'flex-direction': 'column', 'border-top': '2px solid hsl(var(--foreground))', 'padding-top': '32px' }}>
+              <label class="swiss-label">ACTIVE TASK</label>
+              <h2 style={{ 'margin': 0, 'padding': 0, 'font-size': '1.125rem', 'font-weight': 700, 'text-transform': 'uppercase', 'color': 'hsl(var(--muted-foreground))', 'line-height': 1.2 }}>NO ACTIVE TASK DETECTED</h2>
             </div>
           )}
         </div>

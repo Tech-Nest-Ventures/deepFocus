@@ -12,7 +12,7 @@ import {
 import { TypedStore } from './main'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
-import log from 'electron-log/node.js'
+import log from 'electron-log/main'
 import path, { format } from 'path'
 import { app } from 'electron'
 import fs from 'fs'
