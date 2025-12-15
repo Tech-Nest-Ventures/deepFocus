@@ -6,14 +6,24 @@ import path from 'path'
 // import fetch from 'node-fetch'
 
 export function checkForUpdates(): void {
+  // Only check for updates in production mode (packaged app)
+  // AutoUpdater requires Squirrel which is only available in packaged apps
+  if (!app.isPackaged) {
+    log.info('Skipping update check in development mode')
+    return
+  }
+
   const server = 'https://raw.githubusercontent.com/Tech-Nest-Ventures/deepFocus/main'
   const feedURL = `${server}/latest-mac.json`
-  autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
 
-  log.info(autoUpdater.getFeedURL())
-  autoUpdater.checkForUpdates()
-
-  log.info('Checking for updates in app software')
+  try {
+    autoUpdater.setFeedURL({ url: feedURL, serverType: 'json' })
+    log.info(autoUpdater.getFeedURL())
+    autoUpdater.checkForUpdates()
+    log.info('Checking for updates in app software')
+  } catch (error) {
+    log.error('Error setting up auto-updater:', error)
+  }
 
   autoUpdater.on('update-available', () => {
     log.info('Update available.')

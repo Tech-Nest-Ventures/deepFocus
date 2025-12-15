@@ -20,7 +20,7 @@ import dotenv from 'dotenv'
 import StoreModule from 'electron-store'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const StoreModuleAny = StoreModule as any
-const Store = (StoreModuleAny?.default != null) ? StoreModuleAny.default : StoreModuleAny
+const Store = StoreModuleAny?.default != null ? StoreModuleAny.default : StoreModuleAny
 import {
   StoreSchema,
   SiteTimeTracker,
@@ -172,7 +172,7 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
     store?.set('lastResetDate', lastResetDate)
     const today = now.format('dddd') as keyof typeof deepWorkHours
     deepWorkHours[today] = 0
-    
+
     // Also reset today's date-stamped data
     const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
     const todayDate = now.format('YYYY-MM-DD')
@@ -181,7 +181,7 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
       date: todayDate
     }
     store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
-    
+
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', currentSiteTimeTrackers)
     log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
@@ -252,7 +252,10 @@ export function startActivityMonitoring(): void {
         let URL = ''
 
         if (isBrowser(appName)) {
-          URL = getBaseURL(await getBrowserURL(appName))
+          const browserURL = await getBrowserURL(appName)
+          if (browserURL && browserURL.trim()) {
+            URL = getBaseURL(browserURL)
+          }
         }
 
         updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
@@ -279,10 +282,10 @@ export function startActivityMonitoring(): void {
                   // Close the browser tab
                   log.info(`Focus mode: Closing unproductive website tab: ${URL} in ${appName}`)
                   const closed = await closeBrowserTab(appName)
-                  
+
                   if (closed) {
                     recentlyBlocked.set(blockKey, now)
-                    
+
                     // Show notification
                     const iconPath = app.isPackaged
                       ? path.join(process.resourcesPath, 'icon.png')
@@ -297,10 +300,10 @@ export function startActivityMonitoring(): void {
                   // Quit the unproductive app
                   log.info(`Focus mode: Quitting unproductive app: ${appName}`)
                   const quit = await quitApplication(appName)
-                  
+
                   if (quit) {
                     recentlyBlocked.set(blockKey, now)
-                    
+
                     // Show notification
                     const iconPath = app.isPackaged
                       ? path.join(process.resourcesPath, 'icon.png')
@@ -315,14 +318,15 @@ export function startActivityMonitoring(): void {
               } else {
                 // Focus mode OFF: Send notification only (cooldown already checked above)
                 recentlyBlocked.set(blockKey, now)
-                
+
                 const iconPath = app.isPackaged
                   ? path.join(process.resourcesPath, 'icon.png')
                   : path.join(__dirname, '../../resources/icon.png')
-                const notificationBody = URL.length > 0
-                  ? `You're on an unproductive website: ${URL}`
-                  : `You're using an unproductive app: ${appName}`
-                
+                const notificationBody =
+                  URL.length > 0
+                    ? `You're on an unproductive website: ${URL}`
+                    : `You're using an unproductive app: ${appName}`
+
                 new Notification({
                   title: 'Deep Focus - Unproductive Activity',
                   body: notificationBody,
@@ -388,7 +392,7 @@ async function createWindow(): Promise<BrowserWindow> {
     await storeData()
     store.set('lastResetDate', dayjs().toISOString())
     log.info('Last reset date is ', store.get('lastResetDate'))
-    
+
     // Final sync attempt before closing
     if (user && user.username) {
       const today = dayjs().format('YYYY-MM-DD')
@@ -396,7 +400,7 @@ async function createWindow(): Promise<BrowserWindow> {
       const filteredTrackers = currentSiteTimeTrackers.filter(
         (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
       )
-      
+
       if (filteredTrackers.length > 0) {
         const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
           url: tracker.url ? tracker.url.slice(0, 200) : 'unknown',
@@ -404,12 +408,12 @@ async function createWindow(): Promise<BrowserWindow> {
           timeSpent: tracker.timeSpent,
           date: today
         }))
-        
+
         await persistDailyData(dailyData, user.username)
         await processOfflineQueue()
       }
     }
-    
+
     app.quit()
     if (process.platform === 'darwin') {
       app.dock.hide()
@@ -510,14 +514,14 @@ app.on('ready', () => {
     isSystemSuspended = false
     startPersistenceInterval()
     startRetryQueueProcessor()
-    
+
     // Process offline queue when system resumes
     if (user && user.username) {
       processOfflineQueue().catch((error) => {
         log.error('Error processing offline queue on resume:', error)
       })
     }
-    
+
     log.info('System resumed.')
   })
 })
@@ -669,7 +673,7 @@ function setupIPCListeners(): void {
       startPersistenceInterval()
       startRetryQueueProcessor()
       loadUserData()
-      
+
       // Process any queued data when user logs in
       processOfflineQueue().catch((error) => {
         log.error('Error processing offline queue on login:', error)
@@ -810,7 +814,7 @@ function setupIPCListeners(): void {
   ipcMain.on('toggle-focus-mode', (_event, enabled: boolean) => {
     store.set('focusMode', enabled)
     log.info(`Focus mode ${enabled ? 'enabled' : 'disabled'}`)
-    
+
     // Send notification when focus mode is enabled
     if (enabled) {
       const iconPath = app.isPackaged
@@ -856,13 +860,13 @@ async function isOnline(): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
-    
+
     // Try to fetch the base URL or use a simple HEAD request
     await fetch(`${API_BASE_URL}`, {
       method: 'HEAD',
       signal: controller.signal
     })
-    
+
     clearTimeout(timeoutId)
     return true // If we get any response, we're online
   } catch (error) {
@@ -873,9 +877,12 @@ async function isOnline(): Promise<boolean> {
 /**
  * Add data to the offline queue for later retry
  */
-function addToOfflineQueue(dailyData: Array<{ url: string; title: string; timeSpent: number; date: string }>, username: string): void {
+function addToOfflineQueue(
+  dailyData: Array<{ url: string; title: string; timeSpent: number; date: string }>,
+  username: string
+): void {
   const queue: QueuedActivityData[] = store.get('offlineQueue', [])
-  
+
   const queuedItem: QueuedActivityData = {
     id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     username,
@@ -883,12 +890,11 @@ function addToOfflineQueue(dailyData: Array<{ url: string; title: string; timeSp
     timestamp: Date.now(),
     retryCount: 0
   }
-  
+
   queue.push(queuedItem)
   store.set('offlineQueue', queue)
   log.info(`Added ${dailyData.length} activities to offline queue. Queue size: ${queue.length}`)
 }
-
 
 /**
  * Calculate exponential backoff delay
@@ -903,42 +909,42 @@ function getRetryDelay(retryCount: number): number {
  */
 async function processOfflineQueue(): Promise<void> {
   const queue: QueuedActivityData[] = store.get('offlineQueue', [])
-  
+
   if (queue.length === 0) {
     return
   }
-  
+
   const online = await isOnline()
   if (!online) {
     log.info('Device is offline. Skipping queue processing.')
     return
   }
-  
+
   log.info(`Processing offline queue with ${queue.length} items`)
-  
+
   const now = Date.now()
   const updatedQueue: QueuedActivityData[] = []
-  
+
   for (const item of queue) {
     // Check if enough time has passed since last retry attempt
     const timeSinceLastRetry = item.lastRetryAttempt ? now - item.lastRetryAttempt : Infinity
     const retryDelay = getRetryDelay(item.retryCount)
-    
+
     if (item.retryCount >= MAX_RETRY_ATTEMPTS) {
       log.warn(`Item ${item.id} has exceeded max retry attempts. Removing from queue.`)
       continue // Skip this item, effectively removing it
     }
-    
+
     if (timeSinceLastRetry < retryDelay) {
       // Not time to retry yet, keep in queue
       updatedQueue.push(item)
       continue
     }
-    
+
     // Attempt to sync this item
     try {
       const success = await syncActivityData(item.dailyData, item.username)
-      
+
       if (success) {
         log.info(`Successfully synced queued item ${item.id}`)
         // Remove from queue on success
@@ -957,9 +963,9 @@ async function processOfflineQueue(): Promise<void> {
       updatedQueue.push(item)
     }
   }
-  
+
   store.set('offlineQueue', updatedQueue)
-  
+
   if (updatedQueue.length > 0) {
     log.info(`Queue processing complete. ${updatedQueue.length} items remaining.`)
   } else {
@@ -992,7 +998,9 @@ async function syncActivityData(
       return true
     } else {
       const errorText = await response.text().catch(() => 'Unknown error')
-      log.error(`Failed to persist daily data: ${response.status} ${response.statusText} - ${errorText}`)
+      log.error(
+        `Failed to persist daily data: ${response.status} ${response.statusText} - ${errorText}`
+      )
       return false
     }
   } catch (error) {
@@ -1012,65 +1020,62 @@ async function persistDailyData(
     log.warn('Cannot persist data: user not logged in')
     return false
   }
-  
+
   // Check if online
   const online = await isOnline()
-  
+
   if (!online) {
     log.info('Device is offline. Adding data to queue.')
     addToOfflineQueue(dailyData, username)
     return false
   }
-  
+
   // Try to sync
   const success = await syncActivityData(dailyData, username)
-  
+
   if (!success) {
     // If sync failed, add to queue for retry
     log.info('Sync failed. Adding data to offline queue.')
     addToOfflineQueue(dailyData, username)
   }
-  
+
   return success
 }
 function startPersistenceInterval(): void {
   if (!persistenceInterval && !isSystemSuspended) {
-    persistenceInterval = setInterval(
-      async () => {
-        if (!user || !user.username) {
-          log.info('User not logged in. Skipping persistence.')
-          return
-        }
+    persistenceInterval = setInterval(async () => {
+      if (!user || !user.username) {
+        log.info('User not logged in. Skipping persistence.')
+        return
+      }
 
-        const today = dayjs().format('YYYY-MM-DD') // Use ISO date format
-        const username = user.username
-        const MIN_TIME_THRESHOLD = 10
+      const today = dayjs().format('YYYY-MM-DD') // Use ISO date format
+      const username = user.username
+      const MIN_TIME_THRESHOLD = 10
 
-        const filteredTrackers = currentSiteTimeTrackers.filter(
-          (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
-        )
+      const filteredTrackers = currentSiteTimeTrackers.filter(
+        (tracker) => tracker.timeSpent >= MIN_TIME_THRESHOLD
+      )
 
-        if (filteredTrackers.length === 0) {
-          log.info('No trackers to persist (all below threshold).')
-          return
-        }
+      if (filteredTrackers.length === 0) {
+        log.info('No trackers to persist (all below threshold).')
+        return
+      }
 
-        // Create an array of activity objects with ISO date format
-        const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
-          url: tracker.url ? tracker.url.slice(0, 200) : 'unknown',
-          title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
-          timeSpent: tracker.timeSpent,
-          date: today
-        }))
+      // Create an array of activity objects with ISO date format
+      const dailyData = filteredTrackers.map((tracker: SiteTimeTracker) => ({
+        url: tracker.url ? tracker.url.slice(0, 200) : 'unknown',
+        title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
+        timeSpent: tracker.timeSpent,
+        date: today
+      }))
 
-        log.info(`Persisting ${dailyData.length} activities for ${username}`)
-        await persistDailyData(dailyData, username)
-        
-        // Also process any queued items
-        await processOfflineQueue()
-      },
-      PERSISTENCE_INTERVAL
-    )
+      log.info(`Persisting ${dailyData.length} activities for ${username}`)
+      await persistDailyData(dailyData, username)
+
+      // Also process any queued items
+      await processOfflineQueue()
+    }, PERSISTENCE_INTERVAL)
     log.info('Persistence interval started (every 5 minutes).')
   }
 }
@@ -1081,9 +1086,12 @@ function startPersistenceInterval(): void {
 function startRetryQueueProcessor(): void {
   if (!retryQueueInterval) {
     // Process queue every 2 minutes
-    retryQueueInterval = setInterval(async () => {
-      await processOfflineQueue()
-    }, 2 * 60 * 1000)
+    retryQueueInterval = setInterval(
+      async () => {
+        await processOfflineQueue()
+      },
+      2 * 60 * 1000
+    )
     log.info('Retry queue processor started.')
   }
 }
@@ -1161,7 +1169,7 @@ async function checkAndSendMissedEmails(): Promise<void> {
     const lastEmailDate = dayjs(store.get('lastEmailDate', null) || dayjs().subtract(1, 'day'))
     const today = dayjs().startOf('day')
     const daysSinceLastEmail = today.diff(lastEmailDate, 'day')
-    
+
     log.info('checking and sending missed emails')
     log.info(
       'lastEmailDate',
@@ -1171,7 +1179,7 @@ async function checkAndSendMissedEmails(): Promise<void> {
       'daysSinceLastEmail',
       daysSinceLastEmail
     )
-    
+
     // If there's a large gap (more than 1 day), skip sending missed emails for days in between
     // The user wasn't using the app during those days, so there's no need to send emails
     // But still send an email for today when they check in
@@ -1195,7 +1203,7 @@ async function checkAndSendMissedEmails(): Promise<void> {
       }
       return
     }
-    
+
     // Normal flow: send missed emails for small gaps (1 day or less)
     if (!lastEmailDate.isSame(today, 'day')) {
       let dateToProcess = lastEmailDate.add(1, 'day')

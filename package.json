@@ -4,10 +4,10 @@
   "version": "2.4.7",
   "main": ".vite/build/main.js",
   "scripts": {
-    "start": "DEBUG=electron* electron-forge start",
+    "start": "cross-env DEBUG=electron* electron-forge start",
     "build": "electron-forge package",
-    "package": "DEBUG=electron* electron-forge package",
-    "make": "DEBUG=electron* electron-forge make",
+    "package": "cross-env DEBUG=electron* electron-forge package",
+    "make": "cross-env DEBUG=electron* electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
@@ -30,6 +30,7 @@
     "@types/node-schedule": "^2.1.8",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
+    "cross-env": "^10.1.0",
     "electron": "^39.2.3",
     "eslint": "^9.39.1",
     "eslint-import-resolver-typescript": "^4.4.4",
