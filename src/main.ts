@@ -363,7 +363,9 @@ async function createWindow(): Promise<BrowserWindow> {
     },
     icon: iconPath
   })
-  app.dock.setIcon(getIconPath('icon.png', resourcesPath))
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(getIconPath('icon.png', resourcesPath))
+  }
 
   mainWindow.on('ready-to-show', async () => {
     mainWindow?.show()
