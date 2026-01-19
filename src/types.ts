@@ -21,6 +21,12 @@ export interface QueuedActivityData {
   lastRetryAttempt?: number
 }
 
+export interface FocusModeStats {
+  websitesBlocked: number
+  appsBlocked: number
+  totalBlocked: number
+}
+
 export interface StoreSchema {
   unproductiveSites?: string[]
   unproductiveApps?: string[]
@@ -43,6 +49,8 @@ export interface StoreSchema {
   offlineQueue?: QueuedActivityData[]
   lastSyncTimestamp?: number
   focusMode?: boolean
+  focusModeStats?: FocusModeStats
+  manualTimeEntries?: ManualTimeEntry[]
 }
 export interface SiteTimeTracker {
   url: string
@@ -107,4 +115,12 @@ export interface AppIcon {
 export enum TrackerType {
   Website = 'website',
   App = 'app'
+}
+
+export interface ManualTimeEntry {
+  id: string
+  taskName: string
+  hours: number
+  date: string // ISO date format: YYYY-MM-DD
+  createdAt: number // timestamp
 }

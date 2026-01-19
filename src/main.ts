@@ -28,7 +28,9 @@ import {
   DeepWorkHoursWithDates,
   User,
   AppIcon,
-  QueuedActivityData
+  QueuedActivityData,
+  FocusModeStats,
+  ManualTimeEntry
 } from './types'
 import {
   updateSiteTimeTracker,
@@ -159,6 +161,23 @@ async function storeData(): Promise<void> {
   currentDeepWork = deepWorkHours[today] || 0
 }
 
+function incrementFocusModeStats(type: 'website' | 'app'): void {
+  const currentStats = store.get('focusModeStats', {
+    websitesBlocked: 0,
+    appsBlocked: 0,
+    totalBlocked: 0
+  }) as FocusModeStats
+
+  const updatedStats: FocusModeStats = {
+    websitesBlocked: type === 'website' ? currentStats.websitesBlocked + 1 : currentStats.websitesBlocked,
+    appsBlocked: type === 'app' ? currentStats.appsBlocked + 1 : currentStats.appsBlocked,
+    totalBlocked: currentStats.totalBlocked + 1
+  }
+
+  store.set('focusModeStats', updatedStats)
+  log.info(`Focus mode stats updated: ${JSON.stringify(updatedStats)}`)
+}
+
 export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
   const now = dayjs()
   log.info('Invoked resetCounters')
@@ -182,9 +201,16 @@ export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
     }
     store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
     
+    // Reset focus mode stats daily
+    store.set('focusModeStats', {
+      websitesBlocked: 0,
+      appsBlocked: 0,
+      totalBlocked: 0
+    })
+    
     store.set('deepWorkHours', deepWorkHours)
     store.set('siteTimeTrackers', currentSiteTimeTrackers)
-    log.info('currentSiteTimeTrackers', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
+    log.info('currentSiteTimeTrackersl', currentSiteTimeTrackers, 'deepWorkHours', deepWorkHours)
   } else if (type === 'weekly') {
     currentSiteTimeTrackers = []
     store.set('deepWorkHours', {
@@ -282,6 +308,7 @@ export function startActivityMonitoring(): void {
                   
                   if (closed) {
                     recentlyBlocked.set(blockKey, now)
+                    incrementFocusModeStats('website')
                     
                     // Show notification
                     const iconPath = app.isPackaged
@@ -300,6 +327,7 @@ export function startActivityMonitoring(): void {
                   
                   if (quit) {
                     recentlyBlocked.set(blockKey, now)
+                    incrementFocusModeStats('app')
                     
                     // Show notification
                     const iconPath = app.isPackaged
@@ -546,32 +574,49 @@ function getChartDataInOrder(store: TypedStore): { data: number[]; labels: strin
   const data: number[] = []
   const labels: string[] = []
 
+  // Get manual time entries
+  const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+
   // Build array from Monday to Sunday
   for (let i = 0; i < 7; i++) {
     const currentDate = mondayDate.add(i, 'day')
     const dayName = dayNames[i] as keyof DeepWorkHoursWithDates
     const dateStr = currentDate.format('YYYY-MM-DD')
 
+    // Calculate manual hours for this date
+    const manualHoursForDate = manualTimeEntries
+      .filter((entry) => entry.date === dateStr)
+      .reduce((sum, entry) => sum + entry.hours, 0)
+
     // Check if we have data with dates for this day
     const dayData = deepWorkHoursWithDates[dayName]
 
+    let totalHours = 0
     if (dayData && dayData.date === dateStr) {
       // Use the data with matching date
-      data.push(dayData.hours)
+      // For past dates, this might not include manual hours, so we add them
+      // For today, calculateDeepWorkHours already includes manual hours in the stored data
+      if (currentDate.isSame(now, 'day')) {
+        // Today: stored data already includes manual hours from calculateDeepWorkHours
+        totalHours = dayData.hours
+      } else {
+        // Past date: stored data is automatic only, add manual hours
+        totalHours = dayData.hours + manualHoursForDate
+      }
     } else if (currentDate.isSame(now, 'day')) {
-      // For today, use current deepWorkHours
-      data.push(deepWorkHours[dayName as keyof DeepWorkHours] || 0)
+      // For today, use current deepWorkHours (which includes manual hours from calculateDeepWorkHours)
+      totalHours = deepWorkHours[dayName as keyof DeepWorkHours] || 0
     } else if (currentDate.isBefore(now, 'day')) {
       // For past days in the current week, try to use stored data or fallback to 0
-      if (dayData) {
-        data.push(dayData.hours)
-      } else {
-        data.push(deepWorkHours[dayName as keyof DeepWorkHours] || 0)
-      }
+      const baseHours = dayData ? dayData.hours : (deepWorkHours[dayName as keyof DeepWorkHours] || 0)
+      // Add manual hours for past dates
+      totalHours = baseHours + manualHoursForDate
     } else {
       // Future days should be 0
-      data.push(0)
+      totalHours = 0
     }
+    
+    data.push(Number(totalHours.toFixed(2)))
 
     labels.push(dayAbbrevs[i])
   }
@@ -821,6 +866,189 @@ function setupIPCListeners(): void {
       }).show()
     }
   })
+
+  // Fetch focus mode stats
+  ipcMain.on('fetch-focus-mode-stats', (event) => {
+    const stats = store.get('focusModeStats', {
+      websitesBlocked: 0,
+      appsBlocked: 0,
+      totalBlocked: 0
+    }) as FocusModeStats
+    event.reply('focus-mode-stats-response', stats)
+  })
+
+  // Add manual time entry
+  ipcMain.on('add-manual-time-entry', (_event, entry: Omit<ManualTimeEntry, 'id' | 'createdAt'>) => {
+    try {
+      // Validate input
+      if (!entry.taskName || entry.taskName.trim() === '') {
+        log.error('Invalid manual time entry: task name is required')
+        return
+      }
+      if (entry.hours <= 0 || entry.hours > 24) {
+        log.error('Invalid manual time entry: hours must be between 0 and 24')
+        return
+      }
+      if (!dayjs(entry.date).isValid()) {
+        log.error('Invalid manual time entry: date is invalid')
+        return
+      }
+
+      // Create entry with ID and timestamp
+      const newEntry: ManualTimeEntry = {
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+        taskName: entry.taskName.trim(),
+        hours: Number(entry.hours.toFixed(2)),
+        date: entry.date,
+        createdAt: Date.now()
+      }
+
+      // Get existing entries and add new one
+      const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+      manualTimeEntries.push(newEntry)
+      store.set('manualTimeEntries', manualTimeEntries)
+
+      log.info(`Added manual time entry: ${newEntry.taskName} - ${newEntry.hours} hours on ${newEntry.date}`)
+
+      // Recalculate deep work hours for the entry's date
+      const entryDate = dayjs(entry.date)
+      const entryDayName = entryDate.format('dddd') as keyof DeepWorkHours
+      
+      // Recalculate today if the entry is for today, otherwise update the specific day
+      if (entryDate.isSame(dayjs(), 'day')) {
+        calculateDeepWorkHours(currentSiteTimeTrackers, deepWorkHours, store)
+      } else {
+        // For past dates, we need to recalculate that day's total
+        // The stored data in deepWorkHoursWithDates might already include manual hours
+        // So we need to get all manual entries for that date and recalculate
+        const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
+        const dayData = deepWorkHoursWithDates[entryDayName]
+        
+        // Get all manual hours for this date (including the new one)
+        const manualHoursForDate = manualTimeEntries
+          .filter((e) => e.date === entry.date)
+          .reduce((sum, e) => sum + e.hours, 0)
+        
+        // For past dates, we assume the stored hours are automatic only
+        // If dayData exists and matches the date, use it as base, otherwise 0
+        const baseHours = (dayData && dayData.date === entry.date) ? dayData.hours : 0
+        
+        // For past dates, we can't recalculate automatic hours, so we'll store
+        // the sum of stored hours + all manual hours
+        // Note: This assumes stored hours don't already include manual hours
+        // If they do, we'd need to track automatic vs manual separately (future improvement)
+        const totalHours = Number((baseHours + manualHoursForDate).toFixed(2))
+        
+        deepWorkHoursWithDates[entryDayName] = {
+          hours: totalHours,
+          date: entry.date
+        }
+        deepWorkHours[entryDayName] = totalHours
+        store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
+        store.set('deepWorkHours', deepWorkHours)
+      }
+
+      // Trigger UI refresh
+      if (mainWindow && mainWindow.webContents) {
+        const { data, labels } = getChartDataInOrder(store)
+        mainWindow.webContents.send('deep-work-data-response', { data, labels })
+        // Also send updated manual entries for today if this entry is for today
+        if (dayjs(entry.date).isSame(dayjs(), 'day')) {
+          const todayEntries = manualTimeEntries.filter((e) => e.date === entry.date)
+          mainWindow.webContents.send('manual-time-entries-response', todayEntries)
+        }
+      }
+    } catch (error) {
+      log.error('Error adding manual time entry:', error)
+    }
+  })
+
+  // Fetch manual time entries
+  ipcMain.on('fetch-manual-time-entries', (event, dateFilter?: string) => {
+    try {
+      const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+      let filteredEntries = manualTimeEntries
+
+      // Filter by date if provided
+      if (dateFilter) {
+        filteredEntries = manualTimeEntries.filter((entry) => entry.date === dateFilter)
+      }
+
+      // Sort by date (newest first) and then by creation time
+      filteredEntries.sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date)
+        if (dateCompare !== 0) return dateCompare
+        return b.createdAt - a.createdAt
+      })
+
+      event.reply('manual-time-entries-response', filteredEntries)
+    } catch (error) {
+      log.error('Error fetching manual time entries:', error)
+      event.reply('manual-time-entries-response', [])
+    }
+  })
+
+  // Delete manual time entry
+  ipcMain.on('delete-manual-time-entry', (_event, entryId: string) => {
+    try {
+      const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+      const entryToDelete = manualTimeEntries.find((e) => e.id === entryId)
+      
+      if (!entryToDelete) {
+        log.warn(`Manual time entry not found: ${entryId}`)
+        return
+      }
+
+      // Remove the entry
+      const updatedEntries = manualTimeEntries.filter((e) => e.id !== entryId)
+      store.set('manualTimeEntries', updatedEntries)
+
+      log.info(`Deleted manual time entry: ${entryId}`)
+
+      // Recalculate deep work hours for the entry's date
+      const entryDate = dayjs(entryToDelete.date)
+      const entryDayName = entryDate.format('dddd') as keyof DeepWorkHours
+      
+      if (entryDate.isSame(dayjs(), 'day')) {
+        // Recalculate today
+        calculateDeepWorkHours(currentSiteTimeTrackers, deepWorkHours, store)
+      } else {
+        // For past dates, recalculate that day's total
+        const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
+        const dayData = deepWorkHoursWithDates[entryDayName]
+        
+        // Get all remaining manual hours for this date
+        const manualHoursForDate = updatedEntries
+          .filter((e) => e.date === entryToDelete.date)
+          .reduce((sum, e) => sum + e.hours, 0)
+        
+        // For past dates, assume stored hours are automatic only
+        const baseHours = (dayData && dayData.date === entryToDelete.date) ? dayData.hours : 0
+        const totalHours = Number((baseHours + manualHoursForDate).toFixed(2))
+        
+        deepWorkHoursWithDates[entryDayName] = {
+          hours: totalHours,
+          date: entryToDelete.date
+        }
+        deepWorkHours[entryDayName] = totalHours
+        store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)
+        store.set('deepWorkHours', deepWorkHours)
+      }
+
+      // Trigger UI refresh
+      if (mainWindow && mainWindow.webContents) {
+        const { data, labels } = getChartDataInOrder(store)
+        mainWindow.webContents.send('deep-work-data-response', { data, labels })
+        // Also send updated manual entries for today if this entry was for today
+        if (dayjs(entryToDelete.date).isSame(dayjs(), 'day')) {
+          const todayEntries = updatedEntries.filter((e) => e.date === entryToDelete.date)
+          mainWindow.webContents.send('manual-time-entries-response', todayEntries)
+        }
+      }
+    } catch (error) {
+      log.error('Error deleting manual time entry:', error)
+    }
+  })
 }
 
 export async function handleDailyReset(): Promise<void> {
@@ -1061,8 +1289,23 @@ function startPersistenceInterval(): void {
           date: today
         }))
 
-        log.info(`Persisting ${dailyData.length} activities for ${username}`)
-        await persistDailyData(dailyData, username)
+        // Add manual time entries for today
+        const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+        const todayManualEntries = manualTimeEntries.filter((entry) => entry.date === today)
+        
+        // Convert manual entries to activity format with type marker
+        const manualActivities = todayManualEntries.map((entry) => ({
+          url: 'manual-entry',
+          title: entry.taskName.slice(0, 100),
+          timeSpent: Math.round(entry.hours * 60 * 60), // Convert hours to seconds
+          date: entry.date,
+          type: 'manual' // Marker to identify manual entries
+        }))
+
+        const allDailyData = [...dailyData, ...manualActivities]
+
+        log.info(`Persisting ${allDailyData.length} activities (${dailyData.length} automatic, ${manualActivities.length} manual) for ${username}`)
+        await persistDailyData(allDailyData, username)
         
         // Also process any queued items
         await processOfflineQueue()

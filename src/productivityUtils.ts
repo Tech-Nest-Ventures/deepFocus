@@ -7,7 +7,8 @@ import {
   AppIcon,
   DeepWorkHours,
   DeepWorkHoursWithDates,
-  TrackerType
+  TrackerType,
+  ManualTimeEntry
 } from './types'
 import { TypedStore } from './main'
 import { exec } from 'child_process'
@@ -273,14 +274,22 @@ export function calculateDeepWorkHours(
       }
     }
   })
+  
+  // Add manual time entries for today
+  const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+  const todayDate = dayjs().format('YYYY-MM-DD')
+  const todayManualHours = manualTimeEntries
+    .filter((entry) => entry.date === todayDate)
+    .reduce((sum, entry) => sum + entry.hours, 0)
+  
   const timeSpentInHours = Number((totalDeepWorkTime / (60 * 60)).toFixed(2)) // Convert from sec to hours
-  deepWorkHours[today as keyof DeepWorkHours] = timeSpentInHours
+  const totalHours = Number((timeSpentInHours + todayManualHours).toFixed(2))
+  deepWorkHours[today as keyof DeepWorkHours] = totalHours
 
   // Also store with date information
-  const todayDate = dayjs().format('YYYY-MM-DD')
   const deepWorkHoursWithDates = store.get('deepWorkHoursWithDates', {}) as DeepWorkHoursWithDates
   deepWorkHoursWithDates[today as keyof DeepWorkHoursWithDates] = {
-    hours: timeSpentInHours,
+    hours: totalHours,
     date: todayDate
   }
   store.set('deepWorkHoursWithDates', deepWorkHoursWithDates)

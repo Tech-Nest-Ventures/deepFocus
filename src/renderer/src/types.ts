@@ -30,3 +30,11 @@ export enum TrackerType {
   Website = 'website',
   App = 'app'
 }
+
+export interface ManualTimeEntry {
+  id: string
+  taskName: string
+  hours: number
+  date: string // ISO date format: YYYY-MM-DD
+  createdAt: number // timestamp
+}

@@ -4,11 +4,12 @@
   "version": "2.4.7",
   "main": ".vite/build/main.js",
   "scripts": {
-    "start": "DEBUG=electron* electron-forge start",
-    "build": "electron-forge package",
-    "package": "DEBUG=electron* electron-forge package",
-    "make": "DEBUG=electron* electron-forge make",
-    "publish": "electron-forge publish",
+    "prebuild": "node scripts/build.js",
+    "build": "electron-builder --dir",
+    "package": "npm run prebuild && electron-builder --dir",
+    "make": "npm run prebuild && electron-builder",
+    "dist": "npm run prebuild && electron-builder",
+    "start": "vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts && vite build --config vite.renderer.config.mts && electron .",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "devDependencies": {
@@ -80,5 +81,95 @@
     "vinxi": "^0.5.8",
     "vite-plugin-solid": "^2.11.10",
     "world-countries": "^5.1.0"
+  },
+  "build": {
+    "appId": "com.electron.deepfocus",
+    "productName": "Deep Focus",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      ".vite/build/**/*",
+      ".vite/renderer/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/icon.icns",
+        "to": "icon.icns"
+      },
+      {
+        "from": "resources/icon_green.png",
+        "to": "icon_green.png"
+      },
+      {
+        "from": "resources/icon_red.png",
+        "to": "icon_red.png"
+      },
+      {
+        "from": "resources/icon_yellow.png",
+        "to": "icon_yellow.png"
+      },
+      {
+        "from": "resources/icon_blue.png",
+        "to": "icon_blue.png"
+      },
+      {
+        "from": "resources/DOG_MEME.avif",
+        "to": "DOG_MEME.avif"
+      },
+      {
+        "from": "resources/trayIcon.png",
+        "to": "trayIcon.png"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64"]
+        }
+      ],
+      "icon": "resources/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Deep Focus",
+      "icon": "resources/icon.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "format": "ULFO"
+    },
+    "win": {
+      "target": ["nsis", "zip"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb", "rpm"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

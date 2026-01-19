@@ -10,6 +10,19 @@ import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerPKG } from '@electron-forge/maker-pkg'
 import * as fs from 'fs'
 import * as path from 'path'
+import { execSync } from 'child_process'
+
+// Check if code signing certificate is available
+function isCodeSigningAvailable(): boolean {
+  try {
+    const identity = 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)'
+    execSync(`security find-identity -v -p codesigning | grep -q "${identity}"`, { stdio: 'ignore' })
+    return true
+  } catch {
+    console.log('⚠️  Code signing certificate not found. Skipping code signing for local build.')
+    return false
+  }
+}
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -34,32 +47,36 @@ const config: ForgeConfig = {
         }
       }
     ],
+    // Simplified afterExtract - only update if needed, with timeout protection
     afterExtract: [
       (buildPath, electronVersion, platform, arch) => {
-        // Also update package.json after asar extraction if needed
-        const packageJsonPath = path.join(buildPath, 'package.json')
         try {
+          const packageJsonPath = path.join(buildPath, 'package.json')
           if (fs.existsSync(packageJsonPath)) {
             const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
-            if (packageJson.main !== 'main.js') {
+            if (packageJson.main && packageJson.main !== 'main.js') {
               packageJson.main = 'main.js'
               fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
-              console.log('Updated package.json main field after extraction')
+              console.log('✓ Updated package.json main field after extraction')
             }
           }
         } catch (error) {
-          console.error('Failed to update package.json main field after extraction:', error)
+          // Silently fail - don't block the build
+          console.warn('Warning: Could not update package.json after extraction:', error.message)
         }
       }
     ],
-    osxSign: {
-      identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
-      type: 'distribution',
-      optionsForFile: () => ({
-        entitlements: './build/entitlements.mac.plist',
-        hardenedRuntime: true
-      })
-    },
+    // Only enable code signing if certificate is available
+    osxSign: isCodeSigningAvailable()
+      ? {
+          identity: 'Developer ID Application: Timeo Williams (3Y4F3KTSJA)',
+          type: 'distribution',
+          optionsForFile: () => ({
+            entitlements: './build/entitlements.mac.plist',
+            hardenedRuntime: true
+          })
+        }
+      : undefined,
     osxNotarize: process.env.APPLE_ID && process.env.APPLE_ID_PASS && process.env.APPLE_TEAM_ID
       ? {
           appleId: process.env.APPLE_ID,
@@ -80,25 +97,27 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({}),
-    new MakerDMG({
-      name: 'Deep Focus',
-      icon: './resources/icon.icns',
-      format: 'ULFO',
-      overwrite: true,
-      contents: (opts) => [
-        { x: 130, y: 220, type: 'file', path: './out/Deep Focus-darwin-arm64/Deep Focus.app' },
-        { x: 410, y: 220, type: 'link', path: '/Applications' }
-      ]
-    }),
-    // Temporarily disabled until we have the correct certificate
-    // new MakerPKG({
-    //   name: 'Deep Focus',
-    //   identity: 'Developer ID Installer: Timeo Williams (3Y4F3KTSJA)'
-    // })
+    // For local builds, only use ZIP maker to avoid hanging
+    // Full makers are used in CI/CD with 'npm run make'
+    ...(process.env.CI === 'true' ? [
+      new MakerSquirrel({}),
+      new MakerZIP({}, ['darwin']),
+      new MakerRpm({}),
+      new MakerDeb({}),
+      new MakerDMG({
+        name: 'Deep Focus',
+        icon: './resources/icon.icns',
+        format: 'ULFO',
+        overwrite: true,
+        contents: (opts) => [
+          { x: 130, y: 220, type: 'file', path: './out/Deep Focus-darwin-arm64/Deep Focus.app' },
+          { x: 410, y: 220, type: 'link', path: '/Applications' }
+        ]
+      })
+    ] : [
+      // Minimal makers for local builds
+      new MakerZIP({}, ['darwin'])
+    ])
   ],
   plugins: [
     new VitePlugin({
@@ -121,15 +140,19 @@ const config: ForgeConfig = {
         }
       ]
     }),
-    new FusesPlugin({
-      version: FuseVersion.V1,
-      [FuseV1Options.RunAsNode]: false,
-      [FuseV1Options.EnableCookieEncryption]: true,
-      [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-      [FuseV1Options.EnableNodeCliInspectArguments]: false,
-      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-      [FuseV1Options.OnlyLoadAppFromAsar]: true
-    })
+    // Temporarily disable FusesPlugin for local builds to avoid hanging
+    // Re-enable for production builds
+    ...(process.env.CI === 'true' ? [
+      new FusesPlugin({
+        version: FuseVersion.V1,
+        [FuseV1Options.RunAsNode]: false,
+        [FuseV1Options.EnableCookieEncryption]: true,
+        [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+        [FuseV1Options.EnableNodeCliInspectArguments]: false,
+        [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+        [FuseV1Options.OnlyLoadAppFromAsar]: true
+      })
+    ] : [])
   ]
 }
 
