@@ -1,5 +1,5 @@
 import { lazy, onMount, createSignal, ComponentProps, createEffect, onCleanup } from 'solid-js'
-import { Router, Route, A, useLocation, useNavigate } from '@solidjs/router'
+import { Router, Route, useLocation, useNavigate } from '@solidjs/router'
 import { render } from 'solid-js/web'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import { sendUserToBackend, stopActivityMonitoring } from './lib/utils'
@@ -174,35 +174,21 @@ const App = (props: ComponentProps<typeof Router>) => {
           <nav class="flex items-center justify-center" style={{ gap: '8px' }}>
             {!isLoggedIn() ? (
               location.pathname !== '/signup' ? (
-                <A href="/signup" class="logo">
-                  <Button id="signup" variant="outline" size="sm">SIGN UP</Button>
-                </A>
+                <Button id="signup" variant="outline" size="sm" onClick={() => navigate('/signup')}>SIGN UP</Button>
               ) : (
-                <A href="/login" class="logo">
-                  <Button id="login" variant="outline" size="sm">LOGIN</Button>
-                </A>
+                <Button id="login" variant="outline" size="sm" onClick={() => navigate('/login')}>LOGIN</Button>
               )
             ) : (
               <>
-                <A href="/" class="logo" id="home">
-                  <Button variant="ghost" size="icon" class="logo">
-                    <VsHome />
-                  </Button>
-                </A>
-                <A href="/analytics" class="logo" id="analytics">
-                  <Button variant="ghost" size="icon" class="logo">
-                    <SiSimpleanalytics />
-                  </Button>
-                </A>
-                <A
-                  href="/settings"
-                  class="flex items-center logo"
-                  id="settings"
-                >
-                  <Button variant="ghost" size="icon" class="logo">
-                    <IoSettingsSharp />
-                  </Button>
-                </A>
+                <Button variant="ghost" size="icon" class="logo" id="home" onClick={() => navigate('/')}>
+                  <VsHome />
+                </Button>
+                <Button variant="ghost" size="icon" class="logo" id="analytics" onClick={() => navigate('/analytics')}>
+                  <SiSimpleanalytics />
+                </Button>
+                <Button variant="ghost" size="icon" class="logo" id="settings" onClick={() => navigate('/settings')}>
+                  <IoSettingsSharp />
+                </Button>
                 <Button
                   onClick={handleLogoutClick}
                   variant="ghost"

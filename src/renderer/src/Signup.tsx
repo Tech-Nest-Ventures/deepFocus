@@ -46,6 +46,13 @@ function Signup() {
 
   const handleSubmit: SubmitHandler<any> = async (values) => {
     try {
+      setSignUpError(null)
+
+      if (!values.email || !values.password || !values.firstName || !values.lastName) {
+        setSignUpError('Please complete all required fields.')
+        return
+      }
+
       if (values.password !== values.confirmPassword) {
         setSignUpError('Passwords do not match')
         return
@@ -71,7 +78,6 @@ function Signup() {
       }
 
       const result = await response.json()
-      console.log('User signed up successfully:', result)
 
       const { token, user } = result as { token: string; user: User }
 
@@ -84,7 +90,7 @@ function Signup() {
       navigate('/onboarding')
       console.info('Navigating to Onboarding')
     } catch (error) {
-      console.error('Signup error:', error)
+      console.error('Signup failed:', error)
       setSignUpError('Sign-up failed. Please try again.')
     }
   }
@@ -236,9 +242,13 @@ function Signup() {
       </Form>
       <p class="text-muted-foreground text-sm font-normal">
         ALREADY HAVE AN ACCOUNT?{' '}
-        <a href="/login" class="text-foreground font-bold underline uppercase">
+        <button
+          type="button"
+          class="text-foreground font-bold underline uppercase"
+          onClick={() => navigate('/login')}
+        >
           LOGIN
-        </a>
+        </button>
       </p>
     </div>
     </Motion.div>

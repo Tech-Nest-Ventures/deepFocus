@@ -33,6 +33,7 @@
     "@typescript-eslint/parser": "^8.48.0",
     "cross-env": "^10.1.0",
     "electron": "^39.2.3",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.39.1",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -90,6 +91,7 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "npmRebuild": false,
     "files": [
       ".vite/build/**/*",
       ".vite/renderer/**/*",
@@ -131,11 +133,15 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "icon": "resources/icon.icns",
@@ -163,10 +169,18 @@
       "format": "ULFO"
     },
     "win": {
-      "target": ["nsis", "zip"]
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "signAndEditExecutable": false
     },
     "linux": {
-      "target": ["AppImage", "deb", "rpm"]
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ]
     },
     "nsis": {
       "oneClick": false,

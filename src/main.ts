@@ -12,6 +12,7 @@ import {
 import path from 'path'
 import dayjs from 'dayjs'
 import fs from 'fs'
+import http from 'http'
 import { scheduleJob } from 'node-schedule'
 import dotenv from 'dotenv'
 // Import electron-store - handle both ESM and CommonJS when externalized
@@ -81,10 +82,13 @@ let tray: Tray | null = null
 let persistenceInterval: NodeJS.Timeout | null = null
 let isSystemSuspended = false
 let retryQueueInterval: NodeJS.Timeout | null = null
+let browserBridgeServer: http.Server | null = null
 const MAX_RETRY_ATTEMPTS = 5
 const INITIAL_RETRY_DELAY = 60000 // 1 minute
 const MAX_RETRY_DELAY = 600000 // 10 minutes
 const PERSISTENCE_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const BROWSER_BRIDGE_HOST = '127.0.0.1'
+const BROWSER_BRIDGE_PORT = 17321
 // Track recently blocked items to avoid rapid-fire blocking
 const recentlyBlocked = new Map<string, number>()
 const BLOCK_COOLDOWN = 10000 // 10 seconds cooldown before blocking the same item again
@@ -176,6 +180,151 @@ function incrementFocusModeStats(type: 'website' | 'app'): void {
 
   store.set('focusModeStats', updatedStats)
   log.info(`Focus mode stats updated: ${JSON.stringify(updatedStats)}`)
+}
+
+type BrowserEventPayload = {
+  url?: string
+  title?: string
+  browser?: string
+  tabId?: number
+  incognito?: boolean
+  timestamp?: number
+}
+
+function sendBrowserBridgeJSON(
+  response: http.ServerResponse,
+  statusCode: number,
+  payload: Record<string, unknown>
+): void {
+  response.writeHead(statusCode, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  })
+  response.end(JSON.stringify(payload))
+}
+
+function readRequestBody(request: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = ''
+
+    request.on('data', (chunk) => {
+      body += chunk.toString()
+      if (body.length > 64 * 1024) {
+        reject(new Error('Browser bridge payload too large'))
+        request.destroy()
+      }
+    })
+
+    request.on('end', () => resolve(body))
+    request.on('error', reject)
+  })
+}
+
+function normalizeExtensionBrowserName(browserName?: string, userAgent?: string): string {
+  const source = `${browserName || ''} ${userAgent || ''}`.toLowerCase()
+
+  if (source.includes('edg/') || source.includes('edge')) return 'Microsoft Edge'
+  if (source.includes('brave')) return 'Brave Browser'
+  if (source.includes('firefox')) return 'Firefox'
+  if (source.includes('chrome')) return 'Google Chrome'
+
+  return browserName || 'Browser'
+}
+
+function handleExtensionBrowserEvent(payload: BrowserEventPayload, userAgent?: string): {
+  action: 'allow' | 'block'
+  reason?: string
+} {
+  if (payload.incognito || !payload.url) {
+    return { action: 'allow' }
+  }
+
+  const URL = getBaseURL(payload.url)
+  if (!URL) {
+    return { action: 'allow' }
+  }
+
+  const appName = normalizeExtensionBrowserName(payload.browser, userAgent)
+  updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
+  const isProductive = isDeepWork({ type: 'URL', value: URL }, store)
+
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('active-window-info', { appName, URL, isProductive })
+  }
+
+  if (store.get('focusMode', false) && !isProductive) {
+    const blockKey = `extension:${URL}`
+    const now = Date.now()
+    const lastBlocked = recentlyBlocked.get(blockKey) || 0
+
+    if (now - lastBlocked >= BLOCK_COOLDOWN) {
+      recentlyBlocked.set(blockKey, now)
+      incrementFocusModeStats('website')
+
+      const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'icon.png')
+        : path.join(__dirname, '../../resources/icon.png')
+      new Notification({
+        title: 'Deep Focus - Focus Mode',
+        body: `Blocked unproductive website: ${URL}`,
+        icon: iconPath
+      }).show()
+    }
+
+    return { action: 'block', reason: 'unproductive' }
+  }
+
+  return { action: 'allow' }
+}
+
+function startBrowserBridge(): void {
+  if (browserBridgeServer) {
+    return
+  }
+
+  browserBridgeServer = http.createServer(async (request, response) => {
+    if (request.method === 'OPTIONS') {
+      sendBrowserBridgeJSON(response, 204, {})
+      return
+    }
+
+    if (request.method !== 'POST' || request.url !== '/browser-event') {
+      sendBrowserBridgeJSON(response, 404, { error: 'Not found' })
+      return
+    }
+
+    try {
+      const body = await readRequestBody(request)
+      const payload = JSON.parse(body) as BrowserEventPayload
+      const result = handleExtensionBrowserEvent(payload, request.headers['user-agent'])
+      sendBrowserBridgeJSON(response, 200, result)
+    } catch (error) {
+      log.warn('Browser bridge event failed:', error)
+      sendBrowserBridgeJSON(response, 400, { action: 'allow', error: 'Invalid browser event' })
+    }
+  })
+
+  browserBridgeServer.on('error', (error) => {
+    log.warn('Browser bridge server error:', error)
+    browserBridgeServer = null
+  })
+
+  browserBridgeServer.listen(BROWSER_BRIDGE_PORT, BROWSER_BRIDGE_HOST, () => {
+    log.info(`Browser bridge listening on http://${BROWSER_BRIDGE_HOST}:${BROWSER_BRIDGE_PORT}`)
+  })
+}
+
+function stopBrowserBridge(): void {
+  if (!browserBridgeServer) {
+    return
+  }
+
+  browserBridgeServer.close(() => {
+    log.info('Browser bridge stopped.')
+  })
+  browserBridgeServer = null
 }
 
 export async function resetCounters(type: 'daily' | 'weekly'): Promise<void> {
@@ -521,6 +670,7 @@ app.whenReady().then(async () => {
 
 app.on('ready', () => {
   checkForUpdates()
+  startBrowserBridge()
   startPersistenceInterval()
   startRetryQueueProcessor()
 
@@ -658,6 +808,7 @@ export function handleUserLogout(): void {
 }
 
 app.on('will-quit', () => {
+  stopBrowserBridge()
   ipcMain.removeAllListeners()
 })
 app.on('window-all-closed', () => {
@@ -1296,36 +1447,31 @@ function startPersistenceInterval(): void {
         title: tracker.title ? tracker.title.slice(0, 100) : 'Untitled',
         timeSpent: tracker.timeSpent,
         date: today
-        }))
+      }))
 
-        // Add manual time entries for today
-        const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
-        const todayManualEntries = manualTimeEntries.filter((entry) => entry.date === today)
-        
-        // Convert manual entries to activity format with type marker
-        const manualActivities = todayManualEntries.map((entry) => ({
-          url: 'manual-entry',
-          title: entry.taskName.slice(0, 100),
-          timeSpent: Math.round(entry.hours * 60 * 60), // Convert hours to seconds
-          date: entry.date,
-          type: 'manual' // Marker to identify manual entries
-        }))
+      // Add manual time entries for today
+      const manualTimeEntries = store.get('manualTimeEntries', []) as ManualTimeEntry[]
+      const todayManualEntries = manualTimeEntries.filter((entry) => entry.date === today)
 
-        const allDailyData = [...dailyData, ...manualActivities]
+      // Convert manual entries to activity format with type marker
+      const manualActivities = todayManualEntries.map((entry) => ({
+        url: 'manual-entry',
+        title: entry.taskName.slice(0, 100),
+        timeSpent: Math.round(entry.hours * 60 * 60), // Convert hours to seconds
+        date: entry.date,
+        type: 'manual' // Marker to identify manual entries
+      }))
 
-        log.info(`Persisting ${allDailyData.length} activities (${dailyData.length} automatic, ${manualActivities.length} manual) for ${username}`)
-        await persistDailyData(allDailyData, username)
-        
-        // Also process any queued items
-        await processOfflineQueue()
-      },
-      PERSISTENCE_INTERVAL
-    )
+      const allDailyData = [...dailyData, ...manualActivities]
+
+      log.info(
+        `Persisting ${allDailyData.length} activities (${dailyData.length} automatic, ${manualActivities.length} manual) for ${username}`
+      )
+      await persistDailyData(allDailyData, username)
 
       // Also process any queued items
       await processOfflineQueue()
     }, PERSISTENCE_INTERVAL)
->>>>>>> 08451da57f0b34e5fec2376dc24a403eb32e8a2b
     log.info('Persistence interval started (every 5 minutes).')
   }
 }

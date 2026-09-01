@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Deep Focus Browser Bridge",
+  "description": "Reports active browser tabs to the Deep Focus desktop app and closes unproductive tabs during focus mode.",
+  "version": "0.1.0",
+  "permissions": ["tabs", "webNavigation"],
+  "host_permissions": ["http://127.0.0.1:17321/*", "http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Deep Focus Browser Bridge"
+  }
+}

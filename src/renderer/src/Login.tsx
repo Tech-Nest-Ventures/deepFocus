@@ -27,15 +27,19 @@ console.log(`Server URL: ${API_BASE_URL}`)
 
 function Login() {
   const [authForm, { Form, Field }] = createForm()
-  const [_loginError, setLoginError] = createSignal<null | string>(null)
+  const [loginError, setLoginError] = createSignal<null | string>(null)
   const navigate = useNavigate()
   const [_loggedIn, setIsLoggedIn] = useAuth()
 
   const handleSubmit: SubmitHandler<any> = async (values) => {
     try {
-      console.log('Values are ', values)
+      setLoginError(null)
 
-      console.log('Login values are ', values)
+      if (!values.email || !values.password) {
+        setLoginError('Please enter your email and password.')
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
@@ -77,6 +81,7 @@ function Login() {
       {/* Swiss Typography: Left-aligned, asymmetric layout with extreme whitespace */}
       <div class="grid gap-swiss-8 p-swiss-10 w-full max-w-md mx-auto sm:mx-0">
         <h2 class="text-2xl font-extrabold tracking-tight uppercase">LOGIN</h2>
+        {loginError() && <p class="text-destructive font-semibold uppercase">{loginError()}</p>}
         <Form onSubmit={handleSubmit}>
           <Grid class="gap-swiss-4">
             <Field name="email">
@@ -103,9 +108,13 @@ function Login() {
         </Form>
         <p class="text-muted-foreground text-sm font-normal">
           DON'T HAVE AN ACCOUNT?{' '}
-          <a href="/signup" class="text-foreground font-bold underline uppercase">
+          <button
+            type="button"
+            class="text-foreground font-bold underline uppercase"
+            onClick={() => navigate('/signup')}
+          >
             SIGN UP
-          </a>
+          </button>
         </p>
       </div>
     </Motion.div>

@@ -17,16 +17,47 @@ import { app } from 'electron'
 import fs from 'fs'
 import { platform, tmpdir } from 'os'
 
+const CLIPBOARD_URL_FALLBACK_CACHE_MS = 10 * 1000
+const CLIPBOARD_URL_FALLBACK_THROTTLE_MS = 30 * 1000
+const clipboardURLFallbackCache = new Map<string, { url: string; timestamp: number }>()
+const clipboardURLFallbackLastAttempt = new Map<string, number>()
+
+function runPowerShell(script: string, timeout = 2500): Promise<string> {
+  return new Promise((resolve) => {
+    const encodedCommand = Buffer.from(script, 'utf16le').toString('base64')
+
+    exec(
+      `powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encodedCommand}`,
+      { maxBuffer: 1024 * 1024, timeout },
+      (err, stdout, stderr) => {
+        if (err) {
+          log.debug(`PowerShell script failed: ${stderr || err.message}`)
+          resolve('')
+          return
+        }
+
+        resolve(stdout.trim())
+      }
+    )
+  })
+}
+
 export function capitalizeFirstLetter(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 export function getBaseURL(url: string): string {
-  const urlObj = new URL(url)
+  const normalizedUrl = normalizeBrowserAddress(url)
+  if (!normalizedUrl) return ''
+
+  const urlObj = new URL(normalizedUrl)
   return `${urlObj.protocol}//${urlObj.hostname}` // This gives you the base URL
 }
 export function getTrimmedURL(url: string): string {
-  const urlObj = new URL(url)
+  const normalizedUrl = normalizeBrowserAddress(url)
+  if (!normalizedUrl) return url.replace(/^https?:\/\//i, '').split('/')[0]
+
+  const urlObj = new URL(normalizedUrl)
   return `${urlObj.hostname}`
 }
 
@@ -88,6 +119,10 @@ export function formatTime(milliseconds: number): string {
 const ICONS_BASE_PATH = path.join(app.getPath('userData'), 'icons')
 
 function findBestIconMatch(appName: string): string | null {
+  if (!fs.existsSync(ICONS_BASE_PATH)) {
+    return null
+  }
+
   const sanitizedAppName = appName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
   const icons = fs.readdirSync(ICONS_BASE_PATH)
   const matchedIcon = icons.find((icon) => icon.toLowerCase().includes(sanitizedAppName))
@@ -130,7 +165,7 @@ export function updateSiteTimeTracker(
     // Attempt to find the cached icon for this app
     const iconPath = findBestIconMatch(appName)
 
-    if (fs.existsSync(iconPath)) {
+    if (iconPath && fs.existsSync(iconPath)) {
       iconUrl = getBase64Icon(iconPath) // Use Base64 data URI for the icon
       // log.info(`Using cached icon: ${iconPath}`)
     } else {
@@ -167,7 +202,10 @@ export function isDeepWork(context: WorkContext, store: TypedStore): boolean {
     // Handle the case for URL
     const unproductiveURLs = store.get('unproductiveUrls', [])
     if (
-      unproductiveURLs?.some((site) => formattedItem.includes(getTrimmedURL(site).toLowerCase()))
+      unproductiveURLs?.some((site) => {
+        const trimmedSite = getTrimmedURL(site).replaceAll(' ', '').toLowerCase()
+        return Boolean(trimmedSite) && formattedItem.includes(trimmedSite)
+      })
     ) {
       return false
     }
@@ -311,9 +349,188 @@ public class Win32Helper {
   })
 }
 
+function getWindowsBrowserProcessName(browser: string): string {
+  const browserProcessMap: Record<string, string> = {
+    'Google Chrome': 'chrome',
+    'Microsoft Edge': 'msedge',
+    'Brave Browser': 'brave'
+  }
+
+  return browserProcessMap[browser] || browser.toLowerCase()
+}
+
+function normalizeBrowserAddress(value: string): string {
+  const trimmed = value.trim().split(/\r?\n/)[0]?.trim() || ''
+
+  if (!trimmed) return ''
+  if (/^(edge|chrome|brave|about):/i.test(trimmed)) return ''
+
+  try {
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+    const parsed = new URL(candidate)
+    if (!parsed.hostname.includes('.')) return ''
+    return parsed.toString()
+  } catch (_) {
+    return ''
+  }
+}
+
+function normalizeFirstBrowserAddress(value: string): string {
+  for (const line of value.split(/\r?\n/)) {
+    const normalized = normalizeBrowserAddress(line)
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  return ''
+}
+
+async function getURLFromWindowsAccessibility(browser: string): Promise<string> {
+  const processName = getWindowsBrowserProcessName(browser)
+  const script = `
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class ForegroundWindowHelper {
+  [DllImport("user32.dll")]
+  public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")]
+  public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+}
+"@
+
+$hwnd = [ForegroundWindowHelper]::GetForegroundWindow()
+if ($hwnd -eq [IntPtr]::Zero) { exit }
+
+$pid = 0
+[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$pid) | Out-Null
+if ($pid -eq 0) { exit }
+
+$process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+if (!$process -or $process.ProcessName.ToLowerInvariant() -ne '${processName}') { exit }
+
+$root = [System.Windows.Automation.AutomationElement]::FromHandle($hwnd)
+if ($null -eq $root) { exit }
+
+$walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+$queue = New-Object 'System.Collections.Generic.Queue[System.Windows.Automation.AutomationElement]'
+$queue.Enqueue($root)
+$visited = 0
+$candidates = New-Object System.Collections.Generic.List[string]
+
+while ($queue.Count -gt 0 -and $visited -lt 1200) {
+  $element = $queue.Dequeue()
+  $visited += 1
+
+  try {
+    $controlType = $element.Current.ControlType.ProgrammaticName
+    $automationId = $element.Current.AutomationId
+    $name = $element.Current.Name
+    $value = $null
+
+    $valuePattern = $null
+    if ($element.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$valuePattern)) {
+      $value = $valuePattern.Current.Value
+    }
+
+    if ($value -and ($controlType -match 'Edit|ComboBox' -or $automationId -match 'address|url|omnibox' -or $name -match 'address|search|url')) {
+      $candidates.Add($value)
+    }
+  } catch {}
+
+  try {
+    $child = $walker.GetFirstChild($element)
+    while ($null -ne $child) {
+      $queue.Enqueue($child)
+      $child = $walker.GetNextSibling($child)
+    }
+  } catch {}
+}
+
+$candidates | Select-Object -First 20
+`.trim()
+
+  const output = await runPowerShell(script, 3000)
+  return normalizeFirstBrowserAddress(output)
+}
+
+async function getURLFromWindowsClipboardFallback(browser: string): Promise<string> {
+  const processName = getWindowsBrowserProcessName(browser)
+  const now = Date.now()
+  const cached = clipboardURLFallbackCache.get(browser)
+
+  if (cached && now - cached.timestamp < CLIPBOARD_URL_FALLBACK_CACHE_MS) {
+    return cached.url
+  }
+
+  const lastAttempt = clipboardURLFallbackLastAttempt.get(browser) || 0
+  if (now - lastAttempt < CLIPBOARD_URL_FALLBACK_THROTTLE_MS) {
+    return ''
+  }
+  clipboardURLFallbackLastAttempt.set(browser, now)
+
+  const script = `
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class ForegroundWindowHelper {
+  [DllImport("user32.dll")]
+  public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")]
+  public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+}
+"@
+
+$hwnd = [ForegroundWindowHelper]::GetForegroundWindow()
+if ($hwnd -eq [IntPtr]::Zero) { exit }
+
+$pid = 0
+[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$pid) | Out-Null
+$process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+if (!$process -or $process.ProcessName.ToLowerInvariant() -ne '${processName}') { exit }
+
+$originalClipboard = Get-Clipboard -Raw -Format Text -ErrorAction SilentlyContinue
+$hadTextClipboard = $null -ne $originalClipboard
+$wshell = New-Object -ComObject WScript.Shell
+Start-Sleep -Milliseconds 50
+$wshell.SendKeys('{F6}')
+Start-Sleep -Milliseconds 80
+$wshell.SendKeys('^c')
+Start-Sleep -Milliseconds 120
+$copiedUrl = Get-Clipboard -Raw -Format Text -ErrorAction SilentlyContinue
+$wshell.SendKeys('{ESC}')
+Start-Sleep -Milliseconds 30
+
+if ($hadTextClipboard) {
+  Set-Clipboard -Value $originalClipboard
+} else {
+  Clear-Clipboard -ErrorAction SilentlyContinue
+}
+
+if ($copiedUrl) { $copiedUrl }
+`.trim()
+
+  const url = normalizeFirstBrowserAddress(await runPowerShell(script, 3500))
+  if (url) {
+    clipboardURLFallbackCache.set(browser, { url, timestamp: now })
+  }
+
+  return url
+}
+
 // Helper function to get URL from Chrome DevTools Protocol (CDP) for Chromium-based browsers
 // Works for both Chrome and Edge since they're both Chromium-based
 async function getURLFromCDP(browser: string): Promise<string> {
+  if (platform() === 'win32') {
+    const accessibilityUrl = await getURLFromWindowsAccessibility(browser)
+    if (accessibilityUrl) {
+      return accessibilityUrl
+    }
+  }
+
   // First, try to find the browser's debugging port from its user data directory
   // This works when DevTools is open (which auto-enables remote debugging)
   const port = await findBrowserDebuggingPort(browser)
@@ -389,7 +606,12 @@ async function getURLFromCDP(browser: string): Promise<string> {
   }
 
   // If no CDP port found, try to find the browser's debugging port via process inspection
-  return await getURLFromBrowserProcess(browser)
+  const processUrl = await getURLFromBrowserProcess(browser)
+  if (processUrl) {
+    return processUrl
+  }
+
+  return platform() === 'win32' ? getURLFromWindowsClipboardFallback(browser) : ''
 }
 
 // Find the browser's debugging port by checking its user data directory
@@ -457,13 +679,7 @@ async function findBrowserDebuggingPort(browser: string): Promise<number> {
 // Fallback: Try to get URL by finding the browser's debugging port via process inspection
 async function getURLFromBrowserProcess(browser: string): Promise<string> {
   return new Promise<string>((resolve) => {
-    const browserProcessMap: Record<string, string> = {
-      'Google Chrome': 'chrome',
-      'Microsoft Edge': 'msedge',
-      'Brave Browser': 'brave'
-    }
-
-    const processName = browserProcessMap[browser] || browser.toLowerCase()
+    const processName = getWindowsBrowserProcessName(browser)
 
     // Try to find if the browser process has remote debugging enabled
     // by checking command line arguments or user data directory

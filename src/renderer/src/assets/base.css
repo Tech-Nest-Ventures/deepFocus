@@ -288,6 +288,9 @@ input[type="range"]::-moz-range-thumb {
 /* Swiss Typography: Input field styling - Clean, high contrast */
 input[type="text"],
 input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
 input[type="url"],
 input[type="search"],
 textarea {
@@ -304,6 +307,9 @@ textarea {
 
 input[type="text"]:focus,
 input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
 input[type="url"]:focus,
 input[type="search"]:focus,
 textarea:focus {
@@ -313,6 +319,9 @@ textarea:focus {
 
 input[type="text"]::placeholder,
 input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder,
+input[type="date"]::placeholder,
 input[type="url"]::placeholder,
 input[type="search"]::placeholder,
 textarea::placeholder {
