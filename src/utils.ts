@@ -12,6 +12,10 @@ export function checkForUpdates(): void {
     log.info('Skipping update check in development mode')
     return
   }
+  if (process.platform === 'win32') {
+    log.info('Skipping update check on Windows until the Windows update feed is configured')
+    return
+  }
 
   const server = 'https://raw.githubusercontent.com/Tech-Nest-Ventures/deepFocus/main'
   const feedURL = `${server}/latest-mac.json`

@@ -94,6 +94,16 @@ const recentlyBlocked = new Map<string, number>()
 const BLOCK_COOLDOWN = 10000 // 10 seconds cooldown before blocking the same item again
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
+if (app.isPackaged && log.transports.console) {
+  log.transports.console.level = false
+}
+for (const stream of [process.stdout, process.stderr]) {
+  stream?.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code !== 'EPIPE') {
+      log.error('Process stdio stream error:', error)
+    }
+  })
+}
 
 log.info('Log from the main process')
 const resourcesPath: string = setupEnvironment()
@@ -558,10 +568,15 @@ async function createWindow(): Promise<BrowserWindow> {
   })
 
   // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+  const rendererDevServerUrl =
+    typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined' ? MAIN_WINDOW_VITE_DEV_SERVER_URL : ''
+  const rendererWindowName =
+    typeof MAIN_WINDOW_VITE_NAME !== 'undefined' ? MAIN_WINDOW_VITE_NAME : 'main_window'
+
+  if (rendererDevServerUrl) {
+    mainWindow.loadURL(rendererDevServerUrl)
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`))
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${rendererWindowName}/index.html`))
   }
 
   mainWindow.on('closed', async () => {
