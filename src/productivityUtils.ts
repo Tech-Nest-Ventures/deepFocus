@@ -31,7 +31,8 @@ function runPowerShell(script: string, timeout = 2500): Promise<string> {
       { maxBuffer: 1024 * 1024, timeout },
       (err, stdout, stderr) => {
         if (err) {
-          log.debug(`PowerShell script failed: ${stderr || err.message}`)
+          const message = (stderr || err.message).replace(/\s+/g, ' ').trim()
+          log.debug(`PowerShell script failed: ${message.slice(0, 500)}`)
           resolve('')
           return
         }

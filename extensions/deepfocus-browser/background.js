@@ -1,5 +1,6 @@
 const BRIDGE_URL = 'http://127.0.0.1:17321/browser-event'
 const REPORT_DEBOUNCE_MS = 400
+const ACTIVE_TAB_HEARTBEAT_MS = 3000
 
 const pendingReports = new Map()
 const extensionApi =
@@ -45,7 +46,9 @@ function shouldReportTab(tab) {
   return Boolean(
     tab &&
       tab.active &&
-      !tab.incognito
+      !tab.incognito &&
+      tab.url &&
+      /^https?:\/\//i.test(tab.url)
   )
 }
 
@@ -55,7 +58,6 @@ async function reportTab(tab) {
   }
 
   try {
-    const isWebURL = tab.url && /^https?:\/\//i.test(tab.url)
     const response = await fetch(BRIDGE_URL, {
       method: 'POST',
       headers: {
@@ -63,7 +65,7 @@ async function reportTab(tab) {
       },
       body: JSON.stringify({
         browser: detectBrowser(),
-        url: isWebURL ? tab.url : '',
+        url: tab.url,
         title: tab.title || '',
         tabId: tab.id,
         incognito: tab.incognito,
@@ -121,4 +123,8 @@ if (extensionApi) {
 
   extensionApi.runtime.onStartup.addListener(() => reportActiveTab())
   extensionApi.runtime.onInstalled.addListener(() => reportActiveTab())
+
+  setInterval(() => {
+    reportActiveTab()
+  }, ACTIVE_TAB_HEARTBEAT_MS)
 }

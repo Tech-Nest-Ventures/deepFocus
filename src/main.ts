@@ -92,7 +92,10 @@ const BROWSER_BRIDGE_PORT = 17321
 // Track recently blocked items to avoid rapid-fire blocking
 const recentlyBlocked = new Map<string, number>()
 const BLOCK_COOLDOWN = 10000 // 10 seconds cooldown before blocking the same item again
-const browserBridgeActiveURLs = new Map<string, { URL: string; timestamp: number }>()
+const BROWSER_BRIDGE_URL_CACHE_MS = 10 * 60 * 1000
+type BrowserBridgeURLEntry = { URL: string; appName: string; timestamp: number }
+const browserBridgeActiveURLs = new Map<string, BrowserBridgeURLEntry>()
+let latestBrowserBridgeURL: BrowserBridgeURLEntry | null = null
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 if (app.isPackaged && log.transports.console) {
@@ -244,28 +247,85 @@ function normalizeExtensionBrowserName(browserName?: string, userAgent?: string)
   return browserName || 'Browser'
 }
 
+function getBrowserBridgeCacheKeys(appName: string, payload?: BrowserEventPayload, userAgent?: string): string[] {
+  const source = `${appName} ${payload?.browser || ''} ${payload?.title || ''} ${userAgent || ''}`.toLowerCase()
+  const keys = new Set<string>()
+
+  if (appName) keys.add(appName)
+  if (payload?.browser) keys.add(payload.browser)
+
+  if (source.includes('firefox')) keys.add('Firefox')
+  if (source.includes('edg/') || source.includes('edge')) keys.add('Microsoft Edge')
+  if (source.includes('chrome')) keys.add('Google Chrome')
+  if (source.includes('brave')) keys.add('Brave Browser')
+
+  return Array.from(keys).filter(Boolean)
+}
+
+function clearBrowserBridgeURLCache(keys: string[]): void {
+  for (const key of keys) {
+    browserBridgeActiveURLs.delete(key)
+  }
+
+  if (latestBrowserBridgeURL && keys.includes(latestBrowserBridgeURL.appName)) {
+    latestBrowserBridgeURL = null
+  }
+}
+
+function setBrowserBridgeURLCache(keys: string[], entry: BrowserBridgeURLEntry): void {
+  for (const key of keys) {
+    browserBridgeActiveURLs.set(key, entry)
+  }
+  latestBrowserBridgeURL = entry
+}
+
+function getBrowserBridgeURL(appName: string): string {
+  const now = Date.now()
+  const cached = browserBridgeActiveURLs.get(appName)
+
+  if (cached && now - cached.timestamp <= BROWSER_BRIDGE_URL_CACHE_MS) {
+    return cached.URL
+  }
+
+  if (cached) {
+    browserBridgeActiveURLs.delete(appName)
+  }
+
+  if (
+    latestBrowserBridgeURL &&
+    now - latestBrowserBridgeURL.timestamp <= BROWSER_BRIDGE_URL_CACHE_MS &&
+    (latestBrowserBridgeURL.appName === appName || appName === 'Browser' || latestBrowserBridgeURL.appName === 'Browser')
+  ) {
+    return latestBrowserBridgeURL.URL
+  }
+
+  return ''
+}
+
 function handleExtensionBrowserEvent(payload: BrowserEventPayload, userAgent?: string): {
   action: 'allow' | 'block'
   reason?: string
 } {
   const appName = normalizeExtensionBrowserName(payload.browser, userAgent)
+  const cacheKeys = getBrowserBridgeCacheKeys(appName, payload, userAgent)
 
   if (payload.incognito) {
+    clearBrowserBridgeURLCache(cacheKeys)
     return { action: 'allow' }
   }
 
   if (!payload.url) {
-    browserBridgeActiveURLs.delete(appName)
     return { action: 'allow' }
   }
 
   const URL = getBaseURL(payload.url)
   if (!URL) {
-    browserBridgeActiveURLs.delete(appName)
+    clearBrowserBridgeURLCache(cacheKeys)
     return { action: 'allow' }
   }
 
-  browserBridgeActiveURLs.set(appName, { URL, timestamp: Date.now() })
+  setBrowserBridgeURLCache(cacheKeys, { URL, appName, timestamp: Date.now() })
+  log.info(`Browser bridge URL resolved for ${appName}: ${URL}`)
   updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
   const isProductive = isDeepWork({ type: 'URL', value: URL }, store)
 
@@ -450,7 +510,7 @@ export function startActivityMonitoring(): void {
           if (browserURL && browserURL.trim()) {
             URL = getBaseURL(browserURL)
           } else {
-            URL = browserBridgeActiveURLs.get(appName)?.URL || ''
+            URL = getBrowserBridgeURL(appName)
           }
         }
 
