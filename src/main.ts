@@ -92,6 +92,7 @@ const BROWSER_BRIDGE_PORT = 17321
 // Track recently blocked items to avoid rapid-fire blocking
 const recentlyBlocked = new Map<string, number>()
 const BLOCK_COOLDOWN = 10000 // 10 seconds cooldown before blocking the same item again
+const browserBridgeActiveURLs = new Map<string, { URL: string; timestamp: number }>()
 log.transports.file.level = 'debug'
 log.transports.file.maxSize = 10 * 1024 * 1024
 if (app.isPackaged && log.transports.console) {
@@ -247,16 +248,24 @@ function handleExtensionBrowserEvent(payload: BrowserEventPayload, userAgent?: s
   action: 'allow' | 'block'
   reason?: string
 } {
-  if (payload.incognito || !payload.url) {
+  const appName = normalizeExtensionBrowserName(payload.browser, userAgent)
+
+  if (payload.incognito) {
+    return { action: 'allow' }
+  }
+
+  if (!payload.url) {
+    browserBridgeActiveURLs.delete(appName)
     return { action: 'allow' }
   }
 
   const URL = getBaseURL(payload.url)
   if (!URL) {
+    browserBridgeActiveURLs.delete(appName)
     return { action: 'allow' }
   }
 
-  const appName = normalizeExtensionBrowserName(payload.browser, userAgent)
+  browserBridgeActiveURLs.set(appName, { URL, timestamp: Date.now() })
   updateSiteTimeTracker(appName, currentSiteTimeTrackers, URL)
   const isProductive = isDeepWork({ type: 'URL', value: URL }, store)
 
@@ -440,6 +449,8 @@ export function startActivityMonitoring(): void {
           const browserURL = await getBrowserURL(appName)
           if (browserURL && browserURL.trim()) {
             URL = getBaseURL(browserURL)
+          } else {
+            URL = browserBridgeActiveURLs.get(appName)?.URL || ''
           }
         }
 
