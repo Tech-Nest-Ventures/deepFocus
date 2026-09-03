@@ -7,6 +7,7 @@ import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [solidPlugin()],
+  base: './',
   build: {
     target: 'esnext',
     outDir: '.vite/renderer/main_window',
