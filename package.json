@@ -173,7 +173,7 @@
         "nsis",
         "zip"
       ],
-      "signAndEditExecutable": false
+      "signExecutable": false
     },
     "linux": {
       "target": [
