@@ -6,7 +6,13 @@
   "permissions": ["tabs", "webNavigation"],
   "host_permissions": ["http://127.0.0.1:17321/*", "http://*/*", "https://*/*"],
   "background": {
+    "scripts": ["background.js"],
     "service_worker": "background.js"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "deepfocus-browser-bridge@deepfocus.local"
+    }
   },
   "action": {
     "default_title": "Deep Focus Browser Bridge"

@@ -405,11 +405,11 @@ public class ForegroundWindowHelper {
 $hwnd = [ForegroundWindowHelper]::GetForegroundWindow()
 if ($hwnd -eq [IntPtr]::Zero) { exit }
 
-$pid = 0
-[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$pid) | Out-Null
-if ($pid -eq 0) { exit }
+$foregroundProcessId = 0
+[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$foregroundProcessId) | Out-Null
+if ($foregroundProcessId -eq 0) { exit }
 
-$process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+$process = Get-Process -Id $foregroundProcessId -ErrorAction SilentlyContinue
 if (!$process -or $process.ProcessName.ToLowerInvariant() -ne '${processName}') { exit }
 
 $root = [System.Windows.Automation.AutomationElement]::FromHandle($hwnd)
@@ -487,9 +487,9 @@ public class ForegroundWindowHelper {
 $hwnd = [ForegroundWindowHelper]::GetForegroundWindow()
 if ($hwnd -eq [IntPtr]::Zero) { exit }
 
-$pid = 0
-[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$pid) | Out-Null
-$process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+$foregroundProcessId = 0
+[ForegroundWindowHelper]::GetWindowThreadProcessId($hwnd, [ref]$foregroundProcessId) | Out-Null
+$process = Get-Process -Id $foregroundProcessId -ErrorAction SilentlyContinue
 if (!$process -or $process.ProcessName.ToLowerInvariant() -ne '${processName}') { exit }
 
 $originalClipboard = Get-Clipboard -Raw -Format Text -ErrorAction SilentlyContinue
@@ -754,9 +754,12 @@ export function getBrowserURL(browser: string): Promise<string> {
             resolve('')
           })
       } else if (browser.toLowerCase() === 'firefox') {
-        // Firefox on Windows doesn't support CDP easily
-        log.debug('Firefox URL detection on Windows is not yet implemented.')
-        resolve('')
+        getURLFromWindowsAccessibility(browser)
+          .then((url) => (url ? resolve(url) : getURLFromWindowsClipboardFallback(browser).then(resolve)))
+          .catch((error) => {
+            log.debug(`Error getting URL for Firefox on Windows: ${error.message}`)
+            resolve('')
+          })
       } else {
         log.debug(`URL detection for ${browser} on Windows is not yet implemented.`)
         resolve('')
