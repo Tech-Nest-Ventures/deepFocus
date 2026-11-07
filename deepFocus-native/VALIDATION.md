@@ -1,3 +1,33 @@
+# November 7 · multi-calendar and concurrent-activity validation (v0.4.0)
+
+| Check | Result |
+|---|---|
+| Swift core suite | 84 tests passed, zero failures |
+| Actual EventKit adapter boundary probe | Explicit permission, empty selection/no query, revocation clearing, delayed authorization/disconnect, Actuals selection exclusion, publishing scope, changed/moved entries and overlapping publication rejection passed using a synthetic backend |
+| Actual TimelineStore probe | Eight checks passed: write/reopen/owner-only permissions, multi-activity exchange, exact v1/v2 backup→v3 migration, import diagnostics, conflicting backup, corrupt/future archive preservation |
+| Native macOS Release | Universal arm64/x86_64 build passed; strict deep signature verification passed; sandbox/calendar entitlement inspected |
+| iPhone companion | iOS Simulator build passed; installed and launched in iPhone 16 / iOS 18.4 simulator without requesting calendar or location access |
+| Separate camera target | Release build passed after shared core/schema changes; no new camera runtime check |
+| Mac bundle size | 3,612 KiB allocated (`du -sk`), approximately 3.53 MiB |
+| Charter / generation | Frozen checksum unchanged; generator rerun and whitespace checks passed |
+| Independent review | Standards and spec passes completed; fractional timestamp reimport conflicts, observation-fragmented publication, and overlapping corrected-publication defects fixed with regressions |
+
+The main app now has the sandbox Calendar entitlement and full-access purpose string. It requests authorization only from Connect; no calendars are selected by default. Native provider events are intentions, not confirmed time. Publication is explicit, whole-second, limited to activity labels/times in an existing writable Actuals calendar, with immutable ownership checks and device-local identifier receipts. Cross-device publication reconciliation and replacement/deletion remain unsupported; publish from one device.
+
+**Not live-verified:** real Calendar authorization/revocation, Google multi-account visibility and provider synchronization, shared/read-only account behavior, recurrence edits arriving through EventKit, publication appearing in Notion Calendar, physical iPhone operation. No personal events were read or written during this increment. Simulator launch is not evidence of Google/Notion integration. No new CPU/memory measurement was performed. Browser code did not change; earlier live/browser test evidence below is historical.
+
+## Live calendar acceptance checklist
+
+- Add two Google accounts in system Calendar settings; grant Calendar access from Connect and select calendars from both.
+- Verify account labels/aliases, two same-named events, overlapping events, timed/all-day/recurring entries, and switching days.
+- Edit/delete/move an occurrence in another client, refresh, and confirm the visible snapshot and gap intentions update.
+- Deselect all, disconnect, revoke access and relaunch; verify no stale local connected intentions remain while imported evidence/confirmations survive.
+- Confirm Walking + Communication on a past interval and verify elapsed time remains single-counted.
+- Create a separate Actuals calendar; review and explicitly publish. Verify identical retry skips, changed/overlapping owned events reject, plans remain untouched, and output appears in Notion Calendar using the same account.
+- Finish physical iPhone permissions/background location and manual evidence exchange checks separately.
+
+## Previous checkpoints
+
 # November 7 parallel implementation validation
 
 This checkpoint concerns native v0.3.0 source and extension v0.2.0. Prior November 6 live results below remain historical evidence; they do not establish live verification of these new changes.

@@ -4,6 +4,14 @@ This is editable delivery status. Product direction is governed by the [frozen, 
 
 Approved addition: [quiet desktop session experiment amendment](product-direction/2026-11-06-quiet-desktop-session-amendment.md). The frozen v1 remains unchanged.
 
+## November 7 · multi-account calendars and concurrent activities
+
+Built v0.4.0: shared Mac/iPhone agenda reads explicitly selected calendars across multiple system-configured accounts; account aliases and calendar labels preserve context. Notion Calendar interoperability uses the same underlying Google accounts, rather than reading Notion's private app data. Connect is the only permission-request path. Refresh, deselection, disconnect and revocation handle local connected intentions separately from manual imports and other-device evidence.
+
+Both apps now support concurrent activity labels, with v1/v2→v3 migration backups and elapsed time counted once. An explicit preview can publish confirmed labels/times into an existing writable `Deep Focus — Actuals` calendar. Publication is immutable and uses local identifier receipts; use one publishing device pending cross-device reconciliation. It never publishes unknown time, desktop domains or place coordinates. Full setup: [multiple calendars](multi-calendar.md).
+
+Remaining gates: live multi-Google-account access, permissions/revocation, recurring edits, provider latency, and seeing explicitly published output in Notion Calendar. Private activity/place records still move through file exchange; automatic device sync remains a separate milestone. The earlier simulator demo ran the companion successfully, but physical iPhone delivery and location behavior remain unverified.
+
 ## 1 Desktop foundation
 
 **Built:** the sandboxed macOS menu-bar app, authenticated browser bridge, duration recorder, optional local timeline, daily view, explicit activity tags/corrections, local archive, and JSON evidence exchange. Continuous observations merge; pauses, suspended sampling, and clock jumps do not become invented work. The archive stores app names, domains, recent-input status, and provenance, not full URLs. Corrections preserve observations. Files with an incompatible/corrupt archive are preserved rather than overwritten.

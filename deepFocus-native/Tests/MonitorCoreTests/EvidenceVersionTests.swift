@@ -13,14 +13,14 @@ final class EvidenceVersionTests: XCTestCase {
                 timeZoneID: "America/New_York", isAllDay: false, cancelled: cancelled))
     }
 
-    func testV1ArchiveLoadsAndNextExportWritesV2() throws {
+    func testV1ArchiveLoadsAndNextExportWritesV3() throws {
         let encoded = try TimelineArchive.encode(TimelineLedger(startedAt: instant))
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         object["schemaVersion"] = 1
         let restored = try TimelineArchive.decode(JSONSerialization.data(withJSONObject: object))
         XCTAssertEqual(restored.schemaVersion, 1)
         let next = try XCTUnwrap(JSONSerialization.jsonObject(with: TimelineArchive.encode(restored)) as? [String: Any])
-        XCTAssertEqual(next["schemaVersion"] as? Int, 2)
+        XCTAssertEqual(next["schemaVersion"] as? Int, 3)
     }
 
     func testCalendarUpdateCancellationAndStaleImportDoNotInventHumanTime() throws {

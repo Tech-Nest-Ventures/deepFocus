@@ -9,6 +9,8 @@ struct TimelinePanel: View {
     @State private var importKind: ImportKind = .evidence
     @State private var exporting = false
     @State private var document = EvidenceDocument()
+    @State private var editing: TimelineSlice?
+    @State private var selectedActivities: [ActivityCategory] = []
 
     var body: some View {
         ScrollView {
@@ -93,6 +95,22 @@ struct TimelinePanel: View {
             }
         }
         }.frame(maxHeight: 420)
+        .sheet(item: $editing) { slice in
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Confirm activities").font(.headline)
+                Text("\(slice.start.formatted(date: .omitted, time: .shortened)) – \(slice.end.formatted(date: .omitted, time: .shortened))")
+                ActivitySelectionView(selection: $selectedActivities)
+                HStack {
+                    Button("Cancel") { editing = nil }
+                    Spacer()
+                    Button("Save activities") {
+                        store.annotate(start: slice.start, end: slice.end, categories: selectedActivities)
+                        if store.errorMessage == nil { editing = nil }
+                    }.disabled(selectedActivities.isEmpty)
+                }
+                if let error = store.errorMessage { Text(error).font(.caption).foregroundStyle(.orange) }
+            }.padding().frame(width: 440)
+        }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
             do {
                 let url = try result.get()
@@ -146,10 +164,9 @@ struct TimelinePanel: View {
     }
 
     private func categoryMenu(_ slice: TimelineSlice, title: String) -> some View {
-        Menu(title) {
-            ForEach(ActivityCategory.allCases) { category in
-                Button(category.title) { annotate(slice, category) }
-            }
+        Button(title) {
+            selectedActivities = slice.categories
+            editing = slice
         }
     }
 

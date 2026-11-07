@@ -9,6 +9,7 @@ final class TimelineStore: ObservableObject {
     private var lastSave = Date.distantPast
     private let file: URL?
     private var writable = true
+    private var lastConnectedSnapshot: Date?
 
     init(fileOverride: URL? = nil) {
         recordingEnabled = UserDefaults.standard.bool(forKey: "saveLocalTimeline")
@@ -21,16 +22,16 @@ final class TimelineStore: ObservableObject {
             do {
                 let original = try Data(contentsOf: file)
                 ledger = try TimelineArchive.decode(original)
-                if ledger.schemaVersion == 1 {
-                    // Preserve the original bytes before any v2 write; failure disables writes.
-                    let backup = file.appendingPathExtension("v1-backup")
+                if ledger.schemaVersion < 3 {
+                    // Preserve the source version's exact bytes before any v3 write; failure disables writes.
+                    let backup = file.appendingPathExtension("v\(ledger.schemaVersion)-backup")
                     if !FileManager.default.fileExists(atPath: backup.path) {
                         try FileManager.default.copyItem(at: file, to: backup)
                         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backup.path)
                     } else if try Data(contentsOf: backup) != original {
                         throw TimelineError.invalidArchive
                     }
-                    ledger.schemaVersion = 2
+                    ledger.schemaVersion = 3
                 }
             }
             catch {
@@ -62,12 +63,16 @@ final class TimelineStore: ObservableObject {
     }
 
     func annotate(start: Date, end: Date, category: ActivityCategory) {
+        annotate(start: start, end: end, categories: [category])
+    }
+
+    func annotate(start: Date, end: Date, categories: [ActivityCategory]) {
         guard writable else { return }
         do {
-            try ledger.annotate(start: start, end: end, category: category, now: Date())
+            try ledger.annotate(start: start, end: end, categories: categories, now: Date())
             ledger.startedAt = min(ledger.startedAt, start)
             save()
-        } catch { errorMessage = "Choose an interval that ends after its start and no later than now." }
+        } catch { errorMessage = "Choose at least one activity and an interval that ends after its start and no later than now. Unknown must be selected on its own." }
     }
 
     func addEvidence(_ evidence: ContextEvidence) {
@@ -123,6 +128,28 @@ final class TimelineStore: ObservableObject {
         } catch let error as CalendarImport.ImportError {
             errorMessage = "\(error.localizedDescription) Existing records were preserved."
         } catch { errorMessage = "This calendar snapshot is invalid or unsupported. Existing records were preserved." }
+    }
+
+    func applyConnectedCalendarSnapshot(events: [CalendarAgendaEvent], range: DateInterval,
+                                        fetchedAt: Date, selected: Set<String>, excluded: Set<String>) {
+        guard writable else { return }
+        do {
+            var updated = ledger
+            guard try ConnectedCalendarPolicy.replaceSnapshot(events: events, selectedCalendarIDs: selected,
+                excludingCalendarIDs: excluded, in: range, fetchedAt: fetchedAt, deviceID: ledger.deviceID,
+                into: &updated, lastAppliedAt: lastConnectedSnapshot) else { return }
+            lastConnectedSnapshot = fetchedAt
+            if updated.evidence != ledger.evidence { ledger = updated; save() }
+        } catch { errorMessage = "The calendar refresh was invalid. Refresh your calendars again." }
+    }
+
+    func clearConnectedCalendarEvidence() {
+        // Clearing displayed plans is allowed even when the preserved archive is read-only.
+        // save() independently guards against overwriting an unreadable/incompatible archive.
+        lastConnectedSnapshot = nil
+        var updated = ledger
+        ConnectedCalendarPolicy.clearSnapshot(deviceID: ledger.deviceID, into: &updated)
+        if updated.evidence != ledger.evidence { ledger = updated; save() }
     }
 
     func save() {

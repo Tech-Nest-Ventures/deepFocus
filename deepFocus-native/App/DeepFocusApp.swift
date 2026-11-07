@@ -1,19 +1,31 @@
 import SwiftUI
 
 @main
+@MainActor
 struct DeepFocusApp: App {
     @StateObject private var model = MonitorModel()
+    @StateObject private var calendars = CalendarWorkspace()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         Window("Deep Focus", id: "monitor") {
             MonitorView(model: model, showSetup: true)
+                .task { calendars.attach(to: model.timeline) }
         }
         .windowResizability(.contentSize)
 
+        Window("Calendars", id: "calendars") {
+            ConnectedCalendarsView(workspace: calendars, timeline: model.timeline)
+                .frame(minWidth: 600, minHeight: 560)
+        }
+        .defaultSize(width: 680, height: 720)
+
         MenuBarExtra("Deep Focus", systemImage: model.activity.paused ? "pause.circle" : "scope") {
             MonitorView(model: model)
+                .task { calendars.attach(to: model.timeline) }
         }
         .menuBarExtraStyle(.window)
+        .onChange(of: scenePhase) { _, phase in if phase == .active { calendars.refresh() } }
     }
 }
 
@@ -57,6 +69,7 @@ struct MonitorView: View {
                 showTimeline.toggle()
                 if showTimeline { showSetup = false }
             }
+            Button("Calendars") { openWindow(id: "calendars") }
             if showTimeline { TimelinePanel(store: model.timeline, notifications: model.gapNotifications) }
             HStack {
                 Button(model.activity.paused ? "Resume" : "Pause", action: model.togglePause)
@@ -78,7 +91,7 @@ struct MonitorView: View {
                     Text("Chrome / Edge / Dia / Arc: load Browser/chromium as an unpacked extension. See the project README for setup.")
                         .foregroundStyle(.secondary)
                     if let message = model.setupMessage { Text(message).foregroundStyle(.secondary) }
-                    Text("Full URLs are live only. Optional local timeline saves app names and domains. Nothing is uploaded.").foregroundStyle(.secondary)
+                    Text("Full URLs are live only. Optional local timeline saves app names and domains. Calendar publishing shares only the confirmed labels and times you explicitly choose.").foregroundStyle(.secondary)
                 }.font(.caption)
             }
         }

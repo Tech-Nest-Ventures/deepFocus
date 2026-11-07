@@ -29,13 +29,71 @@ struct ActivityInterval: Codable, Identifiable {
     let context: DesktopContext
 }
 
-struct ActivityAnnotation: Codable, Identifiable {
+struct ActivityAnnotation: Codable, Identifiable, Equatable {
     let id: UUID
     let deviceID: UUID
     let start: Date
     let end: Date
-    let category: ActivityCategory
+    let categories: [ActivityCategory]
     let recordedAt: Date
+
+    /// Compatibility for existing single-activity callers. Display and totals use all categories.
+    var category: ActivityCategory { categories[0] }
+    var title: String { categories.map(\.title).joined(separator: " + ") }
+
+    /// Exchange identity compares dates at millisecond resolution. Converting Foundation's
+    /// reference epoch to Unix milliseconds and back may alter smaller floating-point bits.
+    /// Identifiers, category selection, and every timestamp still participate in the check.
+    func hasSameExchangePayload(as other: ActivityAnnotation) -> Bool {
+        func milliseconds(_ date: Date) -> Double { (date.timeIntervalSince1970 * 1000).rounded() }
+        return id == other.id && deviceID == other.deviceID && categories == other.categories
+            && milliseconds(start) == milliseconds(other.start)
+            && milliseconds(end) == milliseconds(other.end)
+            && milliseconds(recordedAt) == milliseconds(other.recordedAt)
+    }
+
+    init(id: UUID, deviceID: UUID, start: Date, end: Date, category: ActivityCategory, recordedAt: Date) {
+        self.id = id; self.deviceID = deviceID; self.start = start; self.end = end
+        self.categories = [category]; self.recordedAt = recordedAt
+    }
+
+    init(id: UUID, deviceID: UUID, start: Date, end: Date, categories: [ActivityCategory], recordedAt: Date) throws {
+        self.id = id; self.deviceID = deviceID; self.start = start; self.end = end
+        self.categories = try Self.normalized(categories); self.recordedAt = recordedAt
+    }
+
+    static func normalized(_ categories: [ActivityCategory]) throws -> [ActivityCategory] {
+        let selected = Set(categories)
+        guard !selected.isEmpty, !selected.contains(.unknown) || selected.count == 1 else {
+            throw TimelineError.invalidArchive
+        }
+        return ActivityCategory.allCases.filter { selected.contains($0) }
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, deviceID, start, end, categories, category, recordedAt }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        deviceID = try values.decode(UUID.self, forKey: .deviceID)
+        start = try values.decode(Date.self, forKey: .start)
+        end = try values.decode(Date.self, forKey: .end)
+        recordedAt = try values.decode(Date.self, forKey: .recordedAt)
+        // An explicitly malformed new selection must not silently fall back to a legacy field.
+        categories = try Self.normalized(values.contains(.categories)
+            ? values.decode([ActivityCategory].self, forKey: .categories)
+            : [values.decode(ActivityCategory.self, forKey: .category)])
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(id, forKey: .id)
+        try values.encode(deviceID, forKey: .deviceID)
+        try values.encode(start, forKey: .start)
+        try values.encode(end, forKey: .end)
+        try values.encode(recordedAt, forKey: .recordedAt)
+        try values.encode(categories, forKey: .categories)
+    }
 }
 
 /// Optional collectors contribute context, never a confirmed purpose or brain-state score.
@@ -72,16 +130,26 @@ struct TimelineSlice: Identifiable {
     let start: Date
     let end: Date
     let context: DesktopContext?
-    let category: ActivityCategory?
+    let categories: [ActivityCategory]
     let basis: Basis
+    var category: ActivityCategory? { categories.first }
     var duration: TimeInterval { end.timeIntervalSince(start) }
-    var title: String { category?.title ?? context?.websiteHost ?? context?.appName ?? "Unknown" }
+    var title: String { categories.isEmpty ? context?.websiteHost ?? context?.appName ?? "Unknown"
+        : categories.map(\.title).joined(separator: " + ") }
+
+    init(start: Date, end: Date, context: DesktopContext?, categories: [ActivityCategory], basis: Basis) {
+        self.start = start; self.end = end; self.context = context; self.categories = categories; self.basis = basis
+    }
+
+    init(start: Date, end: Date, context: DesktopContext?, category: ActivityCategory?, basis: Basis) {
+        self.init(start: start, end: end, context: context, categories: category.map { [$0] } ?? [], basis: basis)
+    }
 }
 
 enum TimelineError: Error { case invalidArchive, invalidInterval, incompatibleVersion }
 
 struct TimelineLedger: Codable {
-    var schemaVersion = 2
+    var schemaVersion = 3
     var deviceID = UUID()
     var startedAt: Date
     var intervals: [ActivityInterval] = []
@@ -102,9 +170,13 @@ struct TimelineLedger: Codable {
     }
 
     mutating func annotate(start: Date, end: Date, category: ActivityCategory, now: Date) throws {
+        try annotate(start: start, end: end, categories: [category], now: now)
+    }
+
+    mutating func annotate(start: Date, end: Date, categories: [ActivityCategory], now: Date) throws {
         guard start < end, end <= now, start.timeIntervalSince1970.isFinite else { throw TimelineError.invalidInterval }
-        annotations.append(ActivityAnnotation(id: UUID(), deviceID: deviceID, start: start, end: end,
-                                               category: category, recordedAt: now))
+        annotations.append(try ActivityAnnotation(id: UUID(), deviceID: deviceID, start: start, end: end,
+                                               categories: categories, recordedAt: now))
     }
 
     /// Partition time once. Last explicit correction wins; the observed record is preserved.
@@ -122,8 +194,17 @@ struct TimelineLedger: Codable {
             let basis: TimelineSlice.Basis = correction.map { $0.category == .unknown ? .leftUnknown : .confirmed }
                 ?? (observed == nil ? .unknown : .observed)
             return TimelineSlice(start: start, end: end, context: observed?.context,
-                                 category: correction?.category, basis: basis)
+                                 categories: correction?.categories ?? [], basis: basis)
         }
+    }
+
+    /// Category totals overlap when activities happen together. Never sum these as elapsed time.
+    func categoryDurations(in range: DateInterval) -> [ActivityCategory: TimeInterval] {
+        var totals: [ActivityCategory: TimeInterval] = [:]
+        for slice in slices(in: range) where slice.basis == .confirmed {
+            for category in slice.categories { totals[category, default: 0] += slice.duration }
+        }
+        return totals
     }
 
     func reviewCandidates(in range: DateInterval, now: Date) -> [TimelineSlice] {
@@ -158,7 +239,7 @@ struct TimelineLedger: Codable {
     }
 
     func validate() throws {
-        guard (1...2).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
+        guard (1...3).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
         guard Set(intervals.map(\.id)).count == intervals.count,
               Set(annotations.map(\.id)).count == annotations.count,
               Set(evidence.map(\.id)).count == evidence.count,
@@ -172,7 +253,7 @@ struct TimelineLedger: Codable {
 
 /// User-mediated file exchange. Desktop observations stay device-local; evidence does not imply attention.
 struct TimelineExchange: Codable {
-    var schemaVersion = 2
+    var schemaVersion = 3
     let annotations: [ActivityAnnotation]
     let evidence: [ContextEvidence]
     var quietUntil: Date? = nil
@@ -181,13 +262,13 @@ struct TimelineExchange: Codable {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.outputFormatting = [.sortedKeys]
-        guard (1...2).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
+        guard (1...3).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
         var validation = TimelineLedger()
         validation.annotations = annotations
         validation.evidence = evidence
         try validation.validate()
         var current = self
-        current.schemaVersion = 2
+        current.schemaVersion = 3
         return try encoder.encode(current)
     }
 
@@ -196,7 +277,7 @@ struct TimelineExchange: Codable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .millisecondsSince1970
         let exchange = try decoder.decode(Self.self, from: data)
-        guard (1...2).contains(exchange.schemaVersion) else { throw TimelineError.incompatibleVersion }
+        guard (1...3).contains(exchange.schemaVersion) else { throw TimelineError.incompatibleVersion }
         var validation = TimelineLedger()
         validation.annotations = exchange.annotations
         validation.evidence = exchange.evidence
@@ -211,6 +292,17 @@ struct TimelineExchange: Codable {
     }
 
     private func mergeValidated(into ledger: inout TimelineLedger) throws {
+        guard (1...3).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
+        var incoming = TimelineLedger()
+        incoming.annotations = annotations
+        incoming.evidence = evidence
+        try incoming.validate()
+        for annotation in annotations {
+            if let existing = ledger.annotations.first(where: { $0.id == annotation.id }),
+               !existing.hasSameExchangePayload(as: annotation) {
+                throw TimelineError.invalidArchive
+            }
+        }
         let knownAnnotations = Set(ledger.annotations.map(\.id))
         ledger.annotations.append(contentsOf: annotations.filter { !knownAnnotations.contains($0.id) })
         for observation in evidence {
@@ -249,7 +341,7 @@ enum TimelineArchive {
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.outputFormatting = [.sortedKeys]
         var current = ledger
-        current.schemaVersion = 2
+        current.schemaVersion = 3
         return try encoder.encode(current)
     }
 

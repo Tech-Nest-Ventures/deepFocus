@@ -66,7 +66,7 @@ common = dict(SDKROOT="macosx", MACOSX_DEPLOYMENT_TARGET="14.0", SWIFT_VERSION="
               CLANG_ENABLE_MODULES="YES", ENABLE_HARDENED_RUNTIME="YES", CODE_SIGN_STYLE="Manual",
               CODE_SIGN_IDENTITY="-", CODE_SIGNING_ALLOWED="YES", GENERATE_INFOPLIST_FILE="NO",
               CODE_SIGN_INJECT_BASE_ENTITLEMENTS="NO",
-              CURRENT_PROJECT_VERSION="3", MARKETING_VERSION="0.3.0")
+              CURRENT_PROJECT_VERSION="4", MARKETING_VERSION="0.4.0")
 app_settings = dict(common, PRODUCT_BUNDLE_IDENTIFIER="com.timeowilliams.DeepFocusNative",
                     PRODUCT_NAME="Deep Focus Native", PRODUCT_MODULE_NAME="DeepFocusNative",
                     INFOPLIST_FILE="Configuration/App-Info.plist", CODE_SIGN_ENTITLEMENTS="Configuration/App.entitlements",
@@ -159,15 +159,18 @@ base = dict(CFBundleDevelopmentRegion="en", CFBundleExecutable="$(EXECUTABLE_NAM
             CFBundleVersion="$(CURRENT_PROJECT_VERSION)", LSMinimumSystemVersion="$(MACOSX_DEPLOYMENT_TARGET)")
 plists = {
     "App-Info.plist": dict(base, CFBundlePackageType="APPL", LSUIElement=True, NSPrincipalClass="NSApplication",
+                          NSCalendarsFullAccessUsageDescription="Choose calendars from your accounts to compare plans with activity. Events are written only when you explicitly publish confirmed activities.",
                           NSHumanReadableCopyright="Copyright © 2026 Timeo Williams", LSApplicationCategoryType="public.app-category.productivity"),
     "Safari-Info.plist": dict(base, CFBundlePackageType="XPC!", CFBundleDisplayName="Deep Focus Browser Monitor",
                              NSExtension={"NSExtensionPointIdentifier": "com.apple.Safari.web-extension",
                                           "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).SafariWebExtensionHandler"},
                              NSAppTransportSecurity={"NSAllowsLocalNetworking": True}),
     "App.entitlements": {"com.apple.security.app-sandbox": True, "com.apple.security.network.server": True,
-                         "com.apple.security.files.user-selected.read-write": True},
+                         "com.apple.security.files.user-selected.read-write": True,
+                         "com.apple.security.personal-information.calendars": True},
     "Safari.entitlements": {"com.apple.security.app-sandbox": True, "com.apple.security.network.client": True},
     "iOS-Info.plist": dict(base, CFBundlePackageType="APPL", CFBundleDisplayName="Deep Focus",
+                          NSCalendarsFullAccessUsageDescription="Choose calendars from your accounts to compare plans with activity. Events are written only when you explicitly publish confirmed activities.",
                           UILaunchScreen={}, UIApplicationSceneManifest={"UIApplicationSupportsMultipleScenes": False},
                           UISupportedInterfaceOrientations=["UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"],
                           NSLocationWhenInUseUsageDescription="Deep Focus can record optional coarse place visits to help you reconstruct your day.",

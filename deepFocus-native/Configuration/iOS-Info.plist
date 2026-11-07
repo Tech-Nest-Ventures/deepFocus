@@ -22,6 +22,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Choose calendars from your accounts to compare plans with activity. Events are written only when you explicitly publish confirmed activities.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Allow optional background place visits so you can confirm time away from your computer later. Coarse locations stay on this phone until you export them.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

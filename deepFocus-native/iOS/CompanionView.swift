@@ -5,9 +5,11 @@ import UniformTypeIdentifiers
 struct CompanionView: View {
     @ObservedObject var model: CompanionModel
     @ObservedObject var store: TimelineStore
+    @ObservedObject var calendars: CalendarWorkspace
+    @State private var showCalendars = false
     @State private var start = Date().addingTimeInterval(-1800)
     @State private var end = Date()
-    @State private var category = ActivityCategory.reading
+    @State private var categories: [ActivityCategory] = [.reading]
     @State private var exporting = false
     @State private var importing = false
     @State private var document = EvidenceDocument()
@@ -15,16 +17,17 @@ struct CompanionView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Plans across your accounts") {
+                    Button("Open calendars") { showCalendars = true }
+                }
                 Section("Record an activity") {
                     DatePicker("From", selection: $start, in: ...Date())
                     DatePicker("Until", selection: $end, in: ...Date())
-                    Picker("Activity", selection: $category) {
-                        ForEach(ActivityCategory.allCases) { Text($0.title).tag($0) }
-                    }
+                    ActivitySelectionView(selection: $categories)
                     Button("Save activity") {
-                        store.annotate(start: start, end: end, category: category)
+                        store.annotate(start: start, end: end, categories: categories)
                         if store.errorMessage == nil { model.message = "Activity saved on this phone." }
-                    }.disabled(start >= end)
+                    }.disabled(start >= end || categories.isEmpty)
                     Text("Your confirmation records the activity. Location alone does not establish what you did.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
@@ -53,7 +56,7 @@ struct CompanionView: View {
                 Section("Recent records") {
                     ForEach(store.ledger.annotations.suffix(10).reversed()) { annotation in
                         VStack(alignment: .leading) {
-                            Text(annotation.category.title)
+                            Text(annotation.title)
                             Text("\(annotation.start.formatted()) – \(annotation.end.formatted()) · confirmed by you")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
@@ -75,6 +78,12 @@ struct CompanionView: View {
                 if let error = store.errorMessage { Section { Text(error).foregroundStyle(.red) } }
             }
             .navigationTitle("Deep Focus")
+        }
+        .sheet(isPresented: $showCalendars) {
+            NavigationStack {
+                ConnectedCalendarsView(workspace: calendars, timeline: store)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showCalendars = false } } }
+            }
         }
         .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "DeepFocusEvidence") { result in
             if case .failure = result { store.errorMessage = "The export was not saved." }

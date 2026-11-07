@@ -24,6 +24,8 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Choose calendars from your accounts to compare plans with activity. Events are written only when you explicitly publish confirmed activities.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Timeo Williams</string>
 	<key>NSPrincipalClass</key>
