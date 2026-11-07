@@ -29,7 +29,7 @@ struct ConnectedCalendarsView: View {
                         Button("Connect calendars") { Task { await calendars.connect() } }
                     }
                 }
-                Text("Add each Google account to Apple Calendar on this device. Select calendars below to combine them in one agenda. Accounts connected only inside Notion Calendar must also be added to Apple Calendar.")
+                Text("Add your accounts to Apple Calendar on this device. Select calendars below to combine them in one agenda. You can include calendars from multiple accounts.")
                     .font(.caption).foregroundStyle(.secondary)
                 Text("Apple requests full calendar access. Deep Focus reads your selected calendars and writes only when you explicitly publish confirmed activities.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -56,7 +56,7 @@ struct ConnectedCalendarsView: View {
             }
             publishingSection
             Section("Across your devices") {
-                Text("Use the same Google accounts in Apple Calendar and Notion Calendar. Your calendar provider syncs events; Deep Focus does not sync its private activity or place records automatically. Those still use the evidence export/import flow.")
+                Text("Add the same calendar accounts to Apple Calendar on your Mac and iPhone. Your calendar provider syncs events; Deep Focus does not sync its private activity or place records automatically. Those still use the evidence export/import flow.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             if let error = timeline.errorMessage { Text(error).foregroundStyle(.orange) }
@@ -109,7 +109,7 @@ struct ConnectedCalendarsView: View {
 
     private var publishingSection: some View {
         Section("Publish confirmed activities") {
-            Text("Optionally put this day’s confirmed activity labels and times into a separate calendar. Your account provider can then show them in Notion Calendar. No app names, domains, locations or unknown intervals are published.")
+            Text("Optionally put this day’s confirmed activity labels and times into a separate calendar. They will appear in Apple Calendar through your selected account. No app names, domains, locations or unknown intervals are published.")
                 .font(.caption).foregroundStyle(.secondary)
             Text("Publish from one device for now. Existing published entries are not replaced or deleted when you change an activity; conflicting or overlapping entries require manual review.")
                 .font(.caption).foregroundStyle(.secondary)

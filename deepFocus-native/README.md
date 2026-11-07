@@ -10,7 +10,7 @@ The packaged macOS app is available at `build/DeepFocusNative.zip`. Unzip and op
 
 ## Calendars across accounts
 
-Open **Calendars** on Mac or **Open calendars** on iPhone. Add each Google account to Apple Calendar on that device, choose **Connect calendars**, then select the individual calendars to combine. Each agenda entry keeps its account/calendar label, and optional account aliases distinguish similar names. Continue using the same accounts in Notion Calendar; no direct Notion app or database access is needed. [Setup and limitations](docs/multi-calendar.md).
+Open **Calendars** on Mac or **Open calendars** on iPhone. Add your calendar accounts to Apple Calendar on that device, choose **Connect calendars**, then select the individual calendars to combine. Each agenda entry keeps its account/calendar label, and optional account aliases distinguish similar names. Apple Calendar is the supported setup path for this milestone; use the same accounts on your Mac and iPhone. [Setup and limitations](docs/multi-calendar.md).
 
 Confirmed activity entries now accept multiple activities, such as Walking + Communication, while elapsed time counts once. Optional **Deep Focus — Actuals** publication shows a preview and requires an explicit button press before saving labels/times to your selected calendar account. Published entries are immutable here: edits made in another calendar app cause a conflict rather than being overwritten. Use one device for publication for now; this is not continuous two-way activity synchronization.
 

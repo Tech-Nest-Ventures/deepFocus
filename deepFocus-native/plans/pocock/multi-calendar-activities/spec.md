@@ -3,7 +3,7 @@
 User-approved increment, November 7, 2026. Preserve the frozen charter.
 
 ## Outcome
-One agenda combines selected calendars from multiple Google accounts on Mac and iPhone. Use EventKit and existing system accounts; Notion Calendar sees the same provider calendars. No direct Notion database adapter or Google OAuth backend. Entry annotations allow concurrent categories without inflating wall-clock time.
+One agenda combines selected calendars from multiple Google accounts on Mac and iPhone. Use EventKit and accounts configured in Apple Calendar. Operator follow-up: Apple Calendar alone is the supported client for this milestone; Notion integration is deferred. No separate calendar OAuth backend. Entry annotations allow concurrent categories without inflating wall-clock time.
 
 ## Vertical slices
 1. Concurrent confirmation: normalized categories, exclusive unknown, partial corrections, v3 archives/exchange with exact v1/v2 backups, Mac/phone selection UI.

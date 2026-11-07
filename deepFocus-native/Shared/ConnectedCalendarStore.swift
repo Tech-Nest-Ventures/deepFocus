@@ -182,7 +182,7 @@ final class ConnectedCalendarStore: ObservableObject {
     }
 }
 
-/// Immutable published entries protect edits made later in Notion or another calendar client.
+/// Immutable published entries protect edits made later in Apple Calendar or another calendar client.
 /// The adapter resolves its identifier receipt first, including events moved outside the query day.
 struct ActualsPublicationRecord {
     let calendarID: String

@@ -83,7 +83,7 @@ struct ConnectedCalendarStoreProbe {
         do { try moved.verifyUnchanged(draft: draft, calendarID: "actuals"); preconditionFailure("Moved actuals must not be overwritten") }
         catch ConnectedCalendarError.collision {}
         var edited = unchanged
-        edited.title = "My correction in Notion"
+        edited.title = "My correction in Apple Calendar"
         do { try edited.verifyUnchanged(draft: draft, calendarID: "actuals"); preconditionFailure("User-edited actuals must not be overwritten") }
         catch ConnectedCalendarError.collision {}
         let correctedHalf = ConnectedCalendarPolicy.actualsDraft(start: Date(timeIntervalSince1970: 150),

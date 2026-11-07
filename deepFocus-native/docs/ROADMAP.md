@@ -6,11 +6,11 @@ Approved addition: [quiet desktop session experiment amendment](product-directio
 
 ## November 7 · multi-account calendars and concurrent activities
 
-Built v0.4.0: shared Mac/iPhone agenda reads explicitly selected calendars across multiple system-configured accounts; account aliases and calendar labels preserve context. Notion Calendar interoperability uses the same underlying Google accounts, rather than reading Notion's private app data. Connect is the only permission-request path. Refresh, deselection, disconnect and revocation handle local connected intentions separately from manual imports and other-device evidence.
+Built v0.4.0: shared Mac/iPhone agenda reads explicitly selected calendars across multiple system-configured accounts; account aliases and calendar labels preserve context. Operator update: use Apple Calendar as the supported calendar client; defer Notion-specific integration and validation. Multiple accounts still feed one agenda through EventKit. Connect is the only permission-request path. Refresh, deselection, disconnect and revocation handle local connected intentions separately from manual imports and other-device evidence.
 
 Both apps now support concurrent activity labels, with v1/v2→v3 migration backups and elapsed time counted once. An explicit preview can publish confirmed labels/times into an existing writable `Deep Focus — Actuals` calendar. Publication is immutable and uses local identifier receipts; use one publishing device pending cross-device reconciliation. It never publishes unknown time, desktop domains or place coordinates. Full setup: [multiple calendars](multi-calendar.md).
 
-Remaining gates: live multi-Google-account access, permissions/revocation, recurring edits, provider latency, and seeing explicitly published output in Notion Calendar. Private activity/place records still move through file exchange; automatic device sync remains a separate milestone. The earlier simulator demo ran the companion successfully, but physical iPhone delivery and location behavior remain unverified.
+Remaining gates: live multi-Google-account access, permissions/revocation, recurring edits, provider latency, and seeing explicitly published output in Apple Calendar on both devices. Private activity/place records still move through file exchange; automatic device sync remains a separate milestone. The earlier simulator demo ran the companion successfully, but physical iPhone delivery and location behavior remain unverified.
 
 ## 1 Desktop foundation
 

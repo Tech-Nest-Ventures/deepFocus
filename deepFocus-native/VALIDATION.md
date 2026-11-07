@@ -1,3 +1,7 @@
+# November 7 · Apple Calendar setup simplification
+
+Operator follow-up: Apple Calendar is the supported client for this milestone; Notion-specific setup and live validation are deferred. Updated app copy, setup guide and roadmap. EventKit collection, multi-account selection and publication behavior are unchanged. Mac Release and iPhone Simulator builds passed after the copy changes; frozen charter checksum and whitespace checks passed. No new personal calendar access or live provider-sync test was performed.
+
 # November 7 · multi-calendar and concurrent-activity validation (v0.4.0)
 
 | Check | Result |
@@ -14,7 +18,7 @@
 
 The main app now has the sandbox Calendar entitlement and full-access purpose string. It requests authorization only from Connect; no calendars are selected by default. Native provider events are intentions, not confirmed time. Publication is explicit, whole-second, limited to activity labels/times in an existing writable Actuals calendar, with immutable ownership checks and device-local identifier receipts. Cross-device publication reconciliation and replacement/deletion remain unsupported; publish from one device.
 
-**Not live-verified:** real Calendar authorization/revocation, Google multi-account visibility and provider synchronization, shared/read-only account behavior, recurrence edits arriving through EventKit, publication appearing in Notion Calendar, physical iPhone operation. No personal events were read or written during this increment. Simulator launch is not evidence of Google/Notion integration. No new CPU/memory measurement was performed. Browser code did not change; earlier live/browser test evidence below is historical.
+**Not live-verified:** real Calendar authorization/revocation, Google multi-account visibility and provider synchronization, shared/read-only account behavior, recurrence edits arriving through EventKit, publication appearing in Apple Calendar on both devices, physical iPhone operation. No personal events were read or written during this increment. Simulator launch is not evidence of live calendar-provider integration. No new CPU/memory measurement was performed. Browser code did not change; earlier live/browser test evidence below is historical.
 
 ## Live calendar acceptance checklist
 
@@ -23,7 +27,7 @@ The main app now has the sandbox Calendar entitlement and full-access purpose st
 - Edit/delete/move an occurrence in another client, refresh, and confirm the visible snapshot and gap intentions update.
 - Deselect all, disconnect, revoke access and relaunch; verify no stale local connected intentions remain while imported evidence/confirmations survive.
 - Confirm Walking + Communication on a past interval and verify elapsed time remains single-counted.
-- Create a separate Actuals calendar; review and explicitly publish. Verify identical retry skips, changed/overlapping owned events reject, plans remain untouched, and output appears in Notion Calendar using the same account.
+- Create a separate Actuals calendar; review and explicitly publish. Verify identical retry skips, changed/overlapping owned events reject, plans remain untouched, and output appears in Apple Calendar on both devices using the same account.
 - Finish physical iPhone permissions/background location and manual evidence exchange checks separately.
 
 ## Previous checkpoints
