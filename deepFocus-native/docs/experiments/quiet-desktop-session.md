@@ -1,6 +1,6 @@
 # Quiet desktop session prototype and personal trial
 
-Status: specified, not implemented or trialed. Authority: [November 6, 2026 amendment](../product-direction/2026-11-06-quiet-desktop-session-amendment.md). Build one small desktop prototype and run it for five working days before deciding whether camera prompts deserve further investment. Existing Deep Focus tracking continues independently.
+Status: native prototype implemented November 7; physical pre-trial checks and five working days are still pending. Fixed implementation settings and setup are in [Quiet Desktop Experiment](../../QuietDesktop/README.md). Authority: [November 6, 2026 amendment](../product-direction/2026-11-06-quiet-desktop-session-amendment.md). Build one small desktop prototype and run it for five working days before deciding whether camera prompts deserve further investment. Existing Deep Focus tracking continues independently.
 
 ## Prototype boundaries
 

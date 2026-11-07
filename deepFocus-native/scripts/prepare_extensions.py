@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Build browser-specific manifests around shared source. No Node or packages required."""
 import json
-import shutil
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
@@ -11,12 +10,15 @@ for browser in ("chromium", "safari"):
     for source in (root / "Browser" / "shared").iterdir():
         if source.is_file():
             destination = output / source.name
-            if not destination.exists() or source.read_bytes() != destination.read_bytes():
-                shutil.copyfile(source, destination)
+            content = source.read_text()
+            if browser == "safari" and source.suffix == ".js":
+                content = content.replace("const PACKAGE_BROWSER = null;", 'const PACKAGE_BROWSER = "safari";')
+            if not destination.exists() or content != destination.read_text():
+                destination.write_text(content)
     manifest = {
         "manifest_version": 3,
         "name": "Deep Focus Browser Monitor",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "Show your active public tab in Deep Focus on this Mac. The extension saves no URL history.",
         "permissions": ["tabs", "storage", "alarms"],
         "host_permissions": ["http://127.0.0.1/*"],

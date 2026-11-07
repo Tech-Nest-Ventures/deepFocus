@@ -70,12 +70,12 @@ struct MonitorView: View {
             if showSetup {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Connect your browser").font(.headline)
-                    Text("1. Enable Deep Focus Browser Monitor in your browser.\n2. Copy the pairing code below.\n3. Open the extension, paste the code, and choose Pair.\n4. In Safari, also choose Allow Safari URL access.")
+                    Text("1. Enable Deep Focus Browser Monitor in your browser.\n2. Copy the pairing code below.\n3. Open the extension, select this browser, paste the code, and choose Pair.\n4. In Safari, also choose Allow Safari URL access.")
                     HStack {
                         Button("Copy pairing code", action: model.copyPairingCode)
                         Button("Safari settings", action: model.openSafariSettings)
                     }
-                    Text("Chrome / Edge: load Browser/chromium as an unpacked extension. See the project README for setup.")
+                    Text("Chrome / Edge / Dia / Arc: load Browser/chromium as an unpacked extension. See the project README for setup.")
                         .foregroundStyle(.secondary)
                     if let message = model.setupMessage { Text(message).foregroundStyle(.secondary) }
                     Text("Full URLs are live only. Optional local timeline saves app names and domains. Nothing is uploaded.").foregroundStyle(.secondary)

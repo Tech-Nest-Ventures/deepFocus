@@ -29,19 +29,21 @@ test("URL credentials are stripped before transmission", () => {
 });
 
 async function simulate({ monitoring = true, nativeBrowser = "chrome", window = { id: 1, focused: true },
-  tab = { active: true, url: "https://example.com/work" }, changeDuringQuery = false } = {}) {
+  tab = { active: true, url: "https://example.com/work" }, changeDuringQuery = false, identity = "chrome", changeDuringStatus = false, packagedSource = source, multipleActiveTabs = false, changeIdentityDuringQuery = false } = {}) {
   const sent = [];
   let queried = 0;
   const listener = { addListener() {} };
+  let storageChanged;
   const sandbox = {
     navigator: { userAgent: "Chrome/130" }, URL, AbortSignal, setInterval() {}, setTimeout() {},
     chrome: {
-      storage: { local: { get: async () => ({ pairingToken: "a".repeat(64) }) }, onChanged: listener },
+      storage: { local: { get: async () => ({ pairingToken: "a".repeat(64), browserIdentity: identity }) }, onChanged: { addListener(handler) { storageChanged = handler; } } },
       tabs: {
         query: async () => {
           queried++;
           if (changeDuringQuery) vm.runInContext("revision++", sandbox);
-          return [tab];
+          if (changeIdentityDuringQuery) storageChanged({ browserIdentity: { newValue: "dia" } }, "local");
+          return multipleActiveTabs ? [tab, { ...tab, url: "https://other.example" }] : [tab];
         }, onActivated: listener, onUpdated: listener, onRemoved: listener,
       },
       windows: { getLastFocused: async () => window, onFocusChanged: listener, onRemoved: listener },
@@ -49,13 +51,16 @@ async function simulate({ monitoring = true, nativeBrowser = "chrome", window = 
       alarms: { create() {}, onAlarm: listener },
     },
     fetch: async (url, options) => {
-      if (url.endsWith("/v1/status")) return { ok: true, json: async () => ({ epoch: "epoch", monitoring, browser: nativeBrowser }) };
+      if (url.endsWith("/v1/status")) {
+        if (changeDuringStatus) storageChanged({ browserIdentity: { newValue: "dia" } }, "local");
+        return { ok: true, json: async () => ({ epoch: "epoch", monitoring, browser: nativeBrowser }) };
+      }
       sent.push(JSON.parse(options.body));
       return { ok: true, json: async () => ({}) };
     },
   };
   vm.createContext(sandbox);
-  vm.runInContext(source, sandbox);
+  vm.runInContext(packagedSource, sandbox);
   for (let i = 0; i < 10; i++) await new Promise(setImmediate);
   return { sent, queried };
 }
@@ -83,4 +88,39 @@ test("a foreground public tab sends only current observation fields", async () =
   assert.equal(result.sent[0].epoch, "epoch");
   assert.equal("title" in result.sent[0], false);
   assert.equal("tabId" in result.sent[0], false);
+});
+
+test("Chromium requires an explicit browser choice, including legacy paired installations", async () => {
+  for (const identity of [null, "", "safari", "unknown"]) {
+    assert.deepEqual(await simulate({ identity }), { sent: [], queried: 0 });
+  }
+  for (const identity of ["chrome", "edge", "dia", "arc"]) {
+    const result = await simulate({ identity, nativeBrowser: identity });
+    assert.equal(result.sent.length, 1);
+    assert.equal(result.sent[0].browser, identity);
+    assert.equal((await simulate({ identity, nativeBrowser: identity === "chrome" ? "dia" : "chrome" })).queried, 0);
+  }
+});
+
+test("changing browser identity during status lookup stops URL collection", async () => {
+  assert.deepEqual(await simulate({ changeDuringStatus: true }), { sent: [], queried: 0 });
+});
+
+test("Safari package identity is fixed even when the user agent resembles Chromium", async () => {
+  const packagedSource = fs.readFileSync(path.join(__dirname, "../Browser/safari/background.js"), "utf8");
+  const result = await simulate({ packagedSource, nativeBrowser: "safari", identity: "dia" });
+  assert.equal(result.sent.length, 1);
+  assert.equal(result.sent[0].browser, "safari");
+  assert.equal((await simulate({ packagedSource, nativeBrowser: "chrome" })).queried, 0);
+});
+
+test("ambiguous active tabs clear the URL instead of claiming a focused split-view pane", async () => {
+  const result = await simulate({ multipleActiveTabs: true });
+  assert.equal(result.sent.length, 1);
+  assert.equal(result.sent[0].url, null);
+});
+
+test("a browser identity change during tab lookup discards the old browser observation", async () => {
+  const result = await simulate({ changeIdentityDuringQuery: true });
+  assert.equal(result.sent.length, 0);
 });

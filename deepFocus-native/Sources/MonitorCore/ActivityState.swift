@@ -1,13 +1,15 @@
 import Foundation
 
 enum SupportedBrowser: String, Codable, CaseIterable {
-    case safari, chrome, edge
+    case safari, chrome, edge, dia, arc
 
     var bundleID: String {
         switch self {
         case .safari: return "com.apple.Safari"
         case .chrome: return "com.google.Chrome"
         case .edge: return "com.microsoft.edgemac"
+        case .dia: return "company.thebrowser.dia"
+        case .arc: return "company.thebrowser.Browser"
         }
     }
 

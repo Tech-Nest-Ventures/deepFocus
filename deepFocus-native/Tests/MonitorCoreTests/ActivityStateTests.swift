@@ -90,6 +90,22 @@ final class ActivityStateTests: XCTestCase {
         XCTAssertNil(SupportedBrowser(bundleID: "org.mozilla.firefox"))
     }
 
+    func testDiaAndArcHaveDistinctForegroundIdentities() {
+        for (bundleID, expected) in [("company.thebrowser.dia", "dia"), ("company.thebrowser.Browser", "arc")] {
+            var state = ActivityState()
+            state.setForeground(bundleID)
+            XCTAssertEqual(state.browser?.rawValue, expected)
+            XCTAssertFalse(state.receive(message(state, browser: .chrome), now: now))
+            guard let browser = state.browser else { continue }
+            XCTAssertTrue(state.receive(message(state, browser: browser), now: now))
+            let delayed = message(state, browser: browser, sequence: 2)
+            state.setForeground(SupportedBrowser.chrome.bundleID)
+            XCTAssertNil(state.url)
+            XCTAssertFalse(state.receive(delayed, now: now))
+            XCTAssertTrue(state.receive(message(state), now: now))
+        }
+    }
+
     func testClockMovingBackwardsInvalidatesObservation() {
         var state = ActivityState()
         state.setForeground(SupportedBrowser.chrome.bundleID)

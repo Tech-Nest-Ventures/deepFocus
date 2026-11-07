@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Deep Focus Browser Monitor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Show your active public tab in Deep Focus on this Mac. The extension saves no URL history.",
   "permissions": [
     "tabs",

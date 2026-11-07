@@ -3,7 +3,7 @@ body { width: 300px; margin: 0; padding: 20px; }
 h1 { font-size: 19px; margin: 0 0 10px; }
 p, small { line-height: 1.5; }
 label { display: block; margin-bottom: 6px; }
-input { box-sizing: border-box; width: 100%; padding: 8px; margin-bottom: 10px; }
+input, select { box-sizing: border-box; width: 100%; padding: 8px; margin-bottom: 10px; }
 button { padding: 7px 12px; cursor: pointer; }
 small { display: block; opacity: .75; }
 #status { min-height: 20px; }

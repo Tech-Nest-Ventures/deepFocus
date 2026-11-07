@@ -1,3 +1,29 @@
+# November 7 parallel implementation validation
+
+This checkpoint concerns native v0.3.0 source and extension v0.2.0. Prior November 6 live results below remain historical evidence; they do not establish live verification of these new changes.
+
+| Check | Result |
+|---|---|
+| Swift core suite | 66 tests passed, zero failures |
+| Shared extension + popup tests | 15 tests passed, zero failures |
+| macOS Release | Universal arm64/x86_64 build passed; strict deep code-sign verification passed |
+| QuietDesktopExperiment Release | Separate sandboxed app build passed; strict deep code-sign verification passed |
+| iOS companion | Generic iOS Simulator destination build passed; no device/runtime UI exercised |
+| Actual TimelineStore probe | Write/reopen, permissions, v1 byte-preserving backup→v2 migration, exchange, invalid calendar diagnostics/atomic preservation, corrupt/future archive protection passed |
+| Agent event writer | Explicit event write, exact retry, conflict preservation, owner-only permissions passed |
+| Frozen charter | Checksum verified unchanged |
+| Independent review | Standards and spec passes completed; runtime overflow, lost prompt-presence feedback, and calendar diagnostics corrected |
+| Mac app bundle | 2,532 KiB allocated by `du -sk` (~2.47 MiB), universal Release |
+| Separate camera app bundle | 2,116 KiB allocated (~2.07 MiB), Release |
+
+The signed core app entitlements remain sandbox + local network server + user-selected file access; no camera entitlement. Only the separate experiment has camera access capability. Builds use ad-hoc local signing, not App Store distribution signing.
+
+New behavior is automated-test/build verified: explicit Dia/Arc identity and setup migration; composed suspension reasons; calendar update/cancellation/recurrence/DST handling; phone visit completion and stopped-generation rejection; agent event identity, atomic conflict rejection and unavailable invalid runtimes; camera state/calibration/prompt policies. A regression test reproduced the extreme-duration overflow before its fix. Camera UI action handlers were typechecked and reviewed; real prompt interaction remains pending.
+
+**Not performed in this increment:** Dia/Arc install/pairing or split-view checks; Safari enablement; physical lock/sleep/wake and input-idle checks; new sustained CPU/memory/archive-growth benchmark; physical iPhone permissions/background delivery; camera authorization, actual resource release, absence/occlusion accuracy, prompt delivery; five-working-day trial. No new browser/camera permissions were granted. Dia/Arc access confirmation is pending. Existing Chrome/Edge extensions need Reload → choose browser → Pair after upgrading.
+
+## Earlier evidence
+
 # Validation — 2026-11-06
 
 ## Version 0.2 development status

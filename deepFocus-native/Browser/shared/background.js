@@ -1,8 +1,9 @@
 /* Live observations only: never persist URLs, titles, tab IDs, or browsing history. */
 const api = globalThis.browser ?? globalThis.chrome;
 const ENDPOINT = "http://127.0.0.1:17322";
-const browserName = /Edg\//.test(navigator.userAgent) ? "edge"
-  : /Chrome\//.test(navigator.userAgent) ? "chrome" : "safari";
+// Safari's generated package fixes this value; Chromium requires explicit setup.
+const PACKAGE_BROWSER = null;
+const CHROMIUM_BROWSERS = ["chrome", "edge", "dia", "arc"];
 let revision = 0;
 let inFlight = false;
 let pending = false;
@@ -47,20 +48,24 @@ async function report() {
   pending = false;
   const startedRevision = revision;
   try {
-    const { pairingToken } = await api.storage.local.get("pairingToken");
+    const { pairingToken, browserIdentity } = await api.storage.local.get(["pairingToken", "browserIdentity"]);
+    const browserName = PACKAGE_BROWSER ?? (CHROMIUM_BROWSERS.includes(browserIdentity) ? browserIdentity : null);
+    if (!browserName || revision !== startedRevision) return;
     if (!/^[a-f0-9]{64}$/.test(pairingToken ?? "")) return;
     // Ask the native app first: don't collect a URL while paused or in a background browser.
     const status = await request("/v1/status", pairingToken);
-    if (!status.monitoring || status.browser !== browserName) return;
+    if (revision !== startedRevision || !status.monitoring || status.browser !== browserName) return;
     if (epoch !== status.epoch) { epoch = status.epoch; sequence = 0; }
     const currentWindow = await api.windows.getLastFocused({ populate: false, windowTypes: ["normal"] });
+    if (revision !== startedRevision) return;
     const observedAt = Date.now();
     const tabs = currentWindow.focused && !currentWindow.incognito
       ? await api.tabs.query({ active: true, windowId: currentWindow.id }) : [];
     // Recheck window focus after async tab lookup to avoid reporting a window we just left.
     const confirmedWindow = await api.windows.getLastFocused({ populate: false, windowTypes: ["normal"] });
     if (revision !== startedRevision || confirmedWindow.id !== currentWindow.id) { pending = true; return; }
-    const snapshot = observation(confirmedWindow, tabs[0]);
+    // A split view must never be resolved by arbitrarily taking the first active tab.
+    const snapshot = observation(confirmedWindow, tabs.length === 1 ? tabs[0] : null);
     await request("/v1/event", pairingToken, {
       browser: browserName, epoch, sequence: sequence++, observedAt, ...snapshot,
     });
@@ -81,7 +86,12 @@ if (api) {
   api.tabs.onRemoved.addListener(changed);
   api.windows.onFocusChanged.addListener(changed);
   api.windows.onRemoved.addListener(changed);
-  api.storage.onChanged.addListener(changed);
+  api.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !(changes.pairingToken || changes.browserIdentity)) return;
+    epoch = null;
+    sequence = 0;
+    changed();
+  });
   api.runtime.onStartup.addListener(changed);
   api.runtime.onInstalled.addListener(changed);
   // Real monitoring heartbeats; workers may be suspended by browsers. Native state expires safely.

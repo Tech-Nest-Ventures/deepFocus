@@ -10,6 +10,17 @@
   <h1>Deep Focus</h1>
   <p>Copy the pairing code from the Mac app’s Browser setup, then paste it here.</p>
   <form id="pairing">
+    <div id="browser-choice">
+      <label for="browser-identity">This browser</label>
+      <select id="browser-identity" required>
+        <option value="">Choose this browser…</option>
+        <option value="chrome">Chrome</option>
+        <option value="edge">Edge</option>
+        <option value="dia">Dia</option>
+        <option value="arc">Arc</option>
+      </select>
+      <p>Select the browser where you installed this extension. Pair each browser separately.</p>
+    </div>
     <label for="token">Pairing code</label>
     <input id="token" type="password" autocomplete="off" spellcheck="false" required minlength="64" maxlength="64">
     <button type="submit">Pair</button>

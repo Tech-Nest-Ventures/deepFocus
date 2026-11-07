@@ -15,7 +15,7 @@ final class MonitorModel: ObservableObject {
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var timer: Timer?
     private var token: String?
-    private var suspensionReasons = Set<String>()
+    private var suspension = MonitoringSuspension()
 
     var statusText: String {
         if activity.paused { return "Paused" }
@@ -53,17 +53,17 @@ final class MonitorModel: ObservableObject {
         }
         let workspace = NSWorkspace.shared.notificationCenter
         observe(workspace, NSWorkspace.didActivateApplicationNotification) { [weak self] in self?.refreshForeground() }
-        observe(workspace, NSWorkspace.willSleepNotification) { [weak self] in self?.suspend("sleep", true) }
-        observe(workspace, NSWorkspace.didWakeNotification) { [weak self] in self?.suspend("sleep", false) }
-        observe(workspace, NSWorkspace.screensDidSleepNotification) { [weak self] in self?.suspend("display", true) }
-        observe(workspace, NSWorkspace.screensDidWakeNotification) { [weak self] in self?.suspend("display", false) }
-        observe(workspace, NSWorkspace.sessionDidResignActiveNotification) { [weak self] in self?.suspend("session", true) }
-        observe(workspace, NSWorkspace.sessionDidBecomeActiveNotification) { [weak self] in self?.suspend("session", false) }
+        observe(workspace, NSWorkspace.willSleepNotification) { [weak self] in self?.suspend(.sleep, true) }
+        observe(workspace, NSWorkspace.didWakeNotification) { [weak self] in self?.suspend(.sleep, false) }
+        observe(workspace, NSWorkspace.screensDidSleepNotification) { [weak self] in self?.suspend(.display, true) }
+        observe(workspace, NSWorkspace.screensDidWakeNotification) { [weak self] in self?.suspend(.display, false) }
+        observe(workspace, NSWorkspace.sessionDidResignActiveNotification) { [weak self] in self?.suspend(.session, true) }
+        observe(workspace, NSWorkspace.sessionDidBecomeActiveNotification) { [weak self] in self?.suspend(.session, false) }
         observe(NotificationCenter.default, NSApplication.willTerminateNotification) { [weak self] in self?.timeline.save() }
         // Supplement workspace session/display notifications for an immediate screen-lock clear.
         let distributed = DistributedNotificationCenter.default()
-        observe(distributed, .init("com.apple.screenIsLocked")) { [weak self] in self?.suspend("lock", true) }
-        observe(distributed, .init("com.apple.screenIsUnlocked")) { [weak self] in self?.suspend("lock", false) }
+        observe(distributed, .init("com.apple.screenIsLocked")) { [weak self] in self?.suspend(.lock, true) }
+        observe(distributed, .init("com.apple.screenIsUnlocked")) { [weak self] in self?.suspend(.lock, false) }
         refreshForeground()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -84,11 +84,9 @@ final class MonitorModel: ObservableObject {
         observers.append((center, center.addObserver(forName: name, object: nil, queue: .main) { _ in action() }))
     }
 
-    private func suspend(_ reason: String, _ value: Bool) {
+    private func suspend(_ reason: MonitoringSuspension.Reason, _ value: Bool) {
         sampleTimeline()
-        if value { suspensionReasons.insert(reason) } else { suspensionReasons.remove(reason) }
-        activity.setSuspended(!suspensionReasons.isEmpty)
-        activity.setForeground(nil)
+        guard suspension.set(reason, active: value, activity: &activity) else { return }
         refreshForeground()
         timeline.save()
     }

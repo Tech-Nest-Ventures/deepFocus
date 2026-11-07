@@ -39,7 +39,7 @@ struct ActivityAnnotation: Codable, Identifiable {
 }
 
 /// Optional collectors contribute context, never a confirmed purpose or brain-state score.
-struct ContextEvidence: Codable, Identifiable {
+struct ContextEvidence: Codable, Identifiable, Equatable {
     enum Source: String, Codable { case calendar, phoneVisit, agentTask, camera, eeg }
     let id: UUID
     let deviceID: UUID
@@ -51,6 +51,19 @@ struct ContextEvidence: Codable, Identifiable {
     let coarseLatitude: Double?
     let coarseLongitude: Double?
     let uncertaintyMeters: Double?
+    var calendar: CalendarEvidenceMetadata? = nil
+    var agent: AgentEventMetadata? = nil
+
+    var isValid: Bool {
+        start.timeIntervalSince1970.isFinite && recordedAt.timeIntervalSince1970.isFinite
+            && (end.map { $0.timeIntervalSince1970.isFinite && $0 >= start } ?? true)
+            && label.count <= 120
+            && (coarseLatitude.map { $0.isFinite && (-90...90).contains($0) } ?? true)
+            && (coarseLongitude.map { $0.isFinite && (-180...180).contains($0) } ?? true)
+            && (uncertaintyMeters.map { $0.isFinite && $0 >= 0 } ?? true)
+            && (calendar.map { source == .calendar && $0.isValid } ?? true)
+            && (agent.map { source == .agentTask && $0.isValid } ?? true)
+    }
 }
 
 struct TimelineSlice: Identifiable {
@@ -68,7 +81,7 @@ struct TimelineSlice: Identifiable {
 enum TimelineError: Error { case invalidArchive, invalidInterval, incompatibleVersion }
 
 struct TimelineLedger: Codable {
-    var schemaVersion = 1
+    var schemaVersion = 2
     var deviceID = UUID()
     var startedAt: Date
     var intervals: [ActivityInterval] = []
@@ -128,15 +141,24 @@ struct TimelineLedger: Codable {
 
     /// Calendar/place/agent evidence never becomes human time by insertion.
     mutating func addEvidence(_ observation: ContextEvidence) throws {
-        guard observation.start.timeIntervalSince1970.isFinite,
-              observation.end.map({ $0 >= observation.start }) ?? true,
-              observation.label.count <= 120 else { throw TimelineError.invalidInterval }
+        guard observation.isValid else { throw TimelineError.invalidInterval }
+        if let calendar = observation.calendar,
+           let index = evidence.firstIndex(where: { $0.calendar?.identity == calendar.identity }) {
+            if calendar.updatedAt > evidence[index].calendar!.updatedAt { evidence[index] = observation }
+            return
+        }
+        if let agent = observation.agent,
+           let existing = evidence.first(where: { $0.agent?.identity == agent.identity && $0.deviceID == observation.deviceID }) {
+            guard existing.agent == observation.agent, existing.start == observation.start,
+                  existing.end == observation.end, existing.label == observation.label else { throw TimelineError.invalidArchive }
+            return
+        }
         guard !evidence.contains(where: { $0.id == observation.id }) else { return }
         evidence.append(observation)
     }
 
     func validate() throws {
-        guard schemaVersion == 1 else { throw TimelineError.incompatibleVersion }
+        guard (1...2).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
         guard Set(intervals.map(\.id)).count == intervals.count,
               Set(annotations.map(\.id)).count == annotations.count,
               Set(evidence.map(\.id)).count == evidence.count,
@@ -144,18 +166,13 @@ struct TimelineLedger: Codable {
             && $0.context.appName.count <= 255
             && ($0.context.websiteHost.map({ !$0.contains("/") && !$0.contains("@") && $0.count <= 255 }) ?? true) }),
               annotations.allSatisfy({ $0.start < $0.end }),
-              evidence.allSatisfy({ observation in
-                  (observation.end.map { $0 >= observation.start } ?? true) && observation.label.count <= 120
-                  && (observation.coarseLatitude.map { $0.isFinite && (-90...90).contains($0) } ?? true)
-                  && (observation.coarseLongitude.map { $0.isFinite && (-180...180).contains($0) } ?? true)
-                  && (observation.uncertaintyMeters.map { $0.isFinite && $0 >= 0 } ?? true)
-              }) else { throw TimelineError.invalidArchive }
+              evidence.allSatisfy(\.isValid) else { throw TimelineError.invalidArchive }
     }
 }
 
 /// User-mediated file exchange. Desktop observations stay device-local; evidence does not imply attention.
 struct TimelineExchange: Codable {
-    var schemaVersion = 1
+    var schemaVersion = 2
     let annotations: [ActivityAnnotation]
     let evidence: [ContextEvidence]
     var quietUntil: Date? = nil
@@ -164,7 +181,14 @@ struct TimelineExchange: Codable {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.outputFormatting = [.sortedKeys]
-        return try encoder.encode(self)
+        guard (1...2).contains(schemaVersion) else { throw TimelineError.incompatibleVersion }
+        var validation = TimelineLedger()
+        validation.annotations = annotations
+        validation.evidence = evidence
+        try validation.validate()
+        var current = self
+        current.schemaVersion = 2
+        return try encoder.encode(current)
     }
 
     static func decode(_ data: Data) throws -> TimelineExchange {
@@ -172,7 +196,7 @@ struct TimelineExchange: Codable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .millisecondsSince1970
         let exchange = try decoder.decode(Self.self, from: data)
-        guard exchange.schemaVersion == 1 else { throw TimelineError.incompatibleVersion }
+        guard (1...2).contains(exchange.schemaVersion) else { throw TimelineError.incompatibleVersion }
         var validation = TimelineLedger()
         validation.annotations = exchange.annotations
         validation.evidence = exchange.evidence
@@ -180,11 +204,20 @@ struct TimelineExchange: Codable {
         return exchange
     }
 
-    func merge(into ledger: inout TimelineLedger) {
+    func merge(into ledger: inout TimelineLedger) throws {
+        var updated = ledger
+        try mergeValidated(into: &updated)
+        ledger = updated
+    }
+
+    private func mergeValidated(into ledger: inout TimelineLedger) throws {
         let knownAnnotations = Set(ledger.annotations.map(\.id))
-        let knownEvidence = Set(ledger.evidence.map(\.id))
         ledger.annotations.append(contentsOf: annotations.filter { !knownAnnotations.contains($0.id) })
-        ledger.evidence.append(contentsOf: evidence.filter { !knownEvidence.contains($0.id) })
+        for observation in evidence {
+            if observation.source == .phoneVisit, observation.coarseLatitude != nil, observation.coarseLongitude != nil {
+                try ledger.recordPlaceVisit(observation)
+            } else { try ledger.addEvidence(observation) }
+        }
         ledger.annotations.sort {
             $0.recordedAt == $1.recordedAt ? $0.id.uuidString < $1.id.uuidString : $0.recordedAt < $1.recordedAt
         }
@@ -215,7 +248,9 @@ enum TimelineArchive {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.outputFormatting = [.sortedKeys]
-        return try encoder.encode(ledger)
+        var current = ledger
+        current.schemaVersion = 2
+        return try encoder.encode(current)
     }
 
     static func decode(_ data: Data) throws -> TimelineLedger {

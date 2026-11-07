@@ -18,7 +18,21 @@ final class TimelineStore: ObservableObject {
         file = fileOverride ?? directory?.appendingPathComponent("timeline-v1.json")
         ledger = TimelineLedger()
         if let file, FileManager.default.fileExists(atPath: file.path) {
-            do { ledger = try TimelineArchive.decode(Data(contentsOf: file)) }
+            do {
+                let original = try Data(contentsOf: file)
+                ledger = try TimelineArchive.decode(original)
+                if ledger.schemaVersion == 1 {
+                    // Preserve the original bytes before any v2 write; failure disables writes.
+                    let backup = file.appendingPathExtension("v1-backup")
+                    if !FileManager.default.fileExists(atPath: backup.path) {
+                        try FileManager.default.copyItem(at: file, to: backup)
+                        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backup.path)
+                    } else if try Data(contentsOf: backup) != original {
+                        throw TimelineError.invalidArchive
+                    }
+                    ledger.schemaVersion = 2
+                }
+            }
             catch {
                 writable = false
                 recordingEnabled = false
@@ -62,6 +76,12 @@ final class TimelineStore: ObservableObject {
         catch { errorMessage = "The observation could not be recorded." }
     }
 
+    func recordPlaceVisit(_ evidence: ContextEvidence) {
+        guard writable else { return }
+        do { try ledger.recordPlaceVisit(evidence); save() }
+        catch { errorMessage = "The place observation could not be recorded." }
+    }
+
     func quiet(for duration: TimeInterval) {
         ledger.quietUntil = Date().addingTimeInterval(duration)
         save()
@@ -73,13 +93,36 @@ final class TimelineStore: ObservableObject {
         guard writable else { return }
         do {
             let exchange = try TimelineExchange.decode(data)
-            exchange.merge(into: &ledger)
+            try exchange.merge(into: &ledger)
             save()
         } catch { errorMessage = "This file is not a supported Deep Focus evidence export. Existing records were preserved." }
     }
 
     func exportExchange() throws -> Data {
         try TimelineExchange(annotations: ledger.annotations, evidence: ledger.evidence, quietUntil: ledger.quietUntil).encode()
+    }
+
+    func importAgentEvents(_ data: Data) {
+        guard writable else { return }
+        do {
+            var updated = ledger
+            for event in try AgentEventFile.decode(data) { try updated.addEvidence(event) }
+            ledger = updated
+            save()
+        } catch { errorMessage = "This agent event file is invalid, conflicting, or unsupported. Existing records were preserved." }
+    }
+
+    func importCalendar(_ data: Data) {
+        guard writable else { return }
+        do {
+            let evidence = try CalendarImport.decode(data, deviceID: ledger.deviceID, existingEvidence: ledger.evidence)
+            var updated = ledger
+            for item in evidence { try updated.addEvidence(item) }
+            ledger = updated
+            save()
+        } catch let error as CalendarImport.ImportError {
+            errorMessage = "\(error.localizedDescription) Existing records were preserved."
+        } catch { errorMessage = "This calendar snapshot is invalid or unsupported. Existing records were preserved." }
     }
 
     func save() {

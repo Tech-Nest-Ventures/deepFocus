@@ -112,8 +112,8 @@ final class TimelineTests: XCTestCase {
         let exchange = TimelineExchange(annotations: phone.annotations, evidence: [], quietUntil: date(5000))
         var desktop = TimelineLedger(startedAt: date(100))
         let decoded = try TimelineExchange.decode(exchange.encode())
-        decoded.merge(into: &desktop)
-        decoded.merge(into: &desktop)
+        try decoded.merge(into: &desktop)
+        try decoded.merge(into: &desktop)
         XCTAssertEqual(desktop.annotations.count, 1)
         XCTAssertEqual(desktop.annotations[0].deviceID, phone.deviceID)
         XCTAssertEqual(desktop.quietUntil, date(5000))
@@ -124,7 +124,7 @@ final class TimelineTests: XCTestCase {
         var ledger = TimelineLedger(startedAt: base)
         XCTAssertThrowsError(try ledger.annotate(start: date(60), end: base, category: .reading, now: date(100)))
         XCTAssertThrowsError(try ledger.annotate(start: base, end: date(200), category: .reading, now: date(100)))
-        ledger.schemaVersion = 2
+        ledger.schemaVersion = 99
         XCTAssertThrowsError(try TimelineArchive.encode(ledger))
         XCTAssertThrowsError(try TimelineExchange.decode(Data("{}".utf8)))
         XCTAssertThrowsError(try TimelineArchive.decode(Data("broken".utf8)))

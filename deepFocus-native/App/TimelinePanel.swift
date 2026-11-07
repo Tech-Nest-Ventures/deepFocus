@@ -5,6 +5,8 @@ struct TimelinePanel: View {
     @ObservedObject var store: TimelineStore
     @ObservedObject var notifications: GapNotificationController
     @State private var importing = false
+    private enum ImportKind { case evidence, agents, calendar }
+    @State private var importKind: ImportKind = .evidence
     @State private var exporting = false
     @State private var document = EvidenceDocument()
 
@@ -38,12 +40,15 @@ struct TimelinePanel: View {
                         Text("Help fill a gap").font(.headline)
                         Text("\(candidate.start.formatted(date: .omitted, time: .shortened))–\(candidate.end.formatted(date: .omitted, time: .shortened)): what happened?")
                             .font(.caption)
-                        if let evidence = store.ledger.evidence.last(where: {
-                            [.calendar, .phoneVisit].contains($0.source) && $0.start < candidate.end
-                                && ($0.end.map { $0 > candidate.start } ?? false)
-                        }) {
-                            Text("Context: \(evidence.label) (\(evidence.source.rawValue)); activity unconfirmed")
+                        ForEach(CalendarImport.suggestions(in: DateInterval(start: candidate.start, end: candidate.end),
+                                                           evidence: store.ledger.evidence).prefix(3)) { evidence in
+                            Text("Calendar intention: \(evidence.label); activity unconfirmed")
                                 .font(.caption2).foregroundStyle(.secondary)
+                        }
+                        if let visit = store.ledger.evidence.last(where: {
+                            $0.source == .phoneVisit && $0.start < candidate.end && ($0.end.map { $0 > candidate.start } ?? false)
+                        }) {
+                            Text("Place context: \(visit.label); activity unconfirmed").font(.caption2).foregroundStyle(.secondary)
                         }
                         HStack {
                             categoryMenu(candidate, title: "Confirm activity")
@@ -74,15 +79,12 @@ struct TimelinePanel: View {
                             }
                         }
                     }
-                if !store.ledger.evidence.isEmpty {
-                    Text("Context evidence").font(.headline)
-                    ForEach(store.ledger.evidence.filter { $0.start < day.end && ($0.end ?? $0.start) >= day.start }.suffix(10).reversed()) { evidence in
-                        Text("\(evidence.label) · \(evidence.source.rawValue) · \(evidence.start.formatted(date: .omitted, time: .shortened))")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                HStack {
-                    Button("Import evidence") { importing = true }
+                contextSection(day: day)
+                agentSection
+                VStack(alignment: .leading, spacing: 6) {
+                    Button("Import evidence") { importKind = .evidence; importing = true }
+                    Button("Import calendar snapshot") { importKind = .calendar; importing = true }
+                    Button("Import agent events") { importKind = .agents; importing = true }
                     Button("Export tags / evidence") {
                         do { document = EvidenceDocument(data: try store.exportExchange()); exporting = true }
                         catch { store.errorMessage = "Could not prepare an evidence export." }
@@ -96,12 +98,47 @@ struct TimelinePanel: View {
                 let url = try result.get()
                 let access = url.startAccessingSecurityScopedResource()
                 defer { if access { url.stopAccessingSecurityScopedResource() } }
-                store.importExchange(try Data(contentsOf: url, options: .mappedIfSafe))
+                let data = try Data(contentsOf: url, options: .mappedIfSafe)
+                switch importKind {
+                case .evidence: store.importExchange(data)
+                case .agents: store.importAgentEvents(data)
+                case .calendar: store.importCalendar(data)
+                }
             } catch { store.errorMessage = "No evidence file was imported." }
         }
         .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "DeepFocusEvidence") { result in
             if case .failure = result { store.errorMessage = "The evidence export was not saved." }
         }
+
+    }
+
+    @ViewBuilder private var agentSection: some View {
+        let runs = AgentRunSummary.summaries(in: store.ledger.evidence)
+                if !runs.isEmpty {
+                    Text("Agent execution").font(.headline)
+                    Text("Machine runtime is separate from your observed time. Acceptance is an imported event, not proof of quality.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                    ForEach(runs.prefix(10)) { run in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(run.label) · \(run.runID)").font(.caption)
+                            Text("\(run.runtime.map { $0.formatted(.number.precision(.fractionLength(0))) + "s machine runtime" } ?? "Runtime unavailable: incomplete or conflicting events")\(run.accepted ? " · accepted" : run.reviewed ? " · reviewed" : "")")
+                                .font(.caption2).foregroundStyle(.secondary)
+                            if let reference = run.resultReference {
+                                Text(reference).font(.caption2).lineLimit(2).textSelection(.enabled)
+                            }
+                        }
+                    }
+                }
+    }
+
+    @ViewBuilder private func contextSection(day: DateInterval) -> some View {
+                if !store.ledger.evidence.isEmpty {
+                    Text("Context evidence").font(.headline)
+                    ForEach(store.ledger.evidence.filter { $0.start < day.end && ($0.end ?? $0.start) >= day.start }.suffix(10).reversed()) { evidence in
+                        Text("\(evidence.label) · \(evidence.source.rawValue)\(evidence.calendar?.cancelled == true ? " cancelled" : "")\(evidence.calendar?.isAllDay == true ? " all-day intention" : "") · \(evidence.start.formatted(date: .omitted, time: .shortened))")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
     }
 
     private func annotate(_ slice: TimelineSlice, _ category: ActivityCategory) {

@@ -18,7 +18,7 @@ Approved addition: [quiet desktop session experiment amendment](product-directio
 
 **Built:** detection of completed unobserved intervals and intervals without recent input (15-minute minimum), explicit confirm/correct/leave-unknown actions, quiet periods, and opt-in macOS local notifications. Notifications contain no activity details. Reminders are capped at two per local calendar day, at least two hours apart; no reminder while paused/suspended, quiet, or history is disabled. Review candidates are available in the timeline even if OS notification permission is absent.
 
-**Next:** read-only calendar integration. Import calendar events as intentions with source IDs and intended intervals; never count them as observed or confirmed work. Match overlapping intentions to review candidates and offer suggestions with explicit evidence. Connect Google's existing calendar snapshots first, then the connected API when requested; no event writes are needed. Actual notification delivery still requires an unlocked Mac and explicit user enablement.
+**November 7 increment:** explicit local calendar snapshot import now preserves source/calendar/event/occurrence identity, provider updates, cancellation tombstones, timezone and all-day semantics. Timed overlapping intentions appear during gap review, without creating confirmations or durations. Malformed and ambiguous timestamps fail with row-level diagnostics. Remote API connection and actual notification delivery remain unverified.
 
 ## 3 Minimal mobile companion
 
@@ -32,13 +32,22 @@ Approved addition: [quiet desktop session experiment amendment](product-directio
 
 **Built:** provenance-bearing context-evidence and file-exchange types that can represent calendar intentions, phone visits, agent-task intervals, camera observations, and EEG observations. Tests show inserting any of these does not create human time or a confirmed activity. No physiological collector, classifier, or remote inference call has been added.
 
-**Planned contract:** agent start/finish/review/acceptance events carry a task ID, device/source ID, timestamp, and result reference. Runtime belongs to a machine-execution axis; a person's planning and approval remain independently observed/confirmed. Compare accepted output, rework, elapsed task time, and human effort before selecting an aggregate metric. The current generic evidence envelope is an expansion point, not an implemented agent connector.
+**November 7 implementation:** local JSON import and a standard-library event writer now accept agent start/finish/review/acceptance events carrying a task ID, device/source ID, timestamp, and result reference. Runtime belongs to a machine-execution axis; a person's planning and approval remain independently observed/confirmed. Compare accepted output, rework, elapsed task time, and human effort before selecting an aggregate metric. Typed v2 evidence preserves event identity through file exchange. Exact repeats are idempotent, conflicting imports are rejected atomically, and incomplete/ambiguous runs show unavailable runtime. Platform-specific Codex/Claude hooks remain deferred.
 
 **Research gate:** compare each optional signal against a baseline using task type, time of day, and a brief self-reported energy/effort rating. Camera work starts with observable presence/head/gaze features processed locally; mental-state labels remain hypotheses. EEG requires a validated acquisition setup and artifact handling. No research hardware purchase or sensor collection is required to deliver the first three directions.
 
-**Next camera experiment — specified, not built:** one small [quiet desktop session prototype](experiments/quiet-desktop-session.md), followed by five working days of personal use. Explicit present/away/uncertain/stopped states, exclusion of uncertain frames from scoring, a repaired Stop control, removal of the misleading forward-head claim, confidence-checked calibration with geometry-checked reuse, and sustained-deviation prompts with snooze and a rolling maximum of two per hour. This is separate from the gap-reminder policy and remains optional.
+**November 7 implementation — physical validation pending:** the separate optional [Quiet Desktop Experiment](../QuietDesktop/README.md) target implements the [quiet desktop session prototype](experiments/quiet-desktop-session.md). Five working days of personal use have not begun. It has explicit present/away/uncertain/stopped states, uncertainty exclusion, generation-protected Stop, neutral position-change language, confidence/geometry calibration, snooze and a persisted rolling maximum of two prompts per hour. The separate older PosturePilot app was not modified. Physical camera release and detection behavior are still gates. This is separate from the gap-reminder policy and remains optional.
 
 **Trial gate:** record setup time, discomfort, useful versus mistimed prompts, and voluntary reuse. Suggested continuation criteria are zero away prompts, at least 80% useful prompts, and wanting to continue after day five. These are product criteria, not demonstrated health outcomes; zero/unrated prompts cannot establish usefulness. Trial has not started. Direct Upright integration remains deferred until authorized data access is demonstrated with a real sample.
+
+
+## November 7 parallel implementation checkpoint
+
+- Dia/Arc bundle identities and explicit Chromium installation selection are implemented and behavior-tested. No Dia/Arc live installation or Arc split-view verification has occurred in this increment. Existing Chrome/Edge extensions require Reload → select browser → Pair after updating.
+- Typed suspension reasons compose lock/sleep/display/session notifications and ignore duplicate transitions. Physical OS checks remain pending.
+- iPhone visit policy rejects stopped/revoked callbacks, preserves coarse areas and unknown times, and safely completes arrival records through local/file exchange. Physical permission/background delivery remains pending.
+- Native archive/export schema v2 reads v1, preserves original local bytes before migration, and protects incompatible/corrupt records. Both devices must be updated before v2 exchange.
+- Implementation used three subagents with Pocock spec/ticket slicing, behavior-first tests, and separate standards/spec review. See [delivery spec and tickets](../plans/pocock/parallel-native/spec.md).
 
 ## Defaults and limits
 

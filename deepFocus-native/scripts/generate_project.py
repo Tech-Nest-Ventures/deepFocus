@@ -29,10 +29,15 @@ app_sources = sorted(str(p.relative_to(root)) for folder in ["App", "Shared", "S
 extension_sources = ["SafariExtension/SafariWebExtensionHandler.swift"]
 ios_sources = sorted(str(p.relative_to(root)) for folder in ["iOS", "Shared", "Sources/MonitorCore"]
                      for p in (root / folder).glob("*.swift"))
+quiet_sources = sorted(str(p.relative_to(root)) for folder in ["QuietDesktop", "Sources/MonitorCore"]
+                       for p in (root / folder).glob("*.swift"))
 resources = sorted(str(p.relative_to(root)) for p in (root / "Browser/safari").iterdir() if p.is_file())
 app_product = add("appProduct", "PBXFileReference", explicitFileType="wrapper.application", path="Deep Focus Native.app", sourceTree="BUILT_PRODUCTS_DIR")
 ext_product = add("extProduct", "PBXFileReference", explicitFileType="wrapper.app-extension", path="DeepFocusSafari.appex", sourceTree="BUILT_PRODUCTS_DIR")
 ios_product = add("iosProduct", "PBXFileReference", explicitFileType="wrapper.application", path="Deep Focus Companion.app", sourceTree="BUILT_PRODUCTS_DIR")
+quiet_product = add("quietProduct", "PBXFileReference", explicitFileType="wrapper.application", path="Quiet Desktop Experiment.app", sourceTree="BUILT_PRODUCTS_DIR")
+quiet_source_phase = add("quietSources", "PBXSourcesBuildPhase", buildActionMask=2147483647,
+                        files=[add("quietBuild:" + p, "PBXBuildFile", fileRef=ref(p, "sourcecode.swift")) for p in quiet_sources], runOnlyForDeploymentPostprocessing=0)
 app_source_phase = add("appSources", "PBXSourcesBuildPhase", buildActionMask=2147483647,
                        files=[build_file(p, "sourcecode.swift") for p in app_sources], runOnlyForDeploymentPostprocessing=0)
 ext_source_phase = add("extSources", "PBXSourcesBuildPhase", buildActionMask=2147483647,
@@ -61,11 +66,15 @@ common = dict(SDKROOT="macosx", MACOSX_DEPLOYMENT_TARGET="14.0", SWIFT_VERSION="
               CLANG_ENABLE_MODULES="YES", ENABLE_HARDENED_RUNTIME="YES", CODE_SIGN_STYLE="Manual",
               CODE_SIGN_IDENTITY="-", CODE_SIGNING_ALLOWED="YES", GENERATE_INFOPLIST_FILE="NO",
               CODE_SIGN_INJECT_BASE_ENTITLEMENTS="NO",
-              CURRENT_PROJECT_VERSION="2", MARKETING_VERSION="0.2.0")
+              CURRENT_PROJECT_VERSION="3", MARKETING_VERSION="0.3.0")
 app_settings = dict(common, PRODUCT_BUNDLE_IDENTIFIER="com.timeowilliams.DeepFocusNative",
                     PRODUCT_NAME="Deep Focus Native", PRODUCT_MODULE_NAME="DeepFocusNative",
                     INFOPLIST_FILE="Configuration/App-Info.plist", CODE_SIGN_ENTITLEMENTS="Configuration/App.entitlements",
                     LD_RUNPATH_SEARCH_PATHS=["$(inherited)", "@executable_path/../Frameworks"])
+quiet_settings = dict(common, PRODUCT_BUNDLE_IDENTIFIER="com.timeowilliams.QuietDesktopExperiment",
+                      PRODUCT_NAME="Quiet Desktop Experiment", PRODUCT_MODULE_NAME="QuietDesktopExperiment",
+                      INFOPLIST_FILE="Configuration/QuietDesktop-Info.plist",
+                      CODE_SIGN_ENTITLEMENTS="Configuration/QuietDesktop.entitlements")
 ext_settings = dict(common, PRODUCT_BUNDLE_IDENTIFIER="com.timeowilliams.DeepFocusNative.Safari",
                     PRODUCT_NAME="DeepFocusSafari", PRODUCT_MODULE_NAME="DeepFocusSafari", SKIP_INSTALL="YES",
                     APPLICATION_EXTENSION_API_ONLY="YES", INFOPLIST_FILE="Configuration/Safari-Info.plist",
@@ -90,13 +99,17 @@ ios_target = add("iosTarget", "PBXNativeTarget", name="DeepFocusCompanion", prod
                  productReference=ios_product, productType="com.apple.product-type.application",
                  buildConfigurationList=configurations("ios", ios_settings),
                  buildPhases=[ios_source_phase], buildRules=[], dependencies=[])
-products = add("products", "PBXGroup", name="Products", sourceTree="<group>", children=[app_product, ext_product, ios_product])
+quiet_target = add("quietTarget", "PBXNativeTarget", name="QuietDesktopExperiment", productName="Quiet Desktop Experiment",
+                   productReference=quiet_product, productType="com.apple.product-type.application",
+                   buildConfigurationList=configurations("quiet", quiet_settings),
+                   buildPhases=[quiet_source_phase], buildRules=[], dependencies=[])
+products = add("products", "PBXGroup", name="Products", sourceTree="<group>", children=[app_product, ext_product, ios_product, quiet_product])
 main_group = add("mainGroup", "PBXGroup", sourceTree="<group>",
-                 children=[ident("file:" + p) for p in sorted(set(app_sources + extension_sources + resources + ios_sources))] + [products])
+                 children=[ident("file:" + p) for p in sorted(set(app_sources + extension_sources + resources + ios_sources + quiet_sources))] + [products])
 project = add("project", "PBXProject", attributes={"LastUpgradeCheck": "1630", "BuildIndependentTargetsInParallel": "YES"},
               buildConfigurationList=configurations("project", {}), compatibilityVersion="Xcode 14.0",
               developmentRegion="en", hasScannedForEncodings=0, knownRegions=["en", "Base"],
-              mainGroup=main_group, productRefGroup=products, projectDirPath="", projectRoot="", targets=[app_target, ext_target, ios_target])
+              mainGroup=main_group, productRefGroup=products, projectDirPath="", projectRoot="", targets=[app_target, ext_target, ios_target, quiet_target])
 
 def serialize(value, indent=0):
     if isinstance(value, dict):
@@ -125,6 +138,15 @@ ios_buildable = f'<BuildableReference BuildableIdentifier="primary" BlueprintIde
 <Scheme LastUpgradeVersion="1630" version="1.3">
  <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">{ios_buildable}</BuildActionEntry></BuildActionEntries></BuildAction>
  <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{ios_buildable}</BuildableProductRunnable></LaunchAction>
+ <AnalyzeAction buildConfiguration="Debug"/><ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+</Scheme>
+''')
+
+quiet_buildable = f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{quiet_target}" BuildableName="Quiet Desktop Experiment.app" BlueprintName="QuietDesktopExperiment" ReferencedContainer="container:DeepFocusNative.xcodeproj"/>'
+(scheme_dir / "QuietDesktopExperiment.xcscheme").write_text(f'''<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="1630" version="1.3">
+ <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">{quiet_buildable}</BuildActionEntry></BuildActionEntries></BuildAction>
+ <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{quiet_buildable}</BuildableProductRunnable></LaunchAction>
  <AnalyzeAction buildConfiguration="Debug"/><ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
 </Scheme>
 ''')

@@ -1,10 +1,10 @@
 # Deep Focus Native
 
-A small macOS 14+ menu-bar app for the foreground application and public HTTP(S) URL in Safari, Chrome, or Edge, with an optional local timeline and an iOS 17+ companion prototype. SwiftUI and Apple frameworks, with no third-party runtime dependencies. The Electron app is independent and unchanged.
+A small macOS 14+ menu-bar app for the foreground application and public HTTP(S) URL in Safari, Chrome, Edge, Dia, or Arc, with an optional local timeline and an iOS 17+ companion prototype. SwiftUI and Apple frameworks, with no third-party runtime dependencies. The Electron app is independent and unchanged.
 
 The canonical product direction is the [approved frozen charter](docs/product-direction/2026-11-06-v1.md), protected by a read-only file, checksum, and automated check. Direction changes require a new approved amendment. [Delivery roadmap](docs/ROADMAP.md) tracks the four directions separately and can change as work proceeds.
 
-This is a local development build, **not yet validated for App Store submission**. The sandboxed app and authenticated local server run successfully. Chrome and Edge pairing, real public URLs, private-window exclusion, and short duration/pause checks have passed. Safari, physical lock/sleep checks, and the remaining reliability matrix are release gates; see [VALIDATION.md](VALIDATION.md).
+This is a local development build, **not yet validated for App Store submission**. The sandboxed app and authenticated local server run successfully. Chrome and Edge pairing, real public URLs, private-window exclusion, and short duration/pause checks have passed. Dia/Arc live installation, Safari, physical lock/sleep checks, and the remaining reliability matrix are release gates; see [VALIDATION.md](VALIDATION.md).
 
 The packaged macOS app is available at `build/DeepFocusNative.zip`. Unzip and open **Deep Focus Native.app**, then follow browser setup below. It contains both Apple Silicon and Intel code; runtime checks used Apple Silicon. Desktop history has passed a short live persistence/duration check; mobile physical-device integration remains pending.
 
@@ -30,7 +30,7 @@ Tag a displayed interval to confirm its activity. Later corrections take precede
 
 The local timeline saves approximately every 30 seconds, on explicit edits, and on normal suspension/exit. A forced termination can lose the unsaved tail; it does not backfill the interruption as work. There is no automatic retention deletion. Disabling capture retains existing records. A corrupt/incompatible archive is preserved instead of overwritten.
 
-**Import evidence** and **Export tags / evidence** move user confirmations, coarse place observations, and quiet periods in a versioned JSON file. These are explicit file operations, not automatic sync. Raw desktop activity stays on that device. Imported context is visible separately and never establishes an activity or human work time by itself. Automatic Google Calendar integration remains planned.
+**Import evidence** and **Export tags / evidence** move user confirmations, coarse place observations, and quiet periods in a versioned JSON file. These are explicit file operations, not automatic sync. Raw desktop activity stays on that device. Imported context is visible separately and never establishes an activity or human work time by itself. **Import calendar snapshot** reads a selected local snapshot and offers timed intentions during gap review; it does not create confirmed work. See [calendar import](docs/calendar-import.md). **Import agent events** shows machine runs separately; see [local agent events](docs/agent-events.md). Automatic remote connectors remain planned.
 
 ## iOS companion prototype
 
@@ -49,13 +49,15 @@ xcodebuild -project DeepFocusNative.xcodeproj -scheme DeepFocusCompanion \
   -derivedDataPath build-ios CODE_SIGNING_ALLOWED=NO build
 ```
 
-## Chrome and Edge
+## Chrome, Edge, Dia, and Arc
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable Developer mode, choose **Load unpacked**, and select this project's `Browser/chromium` directory. The same bundle supports both browsers. This is a development installation, not a marketplace release.
+1. Open the browser’s Extensions manager (`chrome://extensions` in Chrome, Dia or Arc; `edge://extensions` in Edge). Dia/Arc installation UI and split-view behavior still need live verification.
+2. Enable Developer mode, choose **Load unpacked**, and select this project's `Browser/chromium` directory. The same bundle supports all four Chromium browsers. This is a development installation, not a marketplace release.
 3. In the separate **Deep Focus Native Mac app**, choose **Browser setup → Copy pairing code** (setup is visible when its window first opens). The browser extension's popup only accepts the code; it does not generate it.
-4. Open **Deep Focus Browser Monitor** from the browser's extensions menu, paste the code, and choose **Pair**. The code is a local credential; do not share it. The app clears its copied code from the clipboard after two minutes if nothing else has replaced it.
+4. Open **Deep Focus Browser Monitor** from the browser's extensions menu, select **This browser** (Chrome, Edge, Dia, or Arc), paste the code, and choose **Pair**. The code is a local credential; do not share it. The app clears its copied code from the clipboard after two minutes if nothing else has replaced it.
 5. Open a public webpage, make that browser the foreground app, and check the menu-bar popover. Keep private-window access disabled. Chrome/Edge's manifest explicitly disallows incognito operation.
+
+**Upgrading an installed extension:** reload it from the extensions manager, select its browser, and choose Pair. A saved pairing code is retained, but legacy installations stop URL collection until browser identity is confirmed. Safari uses its package identity automatically.
 
 Install and pair separately in each browser/profile you use. Only a focused normal browser window can supply an observation. A worker restart or browser suspension can briefly show URL unavailable while reconnecting.
 
@@ -71,6 +73,10 @@ The app contains `DeepFocusSafari.appex`. It is a Safari Web Extension using the
 
 The extension does not inject scripts, read page contents, block websites, or close tabs. Safari's website permission is broader than the URL information this implementation uses. [Apple's Safari permissions overview](https://developer.apple.com/videos/play/wwdc2020/10665/)
 
+## Optional quiet desktop experiment
+
+The separate **QuietDesktopExperiment** scheme builds **Quiet Desktop Experiment.app**, with its own sandbox and explicit camera Start/Stop. The core monitor receives no camera permission. Calibration, neutral sustained-deviation prompts, snooze, rolling two-per-hour cap, and local trial feedback are implemented. Physical camera validation and five actual working days remain pending. See [experiment setup and fixed thresholds](QuietDesktop/README.md).
+
 ## Data and architecture
 
 - `Sources/MonitorCore`: deterministic activity-selection state and HTTP request validation; shared by the app and unit tests.
@@ -82,7 +88,7 @@ The extension does not inject scripts, read page contents, block websites, or cl
 
 The app listens **only on `127.0.0.1:17322`**, with the App Sandbox `network.server` entitlement. User-selected file access supports explicit evidence import/export. The Safari extension has its own sandbox and `network.client` entitlement. There are no cloud endpoints, accounts, or analytics.
 
-A random pairing credential is persisted in the app's sandbox (`Application Support/DeepFocusNative/pairing-token`, owner-readable/writable only) and in the paired extension's local storage. Optional timeline records are stored in the same sandbox directory in `timeline-v1.json`, with owner-only file permissions. No history is recorded until enabled or a person explicitly saves/imports a record. Full URLs stay in memory and are never logged; paths, query parameters, and fragments are displayed live only. The bridge does not return URLs from its status endpoint.
+A random pairing credential is persisted in the app's sandbox (`Application Support/DeepFocusNative/pairing-token`, owner-readable/writable only) and in the paired extension's local storage. Optional timeline records are stored in the same sandbox directory in the existing `timeline-v1.json` filename, with owner-only file permissions. Its schema is now v2; the filename stays stable for upgrades. A v1 original is preserved as `timeline-v1.json.v1-backup` before the first v2 save. Update both devices before exchanging v2 exports. No history is recorded until enabled or a person explicitly saves/imports a record. Full URLs stay in memory and are never logged; paths, query parameters, and fragments are displayed live only. The bridge does not return URLs from its status endpoint.
 
 `GET /v1/status` and `POST /v1/event` require `Authorization: Bearer <pairing-code>`. Status returns the active supported browser, monitoring state, and a random observation epoch. An event contains `browser`, `epoch`, `sequence`, `observedAt` (Unix milliseconds), `focused`, `privateBrowsing`, and nullable `url`. A foreground or pause/suspension change rotates the epoch. Wrong-browser, old-epoch, out-of-order, and delayed messages are rejected. Explicit private/unfocused/unavailable events clear the observation. The native app determines the foreground browser; it does not trust extension focus alone.
 
@@ -96,7 +102,7 @@ python3 scripts/verify_direction.py
 # If Node is not on PATH in a non-interactive shell:
 source "$HOME/.nvm/nvm.sh"
 nvm use 22
-node --test Tests/browser.test.cjs
+node --test Tests/browser*.test.cjs
 # With the native app running; reads its credential without printing it:
 python3 scripts/bridge_smoke.py
 # Actual persistence class, disposable synthetic files only:
