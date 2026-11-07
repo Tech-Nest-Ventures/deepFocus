@@ -1,0 +1,50 @@
+# Deep Focus delivery roadmap
+
+This is editable delivery status. Product direction is governed by the [frozen, approved charter](product-direction/2026-11-06-v1.md); changing this roadmap does not amend it.
+
+Approved addition: [quiet desktop session experiment amendment](product-direction/2026-11-06-quiet-desktop-session-amendment.md). The frozen v1 remains unchanged.
+
+## 1 Desktop foundation
+
+**Built:** the sandboxed macOS menu-bar app, authenticated browser bridge, duration recorder, optional local timeline, daily view, explicit activity tags/corrections, local archive, and JSON evidence exchange. Continuous observations merge; pauses, suspended sampling, and clock jumps do not become invented work. The archive stores app names, domains, recent-input status, and provenance, not full URLs. Corrections preserve observations. Files with an incompatible/corrupt archive are preserved rather than overwritten.
+
+**Validated without unlocking:** native compilation, deterministic time arithmetic, partial corrections, DST boundaries, privacy of archived fields, file round-trips, and existing bridge validation. Browser integration remains unproven until each real browser is paired and tested. Current resource measurements from the earlier live-only build do not establish the new build's runtime usage.
+
+**Next:** resolve Safari development installation/pairing and complete the remaining Chrome/Edge profile, restart, disconnect, and latency matrix; verify actual idle/lock/sleep behavior and menu-bar layout. Validate input-idle availability within the sandbox; lack of input is only an observation and must not be presented as lack of thought. Broaden the short CPU/memory sample into sustained idle/active measurements and measure archive growth with real use.
+
+**Unlocked continuation:** Chrome and Edge are installed and paired. A small launch/setup window resolves the pairing-code discoverability problem while preserving menu-bar operation. Real public URLs, cross-browser selection, desktop URL clearing, private-window exclusion, Chrome tab clearing, multiple Edge windows, local domain-only persistence, and Pause/Resume passed short live checks. A 67.654-second observed window contained 67.654 recorded seconds; a separate ~30-second paused check contained zero. Safari, full reliability/lock/sleep/idle checks, and extended use remain open. See `VALIDATION.md` for the precise matrix.
+
+## 2 Proactive reconstruction
+
+**Built:** detection of completed unobserved intervals and intervals without recent input (15-minute minimum), explicit confirm/correct/leave-unknown actions, quiet periods, and opt-in macOS local notifications. Notifications contain no activity details. Reminders are capped at two per local calendar day, at least two hours apart; no reminder while paused/suspended, quiet, or history is disabled. Review candidates are available in the timeline even if OS notification permission is absent.
+
+**Next:** read-only calendar integration. Import calendar events as intentions with source IDs and intended intervals; never count them as observed or confirmed work. Match overlapping intentions to review candidates and offer suggestions with explicit evidence. Connect Google's existing calendar snapshots first, then the connected API when requested; no event writes are needed. Actual notification delivery still requires an unlocked Mac and explicit user enablement.
+
+## 3 Minimal mobile companion
+
+**Built:** separate `DeepFocusCompanion` iOS 17+ target sharing the ledger and evidence model, manual activity tags, quiet periods, optional Core Location visit collection, coarse area storage, offline local persistence, and user-mediated JSON export/import. The permission flow starts only from a button. The collector requests When In Use first and Always on a subsequent explicit action. No camera, EEG, or continuous GPS tracking is enabled.
+
+**Validated without unlocking:** simulator-destination compilation and shared data-model tests. No simulator runtime or physical iPhone session has been used; a build does not prove location collection or permissions. Manual files move confirmations/place evidence between devices without merging raw desktop intervals or adding parallel machine time to human time.
+
+**Next:** choose a development team and run on an iPhone. Verify denied/revoked/reduced-accuracy permissions, delayed/partial visit events, locked-phone background delivery, offline relaunch, battery behavior, and file import. Evaluate whether Shortcuts is sufficient before adding more phone UI. Automatic sync is a separate milestone: device authentication, explicit sharing choices, retries/deduplication, and conflict handling must be designed before exposing a service outside the Mac. The existing loopback bridge is not a phone sync endpoint.
+
+## 4 Research additions
+
+**Built:** provenance-bearing context-evidence and file-exchange types that can represent calendar intentions, phone visits, agent-task intervals, camera observations, and EEG observations. Tests show inserting any of these does not create human time or a confirmed activity. No physiological collector, classifier, or remote inference call has been added.
+
+**Planned contract:** agent start/finish/review/acceptance events carry a task ID, device/source ID, timestamp, and result reference. Runtime belongs to a machine-execution axis; a person's planning and approval remain independently observed/confirmed. Compare accepted output, rework, elapsed task time, and human effort before selecting an aggregate metric. The current generic evidence envelope is an expansion point, not an implemented agent connector.
+
+**Research gate:** compare each optional signal against a baseline using task type, time of day, and a brief self-reported energy/effort rating. Camera work starts with observable presence/head/gaze features processed locally; mental-state labels remain hypotheses. EEG requires a validated acquisition setup and artifact handling. No research hardware purchase or sensor collection is required to deliver the first three directions.
+
+**Next camera experiment — specified, not built:** one small [quiet desktop session prototype](experiments/quiet-desktop-session.md), followed by five working days of personal use. Explicit present/away/uncertain/stopped states, exclusion of uncertain frames from scoring, a repaired Stop control, removal of the misleading forward-head claim, confidence-checked calibration with geometry-checked reuse, and sustained-deviation prompts with snooze and a rolling maximum of two per hour. This is separate from the gap-reminder policy and remains optional.
+
+**Trial gate:** record setup time, discomfort, useful versus mistimed prompts, and voluntary reuse. Suggested continuation criteria are zero away prompts, at least 80% useful prompts, and wanting to continue after day five. These are product criteria, not demonstrated health outcomes; zero/unrated prompts cannot establish usefulness. Trial has not started. Direct Upright integration remains deferred until authorized data access is demonstrated with a real sample.
+
+## Defaults and limits
+
+- Local desktop history and OS reminders start off. Manual Save activity and evidence import/export are explicit actions.
+- Quiet periods suppress gap prompts; they do not silently disable optional capture. Stop place visits or pause desktop monitoring separately when desired.
+- The recorder counts foreground observations, not proven productive attention. No-input intervals can be confirmed as reading, thought, or another activity.
+- Local records have no automatic retention deletion. They remain in the app sandbox; automatic cloud backup/sync is not implemented. Export currently moves confirmations/context, not raw desktop observations.
+- The frozen charter has a read-only mode, checksum, automated test, and per-project agent instructions. This protects against accidental drift; no remote backup or tamper-proof storage has been created.
+- Remaining integration gates are recorded in `VALIDATION.md`. Do not label a direction complete solely because it compiles.

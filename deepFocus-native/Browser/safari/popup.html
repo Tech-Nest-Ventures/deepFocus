@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deep Focus Browser Monitor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>Deep Focus</h1>
+  <p>Copy the pairing code from the Mac app’s Browser setup, then paste it here.</p>
+  <form id="pairing">
+    <label for="token">Pairing code</label>
+    <input id="token" type="password" autocomplete="off" spellcheck="false" required minlength="64" maxlength="64">
+    <button type="submit">Pair</button>
+    <button id="disconnect" type="button">Disconnect</button>
+  </form>
+  <div id="safari-access" hidden>
+    <p>Safari also requires website access to reveal tab URLs. This extension reads the active URL only; it does not read page contents.</p>
+    <button id="allow-sites" type="button">Allow Safari URL access</button>
+  </div>
+  <p id="status" role="status" aria-live="polite"></p>
+  <small>Only the active public tab is reported to the app on this Mac. The extension saves no URL history. The Mac app can optionally save domains in its local timeline. Keep private-window access disabled.</small>
+  <script src="popup.js"></script>
+</body>
+</html>
