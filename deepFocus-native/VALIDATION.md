@@ -1,3 +1,9 @@
+# November 8 · first physical iPhone installation
+
+Deep Focus Companion v0.4.0 was development-signed, installed and launched on the operator’s cable-connected iPhone 13 Pro Max running iOS 27.2. Apple’s device tools confirmed installation, successful launch and a running app process. Signature verification passed with the system trust store. The phone was paired with Developer Mode enabled; Xcode account reauthentication resolved the earlier provisioning failure.
+
+This verifies installation and startup only. Calendar authorization/provider synchronization, manual activity persistence through phone relaunch, location permission/background visit delivery and battery behavior still require live checks. No calendar or location permissions were granted by the agent. This remains a development installation, not TestFlight/App Store distribution.
+
 # November 7 · Apple Calendar setup simplification
 
 Operator follow-up: Apple Calendar is the supported client for this milestone; Notion-specific setup and live validation are deferred. Updated app copy, setup guide and roadmap. EventKit collection, multi-account selection and publication behavior are unchanged. Mac Release and iPhone Simulator builds passed after the copy changes; frozen charter checksum and whitespace checks passed. No new personal calendar access or live provider-sync test was performed.

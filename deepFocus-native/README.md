@@ -40,7 +40,7 @@ The local timeline saves approximately every 30 seconds, on explicit edits, and 
 
 ## iOS companion prototype
 
-In the same Xcode project select **DeepFocusCompanion**, choose your own development team and an iPhone, and Run. The app requires iOS 17+. Signing-account settings have not been changed. Its simulator-destination build is verified; no physical-device or simulator UI session has been used.
+In the same Xcode project select **DeepFocusCompanion**, choose your own development team and an iPhone, and Run. The app requires iOS 17+. The simulator build and first physical iPhone installation/startup are verified. Calendar and background location behavior still require live validation. Development signing was supplied as local build overrides; no team identity is committed to the project.
 
 You can save an activity for a chosen interval, set quiet periods, and explicitly export/import evidence through Files. Optional **Enable place visits** requests When In Use access; a subsequent **Allow background visits** action requests Always access. Until Always is granted the collector does not start. **Stop place visits** stops collection but retains existing records. Location is rounded to approximately 0.01° areas; the original coordinate is not stored. Visits can be delayed or incomplete and are not a continuous route or proof of purpose. Keep location off if manual tags are sufficient.
 

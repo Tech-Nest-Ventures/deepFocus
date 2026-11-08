@@ -32,9 +32,11 @@ Remaining gates: live multi-Google-account access, permissions/revocation, recur
 
 **Built:** separate `DeepFocusCompanion` iOS 17+ target sharing the ledger and evidence model, manual activity tags, quiet periods, optional Core Location visit collection, coarse area storage, offline local persistence, and user-mediated JSON export/import. The permission flow starts only from a button. The collector requests When In Use first and Always on a subsequent explicit action. No camera, EEG, or continuous GPS tracking is enabled.
 
-**Validated without unlocking:** simulator-destination compilation and shared data-model tests. No simulator runtime or physical iPhone session has been used; a build does not prove location collection or permissions. Manual files move confirmations/place evidence between devices without merging raw desktop intervals or adding parallel machine time to human time.
+**Validated without unlocking:** simulator-destination compilation and shared data-model tests. Subsequent simulator launch and November 8 physical iPhone installation/startup passed; location collection and permission behavior remain unverified. Manual files move confirmations/place evidence between devices without merging raw desktop intervals or adding parallel machine time to human time.
 
-**Next:** choose a development team and run on an iPhone. Verify denied/revoked/reduced-accuracy permissions, delayed/partial visit events, locked-phone background delivery, offline relaunch, battery behavior, and file import. Evaluate whether Shortcuts is sufficient before adding more phone UI. Automatic sync is a separate milestone: device authentication, explicit sharing choices, retries/deduplication, and conflict handling must be designed before exposing a service outside the Mac. The existing loopback bridge is not a phone sync endpoint.
+**November 8:** development signing, installation and launch succeeded on the operator’s iPhone 13 Pro Max (iOS 27.2); a running process was verified.
+
+**Next:** verify denied/revoked/reduced-accuracy permissions, delayed/partial visit events, locked-phone background delivery, offline relaunch, battery behavior, and file import. Evaluate whether Shortcuts is sufficient before adding more phone UI. Automatic sync is a separate milestone: device authentication, explicit sharing choices, retries/deduplication, and conflict handling must be designed before exposing a service outside the Mac. The existing loopback bridge is not a phone sync endpoint.
 
 ## 4 Research additions
 
