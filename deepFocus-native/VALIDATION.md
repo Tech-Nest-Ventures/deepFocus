@@ -1,3 +1,13 @@
+# November 14 — fictional-day ChatGPT plugin prototype
+
+- Added isolated `Prototype/chatgpt-plugin`; no production native collector/provider changes.
+- Nine focused tests pass: session isolation, immutable intention/visit evidence, overlapping-time union, unknown exclusion, input validation, stale revisions, preview authentication/expiry/confirmation/idempotency, bounded retention/capacity, and HTTP host/origin/body validation.
+- Official MCP client passed initialization, six-tool discovery, structured result validation, UI resource read, correction, calendar preview/confirmation and stale rejection over both loopback and the temporary public HTTPS tunnel.
+- Rendered card verified in browser at 390px and 320px: concurrent Walking + Phone call correction, simulated calendar confirmation, unknown state (90 rather than 145 confirmed minutes), and reset. No component warning/error logs after the icon-attribute fix. See `Prototype/chatgpt-plugin/design-qa.md` and screenshot evidence.
+- Frozen product-direction checksum verified.
+- Created personal **Deep Focus Sample** plugin in ChatGPT. Final connection awaits operator approval of the platform's chat/memory-sharing notice. Actual ChatGPT iframe/model flow and physical iPhone availability are **not yet verified**.
+- Temporary server is memory-only and depends on this Mac + ngrok remaining online. Samples expire after 24 hours on subsequent access, or immediately on process restart. No real location/calendar/browsing data, automatic sync, provider writes, or proactive daily threads.
+
 # November 8 · first physical iPhone installation
 
 Deep Focus Companion v0.4.0 was development-signed, installed and launched on the operator’s cable-connected iPhone 13 Pro Max running iOS 27.2. Apple’s device tools confirmed installation, successful launch and a running app process. Signature verification passed with the system trust store. The phone was paired with Developer Mode enabled; Xcode account reauthentication resolved the earlier provisioning failure.
