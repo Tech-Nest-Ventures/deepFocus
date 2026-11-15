@@ -1,6 +1,6 @@
 # Direction 2 sample-card visual QA
 
-**final result: passed** — for the rendered web/MCP component design. Installed ChatGPT and physical iPhone host integration are separate, pending acceptance gates.
+**final result: passed** — for the rendered web/MCP component design. Live installed-plugin start/show calls now pass; iframe rendering and physical iPhone interaction remain separate acceptance gates.
 
 ## Visual truth and evidence
 
@@ -37,7 +37,7 @@
 
 ## Remaining acceptance checks
 
-- The actual installed ChatGPT iframe handshake, UI-triggered tools, model-context updates, and conversational follow-ups must be tested after connection approval.
+- Installed status and start/show connector calls passed after server restoration. Actual iframe rendering, UI-triggered tools, model-context updates, and conversational follow-ups still need host testing.
 - Physical iPhone ChatGPT availability/rendering remains unverified. A responsive browser preview does not prove mobile host support.
 - P3: optional dark-theme styling and a smaller compressed map bundle can follow after the mobile feasibility check.
 

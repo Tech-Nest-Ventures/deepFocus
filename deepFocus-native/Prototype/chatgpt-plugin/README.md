@@ -6,7 +6,7 @@ A small MCP plugin for testing **Direction 2: Day in Places** with one fictional
 
 The development MCP endpoint is `https://superambitiously-compellable-helga.ngrok-free.dev/mcp` while the local server and ngrok process are running. This is a temporary personal test, not an App Store release or a public plugin listing.
 
-1. In your ChatGPT account, open **Plugins → Personal → Deep Focus Sample** and finish **Connect** if prompted. The plugin was created on November 14; final connection requires the operator's approval of ChatGPT's chat/memory-sharing notice.
+1. Open [Deep Focus Sample in ChatGPT](https://chatgpt.com/plugins/plugin_asdk_app_6af8c35ebac08191a43c21bad1bec11c) in the same account and choose **Try in chat**. Installed status was verified on November 14; live start/show tool calls subsequently succeeded.
 2. Start a ChatGPT **Work** chat with **Deep Focus Sample** selected (type `@` to find it where supported).
 3. Send: **“Show my fictional Saturday and ask me one question about the gym visit. Use only Deep Focus Sample.”**
 4. Correct it: **“In the sample, I was walking while on the phone from 6:15 to 6:35 PM, outside.”**
@@ -40,7 +40,7 @@ MCP_URL=https://YOUR-TUNNEL-HOST/mcp npm run smoke
 
 Connect through **ChatGPT Plugins → Add → Add custom MCP server**. Name: **Deep Focus Sample**. URL: the HTTPS origin plus `/mcp`. Authentication: **No authentication** (synthetic fixture only). Review the platform's connection notice. Refresh the plugin when tool metadata changes; version the `ui://` resource when changing a released widget contract.
 
-Keep this Mac awake and online for the temporary test. Stop the server and ngrok processes with Ctrl-C to end access. ngrok's request inspector is disabled. The endpoint contains only this prototype; it exposes no filesystem, shell, native bridge, credential, or account-access tool.
+Keep this Mac awake and online for the temporary test. The initial tool-owned processes stopped at the end of the build turn; they were replaced with two macOS user-session jobs so the preview survives the chat turn. These jobs do not install a boot/login agent. To stop the currently running preview, use `launchctl remove com.deepfocus.sample-preview` and `launchctl remove com.deepfocus.sample-tunnel`. If running the foreground commands above instead, stop them with Ctrl-C. ngrok's request inspector is disabled. The endpoint contains only this prototype; it exposes no filesystem, shell, native bridge, credential, or account-access tool.
 
 ## Behavior and boundaries
 
